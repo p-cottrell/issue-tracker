@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
-import './Register.css';  // Make sure to import the CSS
+import axios from 'axios';
+import './Register.css';
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-    });
-
-    const { username, email, password } = formData;
-
-    const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     const onSubmit = async (e) => {
         e.preventDefault();
-        console.log("Submitted");
-        // Do a thing
+
+        try {
+            const response = await axios.post('http://localhost:5000/signup', {
+                email,
+                password,
+            });
+
+            console.log('User registered:', response.data);
+            // Handle success (e.g., redirect to login page, show success message, etc.)
+        } catch (error) {
+            console.error('There was an error registering the user:', error);
+            // Handle error (e.g., show error message to user)
+        }
     };
 
     return (
@@ -27,22 +33,22 @@ const Register = () => {
                         type="text"
                         placeholder="Username"
                         name="username"
-                        value={username}
-                        onChange={onChange}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                     />
                     <input
                         type="email"
                         placeholder="Email"
                         name="email"
                         value={email}
-                        onChange={onChange}
+                        onChange={(e) => setEmail(e.target.value)}
                     />
                     <input
                         type="password"
                         placeholder="Password"
                         name="password"
                         value={password}
-                        onChange={onChange}
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                     <button type="submit">Register</button>
                 </form>
