@@ -11,7 +11,8 @@ const Register = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('http://localhost:5000/signup', {
+            const response = await axios.post('http://localhost:5000/users/register', {
+                name,
                 email,
                 password,
             });
@@ -19,8 +20,7 @@ const Register = () => {
             console.log('User registered:', response.data);
             // Handle success (e.g., redirect to login page, show success message, etc.)
         } catch (error) {
-            console.error('There was an error registering the user:', error);
-            // Handle error (e.g., show error message to user)
+            console.log('There was an error registering the user:', error);
         }
     };
 
