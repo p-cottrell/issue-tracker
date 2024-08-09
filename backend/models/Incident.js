@@ -1,14 +1,22 @@
 const mongoose = require('mongoose');
 
-const incidentSchema = new mongoose.Schema({
-    userID: mongoose.Schema.Types.ObjectId,
-    date: {
-        type: Date, default: Date.now
+const IncidentSchema = new mongoose.Schema({
+    userID: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
     },
-    description: String,
-    location: String,
+    date: {
+        type: Date,
+        default: Date.now,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    location: {
+        type: String,
+        required: true,
+    },
 });
 
-const Incident = mongoose.model('Incident', incidentSchema);
-
-module.exports = Incident;
+module.exports = mongoose.model('Incident', IncidentSchema);
