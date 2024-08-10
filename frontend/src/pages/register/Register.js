@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
 import './Register.css';
 
 const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -18,7 +21,7 @@ const Register = () => {
             });
 
             console.log('User registered:', response.data);
-            // Handle success (e.g., redirect to login page, show success message, etc.)
+            navigate('/dashboard');
         } catch (error) {
             console.log('There was an error registering the user:', error);
         }
