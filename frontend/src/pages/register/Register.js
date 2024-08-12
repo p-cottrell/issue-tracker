@@ -5,7 +5,7 @@ import axios from 'axios';
 import './Register.css';
 
 const Register = () => {
-    const [name, setName] = useState('');
+    const [username, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -15,7 +15,7 @@ const Register = () => {
 
         try {
             const response = await axios.post('http://localhost:5000/users/register', {
-                name,
+                username,
                 email,
                 password,
             });
@@ -36,7 +36,7 @@ const Register = () => {
                         type="text"
                         placeholder="Username"
                         name="username"
-                        value={name}
+                        value={username}
                         onChange={(e) => setName(e.target.value)}
                     />
                     <input

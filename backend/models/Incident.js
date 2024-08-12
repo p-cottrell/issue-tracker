@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Schemas for incidents
-const IncidentSchema = new mongoose.Schema({
+const incidentSchema = new mongoose.Schema({
     userID: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

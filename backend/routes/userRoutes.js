@@ -8,10 +8,10 @@ const User = require('../models/User');
 const router = express.Router();
 // SIgnup and sign in operations for users
 
-router.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
+router.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 8);
-  const user = new User({ username, password: hashedPassword });
+  const user = new User({ username, email, password: hashedPassword });
   try {
     const newUser = await user.save();
     const payload = { id: newUser._id };
