@@ -1,70 +1,87 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Intermittent Issue Tracker
 
-## Available Scripts
+## 📋 Track and Manage Intermittent Issues with Ease
 
-In the project directory, you can run:
+The Intermittent Issue Tracker is a mobile-compatible web application designed to help users keep track of recurring issues. Whether it's a technical glitch, a health symptom, or any other type of intermittent problem, this tool enables you to log instances, track patterns, and gain insights over time.
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Summary
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The Intermittent Issue Tracker allows users to:
 
-### `npm test`
+- **Log Issues:** Quickly add new issues you wish to monitor.
+- **Track Occurrences:** Record each instance of an issue and view a history of logged occurrences.
+- **Visualise Data:** Use charts and graphs to understand the frequency and patterns of issues over time.
+- **User Profiles:** Manage your personal data, view logged instances, and adjust notification preferences.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Technologies Used
 
-### `npm run build`
+- **Frontend:** Built using React, HTML, CSS, and JavaScript.
+- **Backend:** Powered by Node.js and Express.js.
+- **Database:** MongoDB with Mongoose for data management.
+- **Visualisation:** Chart.js for creating dynamic data visualisations.
+- **Version Control:** Managed with Git and GitHub.
+- **Editor:** Developed primarily using Visual Studio Code.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+To get started with the Intermittent Issue Tracker on your local machine:
 
-### `npm run eject`
+1. **Clone the repository:**
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+   ```bash
+   git clone https://github.com/your-username/intermittent-issue-tracker.git
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. **Navigate to the project directory:**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+   ```bash
+   cd intermittent-issue-tracker
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+3. **Install the dependencies:**
 
-## Learn More
+   ```bash
+   npm install
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. **Set up the environment variables:**
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+   Create a `.env` file in the root directory with your MongoDB URI and any other environment variables required.
 
-### Code Splitting
+5. **Run the application:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+   ```bash
+   npm start
+   ```
 
-### Analyzing the Bundle Size
+The application should now be running at `http://localhost:3000`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Usage
 
-### Making a Progressive Web App
+1. **Register an account** to start tracking your issues.
+2. **Log in** to access your personal dashboard.
+3. **Add new issues** by clicking the "Add Issue" button on the dashboard.
+4. **Log instances** of an issue whenever it occurs.
+5. **View the history** of logged instances and see visualizations of your data over time.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The dashboard provides an overview of all your tracked issues, while detailed views allow you to dive into specific problems and their occurrence patterns.
 
-### Advanced Configuration
+## API Documentation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+The backend provides RESTful endpoints for interacting with the application. Here are a few key routes:
 
-### Deployment
+    POST /api/register: Register a new user.
+    POST /api/login: Authenticate a user and return a token.
+    GET /api/issues: Retrieve the list of issues being tracked.
+    POST /api/issues: Create a new issue.
+    PUT /api/issues/:id: Update an existing issue.
+    DELETE /api/issues/:id: Delete an issue.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+For detailed API documentation, refer to the API Docs.
 
-### `npm run build` fails to minify
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License. See the LICENSE file for more details.
