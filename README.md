@@ -17,13 +17,11 @@ The Intermittent Issue Tracker allows users to:
 
 ## Technologies Used
 
-- **Frontend:** Built using React, HTML, CSS, and JavaScript.
-- **Backend:** Powered by Node.js and Express.js.
-- **Database:** MongoDB with Mongoose for data management.
-- **Visualisation:** Chart.js for creating dynamic data visualisations.
-- **Version Control:** Managed with Git and GitHub.
-- **Editor:** Developed primarily using Visual Studio Code.
-
+- **Frontend:** Built using <img alt="React" src="https://custom-icon-badges.demolab.com/badge/React-025E9F.svg?logo=react&logoColor=white">, <img alt="HTML" src="https://img.shields.io/badge/HTML-E34F26.svg?logo=html5&logoColor=white">, <img alt="CSS" src="https://img.shields.io/badge/CSS-1572B6.svg?logo=css3&logoColor=white"> and <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?logo=javascript&logoColor=black">.
+- **Backend:** Powered by <img alt="Node.js" src="https://img.shields.io/badge/Node.js-8CC84C.svg?logo=node.js&logoColor=white"> and <img alt="Express.js" src="https://img.shields.io/badge/Express.js-000000.svg?logo=express&logoColor=white">.
+- **Database:** <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-47A248.svg?logo=mongodb&logoColor=white"> with Mongoose for data management.
+- **Visualisation:** <img alt="Chart.js" src="https://img.shields.io/badge/Chart.js-F7D03C.svg?logo=chart.js&logoColor=black"> for creating dynamic data visualisations.
+- **Authentication**: <img alt="JWT" src="https://img.shields.io/badge/JSON_Web_Tokens-000000.svg?logo=json-web-tokens&logoColor=white"> for secure user authentication.
 
 ## Installation
 
@@ -32,13 +30,12 @@ To get started with the Intermittent Issue Tracker on your local machine:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/intermittent-issue-tracker.git
+   git clone https://github.com/p-cottrell/issue-tracker
    ```
-
-2. **Navigate to the project directory:**
+2. **Navigate to the backend project directory:**
 
    ```bash
-   cd intermittent-issue-tracker
+   cd issue-tracker/backend
    ```
 
 3. **Install the dependencies:**
@@ -49,9 +46,32 @@ To get started with the Intermittent Issue Tracker on your local machine:
 
 4. **Set up the environment variables:**
 
-   Create a `.env` file in the root directory with your MongoDB URI and any other environment variables required.
+   Create a `.env` file in the backend directory with your MongoDB URI and other information
+   ```bash
+   PORT=5000
+   MONGO_URI= ***
+   ACCESS_TOKEN_SECRET= ****
+   ```
 
-5. **Run the application:**
+5. **Run the server:**
+
+   ```bash
+   node server.js
+   ```
+
+6. **Create a new terminalinstance and navigate to the frontend project directory:**
+
+   ```bash
+   cd issue-tracker/frontend
+   ```
+
+7. **Install the dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+8. **Start the application:**
 
    ```bash
    npm start
