@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Schemas for incidents
 const IncidentSchema = new mongoose.Schema({
     userID: {
         type: mongoose.Schema.Types.ObjectId,
@@ -19,4 +20,6 @@ const IncidentSchema = new mongoose.Schema({
     },
 });
 
-module.exports = mongoose.model('Incident', IncidentSchema);
+const Incident = mongoose.model('Incident', incidentSchema);
+
+module.exports = Incident;

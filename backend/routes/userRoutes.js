@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -7,35 +8,39 @@ const User = require('../models/User');
 const router = express.Router();
 // SIgnup and sign in operations for users
 
-router.post('/register', async (req, res) => {
+router.post('/signup', async (req, res) => {
+  const { username, password } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 8);
+  const user = new User({ username, password: hashedPassword });
   try {
-    const { email, password } = req.body;
+    const newUser = await user.save();
+    const payload = { id: newUser._id };
+    console.log('payload', payload);
+    const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
 
-    // Hash the password
-    const hashedPassword = bcrypt.hashSync(password, 8);
-
-    // Create a new user instance
-    const user = new User({ email, password: hashedPassword });
-
-    // Save the user to the database
-    await user.save();
-
-    // Respond to the client
-    res.status(201).send({ message: 'User created' });
-
+    res.send({ accessToken });
   } catch (error) {
-    res.status(500).send({ message: 'Server error', error: error.message });
+    console.error('Error saving user:', error);
+    res
+      .status(500)
+      .json({ error: 'Error saving user', details: error.message });
   }
 });
 
-router.post('/signin', async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.json({ message: 'Invalid login credentials' });
   }
-  const token = jwt.sign({ userID: user }, 'key');
-  res.send({ token });
-});
+  const payload = { id: user._id };
 
+  const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
+
+  res.json({
+    message: 'Login successful',
+    token: token,
+  });
+});
 module.exports = router;

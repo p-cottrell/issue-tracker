@@ -23,6 +23,19 @@ app.use(express.json());
 app.use('/users', userRoutes);
 app.use('/incident', incidentRoutes);
 
+app.use((req, res) => {
+    res.status(404).send('Route not found');
+  });
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res
+      .status(500)
+      .json({ error: 'Internal Server Error', details: err.message });
+  });
+
+// Port configure
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
