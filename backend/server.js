@@ -21,7 +21,8 @@ app.use(express.json());
 
 // Define Routes
 app.use('/users', userRoutes);
-app.use('/incident', incidentRoutes);
+app.use('/incidents', incidentRoutes);
+app.use('/occurrences', occurrenceRoutes);
 
 app.use((req, res) => {
     res.status(404).send('Route not found');

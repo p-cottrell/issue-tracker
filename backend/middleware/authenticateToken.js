@@ -14,9 +14,10 @@ function authenticateToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const userID = decoded.id.id ? decoded.id.id : decoded.id;
+    const isAdministrator = decoded.isAdministrator;
   
 
-    req.user = { userID };
+    req.user = { userID, isAdministrator };
 
     next();
   } catch (error) {

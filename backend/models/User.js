@@ -16,8 +16,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    isAdministrator: {
+        type: Boolean,
+        default:true, // this is true for testing purposes obvs
+        required: false}
 });
 
-const User= mongoose.model('User', userSchema);; 
+const User= mongoose.model('User', userSchema);
 
-module.exports = User;  
+module.exports = User;

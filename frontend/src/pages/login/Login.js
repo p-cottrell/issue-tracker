@@ -8,7 +8,7 @@ import "./Login.css";
 
 
 const Login = () => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
@@ -22,16 +22,16 @@ const Login = () => {
     const onSubmit = async (e) => {
         e.preventDefault(); // Prevent the default form submission behavior
 
-        // Basic client-side validation to ensure username and password are not empty
-        if (!username || !password) {
-            setError('Username and password are required');
+        // Basic client-side validation to ensure email and password are not empty
+        if (!email || !password) {
+            setError('Email and password are required');
             return;
         }
 
         try {
             // Make an API request to the server to log in the user
             const response = await axios.post(`${API_URL}/users/login`, {
-                username,
+                email,
                 password,
             });
 
@@ -61,15 +61,15 @@ const Login = () => {
                 {error && <p className="error">{error}</p>}
 
                 <form onSubmit={onSubmit}>
-                    {/* Username input field */}
+                    {/* Email input field */}
                     <input
                         type="text"
-                        id="username"
-                        placeholder="Username"
-                        name="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        aria-label="Username"
+                        id="email"
+                        placeholder="Email"
+                        name="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        aria-label="Email"
                     />
 
                     {/* Password input field */}

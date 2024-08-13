@@ -4,21 +4,17 @@ const mongoose = require('mongoose');
 const authenticateToken = require('../middleware/authenticateToken');
 const Incident = require('../models/Incident');
 
-
 const router = express.Router();
 
 // CRUD operations for incidents
-
-router.post('/', authenticateToken,  async (req, res) => {
-  const { description, location } = req.body;
+router.post('/', authenticateToken, async (req, res) => {
+  const { title, description, location } = req.body;
   const userID = req.user.userID;
-  console.log('userID',req.user.userID);
-  const incident = new Incident({userID, description, location });
+
+  const incident = new Incident({ userID, description, location, title });
   try {
     await incident.save();
-    res.status(201).send('Incident created');
-    console.log('Incident', incident);
-    console.log('userIDDD',req.user.userID);
+    res.status(201).send({message:'Incident created', incidentID: incident._id});
   } catch (error) {
     res.status(500).send('Error creating incident');
   }
@@ -27,33 +23,31 @@ router.post('/', authenticateToken,  async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const incidents = await Incident.find({ userID: req.user.userID });
-    res.send(incidents);
+    if (!incidents) {
+      return res.status(404).send('No incidents found');
+    }
+    res.status(200).json(incidents);
   } catch (error) {
     res.status(500).send('Error fetching incidents');
   }
 });
 
-
-
-
-
 router.put('/:id', authenticateToken, async (req, res) => {
   const { description, location } = req.body;
 
   try {
-    // Find the incident first to check the userID
+   
     const incident = await Incident.findById(req.params.id);
 
     if (!incident) {
       return res.status(404).send('Incident not found');
     }
 
-    // Ensure the user making the request is the owner of the incident
+ 
     if (incident.userID.toString() !== req.user.userID) {
       return res.status(403).send('Not authorized');
     }
 
-   
     const updatedIncident = await Incident.findByIdAndUpdate(
       req.params.id,
       { description, location },
@@ -67,12 +61,12 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-
-
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     // Find the incident first to check the userID
-    const incident = await Incident.findById(req.params.id);
+    const incident = await Incident.findById(req.params.id).populate(
+      'occurrences'
+    );
 
     if (!incident) {
       return res.status(404).send('Incident not found');
@@ -83,7 +77,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(403).send('Not authorized');
     }
 
-  
     res.status(200).json(incident);
   } catch (error) {
     console.error('Error fetching incident:', error);
@@ -97,7 +90,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     if (!incident) {
       return res.syatus(404).send('incident not found');
     }
-    console.log("userIDDD",incident.userID);
+
     if (incident.userID.toString() !== req.user.userID) {
       return res.status(403).send('Not authorized');
     }
