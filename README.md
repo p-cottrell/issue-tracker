@@ -1,6 +1,8 @@
 
 # Intermittent Issue Tracker
 
+[Shared Folder (OneDrive)](https://edithcowanuni-my.sharepoint.com/:f:/r/personal/pcottrel_our_ecu_edu_au/Documents/CSG3101%20Applied%20Project?csf=1&web=1&e=3xdVdA) ・ [GitHub](https://github.com/p-cottrell/issue-tracker/)
+
 ## 📋 Track and Manage Intermittent Issues with Ease
 
 The Intermittent Issue Tracker is a mobile-compatible web application designed to help users keep track of recurring issues. Whether it's a technical glitch, a health symptom, or any other type of intermittent problem, this tool enables you to log instances, track patterns, and gain insights over time.
