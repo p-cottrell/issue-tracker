@@ -8,13 +8,17 @@ const Register = () => {
     const [username, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
     const navigate = useNavigate();
+
+    // configure the API depending on the environment
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
     const onSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('http://localhost:5000/users/register', {
+            const response = await axios.post(`${API_URL}/users/login`, {
                 username,
                 email,
                 password,
