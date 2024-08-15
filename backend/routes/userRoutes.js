@@ -112,6 +112,21 @@ router.post('/login', async (req, res) => {
   });
 });
 
+
+router.get('/all', async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({error: 'Error fetching users', details: error.message});
+  }
+});
+
+
+
+
+
+
 router.delete('/delete/:id', authenticateToken, async (req, res) => {
   try {
 
