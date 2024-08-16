@@ -32,7 +32,7 @@ const Login = () => {
             const response = await axios.post(`${API_URL}/users/login`, {
                 email,
                 password,
-            });
+            }, {withCredentials: true});
 
             // If successful, log the response and navigate to the dashboard
             if (response.data.success) {

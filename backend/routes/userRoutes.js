@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
 const User = require('../models/User');
 const authenticateToken = require('../middleware/authenticateToken');
 const router = express.Router();
@@ -75,11 +76,18 @@ router.post('/register', async (req, res) => {
       expiresIn: '1h',
     });
 
+    // Set the cookie
+    res.cookie('access_token', token, {
+    httpOnly: true, // Cannot be accessed via JavaScript
+    secure:false, // This will only use `secure` in production so we can continue to use HTTP in development
+    sameSite: 'Strict', // Prevent CSRF
+    maxAge: 3600000, // 1 hour
+});
+
     // Send the token as the response
     return res
       .status(201)
       .json({
-        accessToken,
         userID: newUser._id,
         isAdministrator: newUser.isAdministrator,
       });
@@ -93,22 +101,34 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
+  // Fetch the user from DB
   const user = await User.findOne({ email });
 
+  // Validate the user
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.json({
       success: false,
       message: 'Invalid login credentials'
     });
   }
-  const payload = { id: user._id };
 
+  // Create JWT
+  const payload = { id: user._id };
   const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
 
+  // Set the cookie
+  res.cookie('access_token', token, {
+    httpOnly: true, // Cannot be accessed via JavaScript
+    secure:false, // This will only use `secure` in production so we can continue to use HTTP in development
+    sameSite: 'Strict', // Prevent CSRF
+    maxAge: 3600000, // 1 hour
+});
+
+  // Set the response
   res.json({
     success: true,
     message: 'Login successful',
-    token: token,
   });
 });
 
@@ -121,10 +141,6 @@ router.get('/all', async (req, res) => {
     res.status(500).json({error: 'Error fetching users', details: error.message});
   }
 });
-
-
-
-
 
 
 router.delete('/delete/:id', authenticateToken, async (req, res) => {
