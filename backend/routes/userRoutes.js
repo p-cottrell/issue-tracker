@@ -54,7 +54,7 @@ router.post('/register', async (req, res) => {
 
   try {
     validateEmail(email);
-    validatePassword(password);
+    //validatePassword(password); # ADD THIS BACK AT SOME POINT
 
     if (await isEmailTaken(email)) {
       return res.status(400).json({ error: 'Email already taken' });
