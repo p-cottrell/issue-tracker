@@ -109,6 +109,7 @@ router.post('/login', async (req, res) => {
     success: true,
     message: 'Login successful',
     token: token,
+    userID: user._id,
   });
 });
 

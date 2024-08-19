@@ -22,6 +22,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    console.log('userID:', req.user.userID);
     const incidents = await Incident.find({ userID: req.user.userID });
     if (!incidents) {
       return res.status(404).send('No incidents found');
