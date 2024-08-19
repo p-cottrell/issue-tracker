@@ -34,7 +34,7 @@ const Login = () => {
                 email,
                 password,
             });
-            console.log("Hello", response)
+            console.log(response)
 
             // If successful, log the response and navigate to the dashboard
             if (response.data.success) {
