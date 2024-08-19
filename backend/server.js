@@ -2,6 +2,7 @@ const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const userRoutes = require('./routes/userRoutes');
 const incidentRoutes = require('./routes/incidentRoutes');
 const occurrenceRoutes = require('./routes/occurrenceRoutes');
@@ -21,6 +22,7 @@ app.use(cors({
 
 // Init Middleware
 app.use(express.json());
+app.use(cookieParser());
 
 // Define Routes
 app.use('/users', userRoutes);

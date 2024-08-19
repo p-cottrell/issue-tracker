@@ -16,7 +16,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     // configure the API depending on the environment
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const API_URL = process.env.API_URL || 'http://localhost:5000';
     // Form submission handler
     const onSubmit = async (e) => {
         e.preventDefault(); // Prevent the default form submission behavior
