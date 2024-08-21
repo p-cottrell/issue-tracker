@@ -492,7 +492,7 @@ node path/to/your/script.js
 
 ## Connecting to MongoDB
 
-The cluster has been setup with a default user `iit` and password `LfdTdr1hEKkSNIoF`, along with the whitelist IP address `0.0.0.0/0` for testing purposes. This is not recommended for production use, and we should restrict the IP addresses that can access the cluster to only those that need it.
+The cluster has been setup with a default user `iit` and password `LfdTdr1hEKkSNIoF`, along with the whitelisted IP address `0.0.0.0/0` (everyone) for testing purposes. This is not recommended for production use, and we should restrict the IP addresses that can access the cluster to only those that need it.
 
 There are two main ways to connect to the MongoDB Atlas cluster:
 
@@ -521,4 +521,8 @@ There are two main ways to connect to the MongoDB Atlas cluster:
       mongoose.connect('mongodb://localhost:27017/intermittentissuetracker', { useNewUrlParser: true, useUnifiedTopology: true });
       ```
 
-    - Remember to install the `mongoose`, `faker-js`, and `bcrypt` packages using `npm install mongoose @faker-js/faker bcrypt`.
+    - Remember to install the `mongoose`, `faker-js`, and `bcrypt` packages using:
+
+      ```bash
+      npm install mongoose @faker-js/faker bcrypt
+      ```
