@@ -8,36 +8,10 @@ mongoose.connect('mongodb://localhost:27017/intermittent_issue_tracker', {})
     .catch(err => console.log(err));
 
 // Define your schemas and models here
-const ProjectSchema = new mongoose.Schema({
-    project_name: String,
-    description: String,
-    status_types: Array,
-});
+const Project = require('../Schemas/Project');
+const User = require('../Schemas/User');
+const Issue = require('../Schemas/Issue');
 
-const UserSchema = new mongoose.Schema({
-    username: String,
-    email: String,
-    password_hash: String,
-    role: String,
-});
-
-const IssueSchema = new mongoose.Schema({
-    project_id: mongoose.Schema.Types.ObjectId,
-    reporter_id: mongoose.Schema.Types.ObjectId,
-    status_id: Number,
-    title: String,
-    description: String,
-    charm: String,
-    created_at: Date,
-    updated_at: Date,
-    occurrences: Array,
-    attachments: Array,
-    comments: Array,
-});
-
-const Project = mongoose.model('Project', ProjectSchema);
-const User = mongoose.model('User', UserSchema);
-const Issue = mongoose.model('Issue', IssueSchema);
 
 // Function to generate fake data
 async function generateFakeData() {
