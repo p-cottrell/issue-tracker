@@ -1,4 +1,32 @@
-# Database Design for Intermittent Issue Tracker
+# Database Design and Usage for Intermittent Issue Tracker
+
+- [Database Design and Usage for Intermittent Issue Tracker](#database-design-and-usage-for-intermittent-issue-tracker)
+  - [Tables/Entities](#tablesentities)
+  - [Entity-Relationship Diagram (ERD)](#entity-relationship-diagram-erd)
+    - [**1. Tables**](#1-tables)
+      - [**Projects Table**](#projects-table)
+      - [**Status Types Table** (Scoped to a Project)](#status-types-table-scoped-to-a-project)
+      - [**Users Table**](#users-table)
+      - [**Issues Table**](#issues-table)
+      - [**Issue Occurrences Table**](#issue-occurrences-table)
+      - [**Attachments Table**](#attachments-table)
+      - [**Comments Table**](#comments-table)
+    - [**2. Relationships and Constraints**](#2-relationships-and-constraints)
+    - [**3. Additional Considerations**](#3-additional-considerations)
+  - [Generating the Database (MongoDB)](#generating-the-database-mongodb)
+    - [MongoDB Design Strategy](#mongodb-design-strategy)
+    - [MongoDB Schema Example](#mongodb-schema-example)
+      - [1. **Projects Collection**](#1-projects-collection)
+      - [2. **Users Collection**](#2-users-collection)
+      - [3. **Issues Collection**](#3-issues-collection)
+      - [4. **Example MongoDB Operations**](#4-example-mongodb-operations)
+    - [MongoDB Schema Design Summary](#mongodb-schema-design-summary)
+  - [Generating Sample Data (Mongoose + Faker)](#generating-sample-data-mongoose--faker)
+    - [Step 1: Install the required packages](#step-1-install-the-required-packages)
+    - [Step 2: Define the Mongoose schema](#step-2-define-the-mongoose-schema)
+    - [Step 3: Create a script to generate fake data using Faker](#step-3-create-a-script-to-generate-fake-data-using-faker)
+    - [Step 4: Run the script](#step-4-run-the-script)
+  - [Connecting to MongoDB](#connecting-to-mongodb)
 
 ## Tables/Entities
 
@@ -461,3 +489,36 @@ You can run the script using:
 ```bash
 node path/to/your/script.js
 ```
+
+## Connecting to MongoDB
+
+The cluster has been setup with a default user `iit` and password `LfdTdr1hEKkSNIoF`, along with the whitelist IP address `0.0.0.0/0` for testing purposes. This is not recommended for production use, and we should restrict the IP addresses that can access the cluster to only those that need it.
+
+There are two main ways to connect to the MongoDB Atlas cluster:
+
+1. **Using the MongoDB Shell**:
+   - Open the MongoDB shell and run the following command:
+
+     ```bash
+     mongosh "mongodb+srv://intermittentissuetracke.7oyxe.mongodb.net/" --apiVersion 1 --username iit
+     ```
+
+   - Enter the password when prompted (`LfdTdr1hEKkSNIoF`).
+
+2. **Using a Node.js Application**:
+    - Use the following Node.js code to connect to the MongoDB Atlas cluster:
+
+      ```javascript
+      const mongoose = require('mongoose');
+
+      mongoose.connect('mongodb+srv://iit:LfdTdr1hEKkSNIoF@intermittentissuetracke.7oyxe.mongodb.net/?retryWrites=true&w=majority&appName=IntermittentIssueTracker', { useNewUrlParser: true, useUnifiedTopology: true });
+      ```
+
+    - Replace the connection string with your own if needed (for example, if you have a different username or password).
+    - Alternatively, if hosting locally, you may use the following connection string:
+
+      ```javascript
+      mongoose.connect('mongodb://localhost:27017/intermittentissuetracker', { useNewUrlParser: true, useUnifiedTopology: true });
+      ```
+
+    - Remember to install the `mongoose`, `faker-js`, and `bcrypt` packages using `npm install mongoose @faker-js/faker bcrypt`.
