@@ -11,10 +11,7 @@
 
 require('dotenv').config();
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-const User = require('../models/User');
+const User = require('../Schemas/User');
 const authenticateToken = require('../middleware/authenticateToken');
 const router = express.Router();
 
@@ -101,57 +98,62 @@ async function isEmailTaken(email) {
  * @param {Object} req.body - The user data (username, email, password).
  * @param {Object} res - The response object.
  */
-router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
-
-  try {
-    validateEmail(email);
-    // validatePassword(password);
-
-    // Check if the provided email is already associated with an existing user
-    if (await isEmailTaken(email)) {
-      return res.status(400).json({ error: 'Email already taken' });
-    }
-
-    // Hash the user's password for secure storage in the database
-    const hashedPassword = bcrypt.hashSync(password, 8);
-
-    // Create a new user instance with the provided data
-    const user = new User({ username, email, password: hashedPassword });
-
-    // Save the new user to the database
-    const newUser = await user.save();
-
-    // Prepare payload data for JWT generation (includes user ID and admin status)
-    const payload = {
-      id: newUser._id,
-      isAdministrator: newUser.isAdministrator,
-    };
-    // Generate a JWT token using the payload and the application's secret key
-    const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
-
-    // Set a secure cookie with the generated JWT, which will be used for subsequent authentication
-    res.cookie('access_token', token, {
-    httpOnly: true, // Ensures the cookie cannot be accessed via JavaScript
-    secure:false, // This will only use `secure` in production (False here so we can use HTTP in development)
-    sameSite: 'Strict', // Prevent CSRF
-    maxAge: 3600000, // Cookie expiration time set to 1 hour (in milliseconds)
-});
-
-    // Respond with the newly created user's ID and admin status
-    return res
-      .status(201)
-      .json({
-        userID: newUser._id,
-        isAdministrator: newUser.isAdministrator,
+  
+  router.post('/register', async (req, res) => {
+    const { username, email, password } = req.body;
+  
+    try {
+      
+      validateEmail(email);
+  
+    
+      if (await isEmailTaken(email)) {
+        return res.status(400).json({ error: 'Email already taken' });
+      }
+  
+      //validatePassword(password); // Commented out for testing
+      const salt = bcrypt.genSaltSync(10);
+  
+    
+      const hashedPassword = bcrypt.hashSync(password, salt);
+  
+    
+      const user = new User({
+        username,
+        email,
+        password_hash: hashedPassword, 
       });
-  } catch (error) {
-    console.error('Error saving user:', error);
-    return res
-      .status(500)
-      .json({ error: 'Error saving user', details: error.message });
-  }
-});
+  
+    
+      const newUser = await user.save();
+  
+    
+      const payload = {
+        id: newUser._id,
+        role: newUser.role, 
+      };
+  
+     
+      const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+  
+    
+      res.cookie('access_token', token, {
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: 3600000, 
+      });
+  
+      
+      return res.status(201).json({
+        userID: newUser._id,
+        role: newUser.role,
+      });
+    } catch (error) {
+      console.error('Error saving user:', error);
+      return res.status(500).json({ error: 'Error saving user', details: error.message });
+    }
+  });
+ 
 
 /**
  * Route to log in an existing user.
@@ -171,45 +173,48 @@ router.post('/login', async (req, res) => {
   // Fetch the user from DB using provided email
   const user = await User.findOne({ email });
 
-  // Validate the user
-  if (!user || !bcrypt.compareSync(password, user.password)) {
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.json({
-      success: false,
+      secure: process.env.NODE_ENV === 'production',// this will be set in the .env file when we switch to production mode 
       message: 'Invalid login credentials'
     });
   }
 
   // Prepare payload data for JWT generation
   const payload = {
-    id: user._id
+    id: user._id,
+    role: user.role,
   };
-  // Generate a JWT token using the payload and the application's secret key
-  const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
+
+  const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {exiresIn: '1h'});
 
   // Set a secure cookie with the generated JWT for authentication purposes
   res.cookie('access_token', token, {
-    httpOnly: true, // Cannot be accessed via JavaScript
-    secure:false, // Set to true in production to enforce HTTPS (false here for development)
-    sameSite: 'Strict', // Prevent CSRF
-    maxAge: 3600000, // Expires after 1 hour
+    httpOnly: true, 
+    secure : process.env.NODE_ENV === 'production', 
+    sameSite: 'Strict', 
+    maxAge: 3600000, 
 });
 
-  // Respond with a success message for front end use
+
   res.json({
     success: true,
     message: 'Login successful',
   });
 });
 
-// Route to retrieve all users
+// Route to retrieve all users if are an admin dude
 router.get('/all', async (req, res) => {
   try {
-    // Fetch all user documents from the database
+     if (req.user?.role !== 'admin') {
+      return res.status(403).send('You are not authorised to view users');
+    } 
+
     const users = await User.find({});
-    // Respond with the retrieved users
+    
     res.status(200).json(users);
   } catch (error) {
-    // Handle any errors that occur during user retrieval
+  
     res.status(500).json({
       error: 'Error fetching users',
       details: error.message,
@@ -221,21 +226,21 @@ router.get('/all', async (req, res) => {
 // Route to delete a user by ID (Admin only)
 router.delete('/delete/:id', authenticateToken, async (req, res) => {
   try {
-    // Check if the requesting user is an administrator
-    if (!req.user.isAdministrator) {
+    
+    if ((req.user?.role !== 'admin')) {
       return res.status(403).send('You are not authorised to delete users');
     }
 
-    // Attempt to delete the user with the specified ID from the database
+   
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return res.status(404).send('User not found');
     }
 
-    // Respond with a confirmation message if the user is successfully deleted
+   
     res.status(200).send('User deleted');
   } catch (error) {
-    // Handle any errors that occur during user deletion
+   
     res.status(500).json({
       error: 'Error deleting user',
       details: error.message,
@@ -243,5 +248,5 @@ router.delete('/delete/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Export the router to be used in other parts of the application
+
 module.exports = router;
