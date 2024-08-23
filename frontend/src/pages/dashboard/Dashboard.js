@@ -19,13 +19,16 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
+import Issue from '../../components/Issue';
 
 const Dashboard = () => {
     const [issues, setIssues] = useState([]);
-
+    let index = 0;
+    
     useEffect(() => {
         // configure the API depending on the environment
         const API_URL = process.env.API_URL || 'http://localhost:5000';
+        console.log(`${API_URL}/incidents`)
 
         const fetchIncidents = async () => {
             try {
@@ -41,24 +44,33 @@ const Dashboard = () => {
         fetchIncidents();
     }, []);
 
+    
+    function deleteHandler(key) {
+        return
+    }
+    
     return (
         <div className="home-wrapper">
             <div className="home-container">
-                <h1>Welcome to the Intermittent Issue Tracker</h1>
+                <h1>Intermittent Issue Tracker</h1>
                 <p>Track your issues effortlessly.</p>
-                <ul>
-                    {issues.map(incident => (
-                        <li key={incident._id}>
-                            <h3>{incident.title}</h3>
-                            <p><strong>Description:</strong> {incident.description}</p>
-                            <p><strong>Location:</strong> {incident.location}</p>
-                            <p><strong>Date:</strong> {new Date(incident.date).toLocaleString()}</p>
-                        </li>
-                    ))}
-                </ul>
+
+                <div className="user-info-container">
+                    <button name="add-issue" value="add-issue" className="add-button">+ New Issue</button>
+                    
+                </div>
+
+                <div className="issues-container">
+                    {issues.map((incident) => {
+                            index++;
+                                return (
+                                    <Issue key={incident.key} index={index} data={incident} deleteHandler={deleteHandler} />
+                                );
+                        })}
+                </div>
             </div>
         </div>
     );
-};
+    }
 
 export default Dashboard;
