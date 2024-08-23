@@ -4,6 +4,11 @@
     padding: 5px;
 }
 
+.infoContainer {
+    display: flex;
+    width:100%;
+}
+
 .titleDescriptionContainer {
     display: flex;
     flex-direction: column;
@@ -21,6 +26,21 @@
     text-align: start;
     width: 40%;
     padding: 5px;
+}
+
+.deleteContainer {
+    display: flex;
+    align-items: center;
+    background-color: #FF3C3C;
+    color: white;
+    font-weight: bold;
+    align-items: center;
+    padding: 5px;
+}
+
+.deleteContainer:hover {
+    cursor: pointer;
+    background-color: #FF7D7D;
 }
 
 p {

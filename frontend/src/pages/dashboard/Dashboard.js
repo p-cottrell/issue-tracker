@@ -20,15 +20,19 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
+import Popup from '../../components/Popup';
+
 
 const Dashboard = () => {
+    const [popupType, setPopupType] = useState("");
+    const [showPopup, setShowPopup] = useState(false);
+    const [selectedIssue, setSelectedIssue] = useState(null);
     const [issues, setIssues] = useState([]);
     let index = 0;
     
     useEffect(() => {
         // configure the API depending on the environment
         const API_URL = process.env.API_URL || 'http://localhost:5000';
-        console.log(`${API_URL}/incidents`)
 
         const fetchIncidents = async () => {
             try {
@@ -44,8 +48,19 @@ const Dashboard = () => {
         fetchIncidents();
     }, []);
 
-    
-    function deleteHandler(key) {
+    function addHandler() {
+        setShowPopup(true);
+        setPopupType("add");
+    }
+
+    function deleteHandler(data) {
+        setShowPopup(true);
+        setPopupType("delete");
+        setSelectedIssue(data.title)
+        return
+    }
+
+    function clickHandler(key) {
         return
     }
     
@@ -56,7 +71,7 @@ const Dashboard = () => {
                 <p>Track your issues effortlessly.</p>
 
                 <div className="user-info-container">
-                    <button name="add-issue" value="add-issue" className="add-button">+ New Issue</button>
+                    <button name="add-issue" value="add-issue" className="add-button" onClick={addHandler}>+ New Issue</button>
                     
                 </div>
 
@@ -64,11 +79,13 @@ const Dashboard = () => {
                     {issues.map((incident) => {
                             index++;
                                 return (
-                                    <Issue key={incident.key} index={index} data={incident} deleteHandler={deleteHandler} />
+                                    <Issue key={incident.key} index={index} data={incident} deleteHandler={deleteHandler} clickHandler={clickHandler}/>
                                 );
                         })}
                 </div>
             </div>
+
+            {showPopup ? <Popup closeHandler={() => setShowPopup(false)} type={popupType} selectedIssue={selectedIssue}/> : null}
         </div>
     );
     }
