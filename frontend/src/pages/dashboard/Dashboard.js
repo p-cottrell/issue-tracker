@@ -1,3 +1,20 @@
+/**
+ * React component to display a dashboard of issues
+ *
+ * This component fetches issues from an API and displays them in a list format.
+ *
+ * - Uses `axios` to make a GET request to `API_URL/incidents`, including cookies for authentication.
+ * - The fetched data is stored in the `issues` state using `useState` hook.
+ * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
+ * - Each incident is displayed with its title, description, location, and formatted date.
+ *
+ * Usage:
+ * - Import this component and include it in a parent component or route.
+ * - Ensure the server endpoint and authentication are correctly configured.
+ * - Add relevant CSS in `Dashboard.css` to style the component.
+ *
+ * @returns The rendered dashboard component.
+ */
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 import axios from 'axios';
@@ -31,6 +48,7 @@ const Dashboard = () => {
         return
     }
     
+
     return (
         <div className="home-wrapper">
             <div className="home-container">

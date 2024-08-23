@@ -1,3 +1,16 @@
+/**
+ * Incident Management Routes
+ *
+ * This module defines routes for creating, retrieving, updating, and deleting issues
+ * Each route uses JWT-based authentication to ensure that only authorised users can
+ * interact with the issues.
+ *
+ * IMPORTANT: AuthenticateToken authenticates using cookies so when calling the API on
+ * the front-end you must use {withCredentials: true} to ensure authentication cookies
+ * are passed too.
+ *
+ */
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -6,7 +19,19 @@ const Incident = require('../models/Incident');
 
 const router = express.Router();
 
-// CRUD operations for incidents
+/**
+ * Route to create a new issue
+ *
+ * This route allows an authenticated user to create a new incident. The user must provide a title,
+ * description, and location for the incident. The incident is associated with the authenticated
+ * user's ID and stored in the database.
+ *
+ * @name POST /incidents
+ * @function
+ * @memberof module:routes/incidents
+ * @param {Object} req.body - The incident data (title, description, location).
+ * @param {Object} res - The response object.
+ */
 router.post('/', authenticateToken, async (req, res) => {
   const { title, description, location } = req.body;
   const userID = req.user.userID;
@@ -24,11 +49,12 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('userID:', req.user.userID);
     const incidents = await Incident.find({ userID: req.user.userID });
-    if (!incidents) {
+    if (!incidents.length) {
       return res.status(404).send('No incidents found');
     }
     res.status(200).json(incidents);
   } catch (error) {
+    console.error('Error fetching incidents:', error);
     res.status(500).send('Error fetching incidents');
   }
 });
@@ -37,14 +63,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
   const { description, location } = req.body;
 
   try {
-   
+
     const incident = await Incident.findById(req.params.id);
 
     if (!incident) {
       return res.status(404).send('Incident not found');
     }
 
- 
+
     if (incident.userID.toString() !== req.user.userID) {
       return res.status(403).send('Not authorized');
     }

@@ -1,7 +1,7 @@
 
 # Intermittent Issue Tracker
 
-[Shared Folder (OneDrive)](https://edithcowanuni-my.sharepoint.com/:f:/r/personal/pcottrel_our_ecu_edu_au/Documents/CSG3101%20Applied%20Project?csf=1&web=1&e=3xdVdA) ・ [GitHub](https://github.com/p-cottrell/issue-tracker/)
+[Shared Folder (OneDrive)](https://edithcowanuni-my.sharepoint.com/:f:/r/personal/pcottrel_our_ecu_edu_au/Documents/CSG3101%20Applied%20Project?csf=1&web=1&e=3xdVdA) ・ [GitHub](https://github.com/p-cottrell/issue-tracker/) ・ [Git Branching Procedure](https://github.com/p-cottrell/issue-tracker/blob/main/Git%20Branching%20Procedure.md)
 
 ## 📋 Track and Manage Intermittent Issues with Ease
 
