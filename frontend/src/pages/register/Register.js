@@ -18,7 +18,7 @@ const Register = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${API_URL}/users/register`, {
+            const response = await axios.post(`${API_URL}/api/users/register`, {
                 username,
                 email,
                 password,

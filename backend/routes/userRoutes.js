@@ -14,6 +14,8 @@ const express = require('express');
 const User = require('../Schemas/User');
 const authenticateToken = require('../middleware/authenticateToken');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 /**
  * Validate the strength of the user's password.
@@ -112,10 +114,10 @@ async function isEmailTaken(email) {
       }
   
       //validatePassword(password); // Commented out for testing
-      const salt = bcrypt.genSaltSync(10);
+      const salt =  await bcrypt.genSalt(10);
   
     
-      const hashedPassword = bcrypt.hashSync(password, salt);
+      const hashedPassword = await bcrypt.hashSync(password, salt);
   
     
       const user = new User({
@@ -186,7 +188,7 @@ router.post('/login', async (req, res) => {
     role: user.role,
   };
 
-  const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {exiresIn: '1h'});
+  const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
 
   // Set a secure cookie with the generated JWT for authentication purposes
   res.cookie('access_token', token, {
