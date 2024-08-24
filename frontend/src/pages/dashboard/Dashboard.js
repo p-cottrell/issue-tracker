@@ -8,24 +8,22 @@
  * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
  * - Each issue is displayed with its title, description, location, and formatted date.
  *
- * Usage:
- * - Import this component and include it in a parent component or route.
- * - Ensure the server endpoint and authentication are correctly configured.
- * - Add relevant CSS in `Dashboard.css` to style the component.
  *
  * @returns The rendered dashboard component.
  */
-
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
+import axios from 'axios';
+import Issue from '../../components/Issue';
 
 const Dashboard = () => {
     const [issues, setIssues] = useState([]);
+    let index = 0;
 
     useEffect(() => {
         // configure the API depending on the environment
         const API_URL = process.env.API_URL || 'http://localhost:5000';
+
 
         const fetchIssues = async () => {
             try {
@@ -41,24 +39,33 @@ const Dashboard = () => {
         fetchIssues();
     }, []);
 
+
+    function deleteHandler(key) {
+        return
+    }
+
+
     return (
         <div className="home-wrapper">
             <div className="home-container">
-                <h1>Welcome to the Intermittent Issue Tracker</h1>
+                <h1>Intermittent Issue Tracker</h1>
                 <p>Track your issues effortlessly.</p>
-                <ul>
-                    {issues.map(issue => (
-                        <li key={issue._id}>
-                            <h3>{issue.title}</h3>
-                            <p><strong>Description:</strong> {issue.description}</p>
-                            <p><strong>Location:</strong> {issue.location}</p>
-                            <p><strong>Date:</strong> {new Date(issue.date).toLocaleString()}</p>
-                        </li>
-                    ))}
-                </ul>
+
+                <div className="user-info-container">
+                    <button name="add-issue" value="add-issue" className="add-button">+ New Issue</button>
+                </div>
+
+                <div className="issues-container">
+                    {issues.map((issue) => {
+                            index++;
+                                return (
+                                    <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} />
+                                );
+                        })}
+                </div>
             </div>
         </div>
     );
-};
+    }
 
 export default Dashboard;

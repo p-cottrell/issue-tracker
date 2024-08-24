@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import "./Login.css";
 
-
-
-
-
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [userID, setUserID] = useState(null);
+    const [token, setToken] = useState(null);
+
 
     // useNavigate to navigate to different routes
     const navigate = useNavigate();
@@ -34,10 +33,15 @@ const Login = () => {
                 password,
             }, {withCredentials: true});
 
+
             // If successful, log the response and navigate to the dashboard
             if (response.data.success) {
-                console.log('User Logged In:', response.data);
+                setUserID(response.data.userID);
+                setToken(response.data.token);
+                localStorage.setItem('token', response.data.token); // Store the token in local storage
+                localStorage.setItem('userID', response.data.userID);// Store the userID in local storage
                 navigate('/dashboard');
+                
 
             } else {
                 // If the server response indicates a failure, set an error message
