@@ -67,6 +67,7 @@ async function generateFakeData() {
         });
 
         userCredentials.push({
+            email: email,
             username: username,
             password: password,
         });
