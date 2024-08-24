@@ -3,15 +3,11 @@
  *
  * This component fetches issues from an API and displays them in a list format.
  *
- * - Uses `axios` to make a GET request to `API_URL/incidents`, including cookies for authentication.
+ * - Uses `axios` to make a GET request to `API_URL/issues`, including cookies for authentication.
  * - The fetched data is stored in the `issues` state using `useState` hook.
  * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
- * - Each incident is displayed with its title, description, location, and formatted date.
+ * - Each issue is displayed with its title, description, location, and formatted date.
  *
- * Usage:
- * - Import this component and include it in a parent component or route.
- * - Ensure the server endpoint and authentication are correctly configured.
- * - Add relevant CSS in `Dashboard.css` to style the component.
  *
  * @returns The rendered dashboard component.
  */
@@ -23,15 +19,15 @@ import Issue from '../../components/Issue';
 const Dashboard = () => {
     const [issues, setIssues] = useState([]);
     let index = 0;
-    
+
     useEffect(() => {
         // configure the API depending on the environment
         const API_URL = process.env.API_URL || 'http://localhost:5000';
-        console.log(`${API_URL}/incidents`)
 
-        const fetchIncidents = async () => {
+
+        const fetchIssues = async () => {
             try {
-                const response = await axios.get(`${API_URL}/incidents`, {
+                const response = await axios.get(`${API_URL}/api/issues`, {
                     withCredentials: true,
                 });
                 setIssues(response.data);
@@ -40,14 +36,14 @@ const Dashboard = () => {
             }
         };
 
-        fetchIncidents();
+        fetchIssues();
     }, []);
 
-    
+
     function deleteHandler(key) {
         return
     }
-    
+
 
     return (
         <div className="home-wrapper">
@@ -57,14 +53,13 @@ const Dashboard = () => {
 
                 <div className="user-info-container">
                     <button name="add-issue" value="add-issue" className="add-button">+ New Issue</button>
-                    
                 </div>
 
                 <div className="issues-container">
-                    {issues.map((incident) => {
+                    {issues.map((issue) => {
                             index++;
                                 return (
-                                    <Issue key={incident.key} index={index} data={incident} deleteHandler={deleteHandler} />
+                                    <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} />
                                 );
                         })}
                 </div>

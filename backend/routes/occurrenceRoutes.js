@@ -2,8 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
-const Occurrence = require('../models/Occurrence');
-const Incident = require('../models/Incident');
+
 
 
 
@@ -14,31 +13,32 @@ const Incident = require('../models/Incident');
 
 
 router.post(
-  '/:incidentId',
+  '/:issueId',
   authenticateToken,
   async (req, res) => {
     const { description } = req.body;
-    const incidentID = req.params.incidentId.trim(); // remove any leading/trailing whitespace
+    const issueID = req.params.issueId.trim();
 
     try {
       // Find the related incident
-      const incident = await Incident.findById(incidentID);
-      if (!incident) {
+      const issue = await Issue.findById(issueID);
+      if (!issue) {
         console.log({incidentID});
-        return res.status(404).json({ error: 'Incident not found'}); ;
+        return res.status(404).json({ error: 'Issue not found'}); ;
       }
 
       // Create a new occurrence
       const newOccurrence = new Occurrence({
-        incident: incidentID,
+        user_id: req.user.id,
         description,
-        reportedBy: req.user.userID,
+        created_at: Date.now(),
+        updated_at: Date.now(),
       });
 
       await newOccurrence.save();
 
       // Add the occurrence to the incident's occurrences array
-      incident.occurrences.push(newOccurrence._id);
+      issue.occurrences.push(newOccurrence._id);
       await incident.save();
 
       res.status(201).json({ message: 'Occurrence created', occurrenceId: newOccurrence._id });
@@ -48,19 +48,49 @@ router.post(
   }
 );
 // find all occurances for a specific incident
-router.get('/incidents/:id/occurrences', authenticateToken, async (req, res) => {
+router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
   try {
-    const incidentID = req.params.id;
-    const incident = await Incident.findById(incidentID).populate('occurrences');
-    
-    if (!incident) {
-      return res.status(404).json({ error: 'Incident not found' });
+    const issueID = req.params.id; 
+    const issue = await Issue.findById(issueID);
+
+    if (!issue) {
+      return res.status(404).json({ error: 'Issue not found' });
     }
 
-    res.status(200).json(incident.occurrences);
+    
+    res.status(200).json(issue.occurrences);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching occurrences', details: error.message });
   }
 });
+
+
+
+router.delete('/issues/:issueId/occurrences/:occurrenceId', authenticateToken, async (req, res) => {
+  try{
+    const{issueId, occurrenceId} = req.params;
+   
+
+  const  issue = await Issue.findById(issueId);
+  if(!issue){
+    return res.status(404).json({error: 'Issue not found'});
+  }
+  const occurrence = issue.occurrences.id(occurrenceId);
+  if (!occurrence){
+    return res.status(404).json({error: 'Occurrence not found'}); 
+   }
+  if (occurrence.user_id.toString() !== req.user.id|| req.user.role !== 'admin'){
+    return res.status(403).json({error: 'You are not authorised to delete this occurrence'});
+    }
+    occurrence.remove();
+
+    await issue.save();
+    res.status(200).json({message: 'Occurrence deleted'});
+  } catch (error){
+    res.status(500).json({error: 'Error deleting occurrence', details: error.message});
+
+
+  }
+}); 
 
 module.exports = router;
