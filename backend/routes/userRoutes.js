@@ -11,7 +11,7 @@
 
 require('dotenv').config();
 const express = require('express');
-const User = require('../Schemas/User');
+const User = require('../models/User');
 const authenticateToken = require('../middleware/authenticateToken');
 const router = express.Router();
 const bcrypt = require('bcrypt');

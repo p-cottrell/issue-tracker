@@ -1,5 +1,5 @@
 /**
- * Incident Management Routes
+ * Issue Management Routes
  *
  * This module defines routes for creating, retrieving, updating, and deleting issues
  * Each route uses JWT-based authentication to ensure that only authorised users can
@@ -15,7 +15,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const authenticateToken = require('../middleware/authenticateToken');
-const Issue = require('../schemas/Issue');
+const Issue = require('../models/Issue');
 
 const router = express.Router();
 
@@ -26,9 +26,9 @@ const router = express.Router();
  * description, and location for the incident. The incident is associated with the authenticated
  * user's ID and stored in the database.
  *
- * @name POST /incidents
+ * @name POST /issues
  * @function
- * @memberof module:routes/incidents
+ * @memberof module:routes/issues
  * @param {Object} req.body - The incident data (title, description, location).
  * @param {Object} res - The response object.
  */

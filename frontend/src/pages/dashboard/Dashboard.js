@@ -3,10 +3,10 @@
  *
  * This component fetches issues from an API and displays them in a list format.
  *
- * - Uses `axios` to make a GET request to `API_URL/incidents`, including cookies for authentication.
+ * - Uses `axios` to make a GET request to `API_URL/issues`, including cookies for authentication.
  * - The fetched data is stored in the `issues` state using `useState` hook.
  * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
- * - Each incident is displayed with its title, description, location, and formatted date.
+ * - Each issue is displayed with its title, description, location, and formatted date.
  *
  * Usage:
  * - Import this component and include it in a parent component or route.
@@ -27,9 +27,9 @@ const Dashboard = () => {
         // configure the API depending on the environment
         const API_URL = process.env.API_URL || 'http://localhost:5000';
 
-        const fetchIncidents = async () => {
+        const fetchIssues = async () => {
             try {
-                const response = await axios.get(`${API_URL}/incidents`, {
+                const response = await axios.get(`${API_URL}/api/issues`, {
                     withCredentials: true,
                 });
                 setIssues(response.data);
@@ -38,7 +38,7 @@ const Dashboard = () => {
             }
         };
 
-        fetchIncidents();
+        fetchIssues();
     }, []);
 
     return (
@@ -47,12 +47,12 @@ const Dashboard = () => {
                 <h1>Welcome to the Intermittent Issue Tracker</h1>
                 <p>Track your issues effortlessly.</p>
                 <ul>
-                    {issues.map(incident => (
-                        <li key={incident._id}>
-                            <h3>{incident.title}</h3>
-                            <p><strong>Description:</strong> {incident.description}</p>
-                            <p><strong>Location:</strong> {incident.location}</p>
-                            <p><strong>Date:</strong> {new Date(incident.date).toLocaleString()}</p>
+                    {issues.map(issue => (
+                        <li key={issue._id}>
+                            <h3>{issue.title}</h3>
+                            <p><strong>Description:</strong> {issue.description}</p>
+                            <p><strong>Location:</strong> {issue.location}</p>
+                            <p><strong>Date:</strong> {new Date(issue.date).toLocaleString()}</p>
                         </li>
                     ))}
                 </ul>
