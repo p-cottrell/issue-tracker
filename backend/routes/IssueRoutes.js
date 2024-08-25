@@ -29,7 +29,7 @@ const router = express.Router();
  * @name POST /issues
  * @function
  * @memberof module:routes/issues
- * @param {Object} req.body - The incident data (title, description, location).
+ * @param {Object} req.body - The issue data (title, description, location).
  * @param {Object} res - The response object.
  */
 

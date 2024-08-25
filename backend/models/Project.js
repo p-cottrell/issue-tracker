@@ -10,9 +10,9 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  created_at: { 
-    type: Date, 
-    default: Date.now 
+  created_at: {
+    type: Date,
+    default: Date.now
   },
   status_types: [
     {
@@ -21,7 +21,7 @@ const projectSchema = new mongoose.Schema({
         ref: 'Project',
         required: true,
       },
-      
+
         status_name: {
         type: String,
         required: true,
