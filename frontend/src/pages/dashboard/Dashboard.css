@@ -1,49 +1,22 @@
-/* CSS HEX 
---rich-black: #01161eff;
---midnight-green: #124559ff;
---air-force-blue: #598392ff;
---ash-gray: #aec3b0ff;
---beige: #eff6e0ff;
-*/
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #01161E;
-    margin: 0;
-    min-height: 100vh;
-}
-
-.home-wrapper {
+.dashboard-wrapper {
     display: flex;
     justify-content: center;
     align-items: flex-start;
     padding-top: 20px;
     width: 90%;
-    margin: 0 auto; /* Center the wrapper horizontally */
+    margin: 0 auto;
 }
 
-.home-container {
+.dashboard-container {
     width: 90%;
     max-width: 1200px;
     padding: 20px;
     justify-content: center;
     flex-grow: 1;
-    background-color: #124559;
+    background-color: var(--green);
+    border-radius: 8px;
 }
 
-h1 {
-    color: #AEC3B0;
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    text-align: left;
-}
-
-h2 {
-    color: #AEC3B0;
-    font-size: 1.2em;
-    margin-bottom: 20px;
-    text-align: left;
-}
 
 .user-info-container {
     display: flex;
@@ -52,18 +25,18 @@ h2 {
     margin-bottom: 20px;
 }
 
-.add-button {
+.add-issue-button {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
-    cursor: pointer;
-    background-color: #598392ff;
-    color: white;
+    background-color: var(--air-force-blue) ;
+    color: var(--beige);
     font-size: 1em;
 }
 
-.add-button:hover {
-    background-color: #01161eff;
+.add-issue-button:hover {
+    background-color: var(--black);
+    cursor: pointer;
 }
 
 .issues-container {
@@ -73,18 +46,6 @@ h2 {
     justify-content: center;
     align-items: center;
     justify-items: center;
-}
-
-/* Loading container */
-.loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-.loading-text {
-    font-size: 24px;
 }
 
 /* Responsive design */

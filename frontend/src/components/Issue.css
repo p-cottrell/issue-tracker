@@ -1,7 +1,7 @@
 .issue-container {
-    background-color: #eff6e0ff;
+    background-color: var(--beige);
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 5px #00000f;
     padding: 10px;
     margin-bottom: 15px;
     display: flex;
@@ -9,15 +9,6 @@
     width: 300px;
     height: 550px;
     position: relative;
-}
-
-/* Alternating background color for even/odd issues */
-.issue-container.even {
-    background-color: #f1f1f1;
-}
-
-.issue-container.odd {
-    background-color: #ffffff;
 }
 
 /* Status at the top-right corner */
@@ -28,7 +19,7 @@
     padding: 5px 10px;
     border-radius: 15px;
     font-size: 12px;
-    color: rgb(2, 0, 0);
+    color: var(--rich-black);
 }
 
 .issue-status.completed {
@@ -38,7 +29,6 @@
 .issue-status.cancelled {
     background-color: #ff0000;
 }
-
 
 .issue-status.in-progress{
     background-color: #f39c12;
@@ -51,15 +41,25 @@
 /* Icon and Title */
 .issue-header {
     display: flex;
-    align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .issue-icon {
     width: 32px;
     height: 32px;
+    margin-top: 30px;
     margin-right: 10px;
-    padding-top: 30px;
+    padding: 5px;
+    background-color: var(--air-force-blue);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
 }
 
 .issue-title {
@@ -77,9 +77,13 @@
 
 /* Description */
 .issue-description {
-    font-size: 14px;
-    margin-bottom: 5px;
-    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    margin: 0 0 10px;
 }
 
 /* Reference */
@@ -101,9 +105,23 @@
     margin-bottom: 10px;
 }
 
-/* View more link */
+/* View more button */
 .issue-view-more {
     font-size: 14px;
-    color: #3498db;
+    color: white;
+    background-color: #598392ff;
     text-align: center;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+}
+
+.issue-view-more:hover {
+    background-color: #01161eff;
+    cursor: pointer;
 }
