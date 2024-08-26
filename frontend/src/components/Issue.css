@@ -1,37 +1,100 @@
-.container {
-    display: flex;
-    width: 100%;
-    padding: 5px;
-}
-
-.titleDescriptionContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: start;
-    width: 100%;
-    padding: 5px;
-}
-
-.issueTimeContainer {
+.issue-container {
+    background-color: #eff6e0ff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    margin-bottom: 15px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
-    text-align: start;
-    width: 40%;
-    padding: 5px;
+    width: 300px;
+    height: 550px;
+    position: relative;
 }
 
-p {
-    color: #000000da;
-    margin-top: 10px;
+/* Alternating background color for even/odd issues */
+.issue-container.even {
+    background-color: #f1f1f1;
+}
+
+.issue-container.odd {
+    background-color: #ffffff;
+}
+
+/* Status at the top-right corner */
+.issue-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    color: white;
+}
+
+.issue-status.completed {
+    background-color: #27ae60;
+}
+
+.issue-status.pending {
+    background-color: #f39c12;
+}
+
+/* Icon and Title */
+.issue-header {
+    display: flex;
+    align-items: center;
     margin-bottom: 10px;
-    font-size: 1em;
 }
 
-a {
-    font-weight: bold;
+.issue-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    padding-top: 30px;
 }
 
-#more {display: none;}
+.issue-title {
+    font-size: 18px;
+    margin: 0;
+    padding-top: 30px;
+    text-align: left;
+}
+
+/* Date */
+.issue-date {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+/* Description */
+.issue-description {
+    font-size: 14px;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+/* Reference */
+.issue-reference {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Attachments */
+.issue-attachments {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+/* Image */
+.issue-image {
+    width: 100%;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* View more link */
+.issue-view-more {
+    font-size: 14px;
+    color: #3498db;
+    text-align: center;
+}

@@ -3,53 +3,59 @@
  *
  * This component fetches issues from an API and displays them in a list format.
  *
- * - Uses `axios` to make a GET request to `API_URL/issues`, including cookies for authentication.
+ * - Uses apiClient to make a GET request to `API_URL/issues`
  * - The fetched data is stored in the `issues` state using `useState` hook.
  * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
  * - Each issue is displayed with its title, description, location, and formatted date.
- *
  *
  * @returns The rendered dashboard component.
  */
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
-import axios from 'axios';
 import Issue from '../../components/Issue';
+import apiClient from '../../api/apiClient';
+import '../../styles/styles.css';
+import '../../styles/loadingRing.css';
 
 const Dashboard = () => {
     const [issues, setIssues] = useState([]);
+    const [fetched, setFetched] = useState(false); // Initialize to false
     let index = 0;
 
     useEffect(() => {
-        // configure the API depending on the environment
-        const API_URL = process.env.API_URL || 'http://localhost:5000';
-
-
         const fetchIssues = async () => {
             try {
-                const response = await axios.get(`${API_URL}/api/issues`, {
-                    withCredentials: true,
-                });
+                const response = await apiClient.get('api/issues');
                 setIssues(response.data);
+                setFetched(true); // Set fetched to true after data is successfully fetched
             } catch (error) {
                 console.error('Error fetching issues:', error);
+                setFetched(true); // Set fetched to true to avoid infinite loading in case of an error
             }
         };
 
         fetchIssues();
     }, []);
 
-
-    function deleteHandler(key) {
-        return
+    if (!fetched) {
+        return (
+            <div className="loading-container">
+                <div className="loading-text">
+                    <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+                </div>
+            </div>
+        );
     }
 
+    function deleteHandler(key) {
+        // Placeholder for delete logic
+    }
 
     return (
         <div className="home-wrapper">
             <div className="home-container">
                 <h1>Intermittent Issue Tracker</h1>
-                <p>Track your issues effortlessly.</p>
+                <h2>Track your issues effortlessly.</h2>
 
                 <div className="user-info-container">
                     <button name="add-issue" value="add-issue" className="add-button">+ New Issue</button>
@@ -57,15 +63,15 @@ const Dashboard = () => {
 
                 <div className="issues-container">
                     {issues.map((issue) => {
-                            index++;
-                                return (
-                                    <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} />
-                                );
-                        })}
+                        index++;
+                        return (
+                            <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} />
+                        );
+                    })}
                 </div>
             </div>
         </div>
     );
-    }
+}
 
 export default Dashboard;

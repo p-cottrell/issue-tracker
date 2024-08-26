@@ -1,11 +1,11 @@
 /**
- * User Authentication and Management Routes
+ * User  Management Routes
  *
  * This module defines routes for user registration and login.
  *
- * IMPORTANT: AuthenticateToken authenticates using cookies so when calling the API on
- * the front-end you must use {withCredentials: true} to ensure authentication cookies
- * are passed too.
+* IMPORTANT: AuthenticateToken authenticates using cookies so when calling the API on
+ * the front-end you must use apiClient (api/apiClient) to ensure authentication cookies
+ * are passed too
  *
  */
 
@@ -14,80 +14,14 @@ const express = require('express');
 const User = require('../models/User');
 const RefreshToken = require('../models/refreshToken');
 const authenticateToken = require('../middleware/authenticateToken');
-const generateRefreshToken = require('../middleware/generateRefreshToken');
+const generateRefreshToken = require('../utils/generateRefreshToken');
+const validateEmail = require("..utils/validateEmail");
+const validatePassword = require("..utils/validatepassword");
+const isEmailTaken = require("..utils/isEmailTaken");
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-/**
- * Validate the strength of the user's password.
- *
- * This function checks if the provided password meets specific criteria:
- * - At least 8 characters long
- * - Contains at least 1 uppercase letter
- * - Contains at least 1 special character
- * - Contains at least 1 number
- * - Does not contain any spaces
- *
- * @param {string} password - The password to validate.
- * @throws Will throw an error if the password does not meet the criteria.
- */
-function validatePassword(password) {
-  const minLength = 8;
-  const minUppercase = 1;
-  const specialChars = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
-  const uppercaseChars = /[A-Z]/;
-  const numberChars = /[0-9]/;
-  const spaces = /\s/;
-
-  if (password.length < minLength) {
-    throw new Error(`Password must be at least ${minLength} characters`);
-  }
-  if (!specialChars.test(password)) {
-    throw new Error('Password must contain at least one special character');
-  }
-
-  if (!uppercaseChars.test(password)) {
-    throw new Error(
-      `Password must contain at least ${minUppercase} uppercase character`
-    );
-  }
-  if (!numberChars.test(password)) {
-    throw new Error('Password must contain at least one number');
-  }
-
-  if (spaces.test(password)) {
-    throw new Error('Password cannot contain spaces');
-  }
-}
-
-/**
- * Validate the format of the user's email.
- *
- * This function checks if the provided email matches the expected email pattern.
- *
- * @param {string} email - The email to validate.
- * @throws Will throw an error if the email format is invalid.
- */
-function validateEmail(email) {
-  const emailChars = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-  if (!emailChars.test(email)) {
-    throw new Error('Invalid email');
-  }
-}
-
-/**
- * Check if an email is already associated with an existing user.
- *
- * This function queries the database to determine if a user with the given email already exists.
- *
- * @param {string} email - The email to check.
- * @returns {<boolean>} - Returns true if the email is taken, false otherwise.
- */
-async function isEmailTaken(email) {
-  const user = await User.findOne({ email });
-  return !!user;
-}
 
 /**
  * Route to register a new user.
@@ -149,7 +83,6 @@ router.post('/register', async (req, res) => {
       sameSite: 'Strict', // Ensures the cookie is only sent with same-site requests (mitigates CSRF attacks)
       maxAge: 3600000, // 1 hour
     });
-    console.log(token) // DEBUG
 
     // Generate a refresh token for the user.
     const refreshToken = await generateRefreshToken(newUser._id);
@@ -240,7 +173,17 @@ router.post('/login', async (req, res) => {
 
 });
 
-
+/**
+ * Route to log out a user.
+ *
+ * On logout the acces token and the refresh token are destroyed.
+ *
+ * @name POST /users/logout
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.cookies - The cookie containing the refresh token.
+ * @param {Object} res - The response object.
+ */
 router.post('/logout', authenticateToken, async (req, res) => {
   const { refreshToken } = req.cookies;
 
@@ -254,6 +197,28 @@ router.post('/logout', authenticateToken, async (req, res) => {
     res.status(500).send('Error during logout');
   }
 });
+
+
+//
+/**
+ * Route to validate a user token
+ *
+ * This route is used to validate users so they can't access protected routes,
+ * Used in protectedRoutes.js
+ *
+ * @name POST /users/check_token
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} res - The response object.
+ */
+router.get('/check_token', authenticateToken, (req, res) => {
+  // If the request reaches here, it means the token is valid
+  return res.status(200).json({ message: 'Token is valid' });
+});
+
+module.exports = router;
+
+
 
 // Route to retrieve all users if are an admin dude
 router.get('/all', async (req, res) => {

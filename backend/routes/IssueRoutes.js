@@ -6,7 +6,7 @@
  * interact with the issues.
  *
  * IMPORTANT: AuthenticateToken authenticates using cookies so when calling the API on
- * the front-end you must use {withCredentials: true} to ensure authentication cookies
+ * the front-end you must use apiClient (api/apiClient) to ensure authentication cookies
  * are passed too.
  *
  */
@@ -32,20 +32,16 @@ const router = express.Router();
  * @param {Object} req.body - The issue data (title, description, location).
  * @param {Object} res - The response object.
  */
-
-
-
-
 router.post('/', authenticateToken, async (req, res) => {
   const { title, description, status_id, charm, project_id } = req.body;
   const reporter_id = req.user.id;
 
   const issueData ={
     reporter_id,
-    title, 
-    description, 
-    charm, 
-  }; 
+    title,
+    description,
+    charm,
+  };
 
   if (status_id) {
     issueData.status_id = status_id;
