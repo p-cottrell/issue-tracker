@@ -53,6 +53,12 @@ p {
     background-color: #0056b3;
 }
 
+.add-button {
+    display: flex;
+    justify-content: flex-start;
+    max-width: 100px;
+}
+
 /* Media queries for responsive design */
 
 /*SMALL SCREENS*/
