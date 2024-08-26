@@ -11,11 +11,7 @@ export default function Issue({ data, index, deleteHandler }) {
 
             {/* Icon and Title */}
             <div className="issue-header">
-                <img 
-                    src="https://via.placeholder.com/32" 
-                    alt="Issue Icon" 
-                    className="issue-icon"
-                />
+                <div className="issue-icon">{data.charm}</div>
                 <h3 className="issue-title">{data.title}</h3>
             </div>
 
