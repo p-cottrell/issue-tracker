@@ -68,6 +68,10 @@ const Dashboard = () => {
         return
     }
 
+    function clickHandler(key) {
+        return
+    }
+
     // Adds an issue to the DB.
     function addHandler(data) {
         let title = data.title;
