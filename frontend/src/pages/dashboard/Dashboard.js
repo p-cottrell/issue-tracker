@@ -129,7 +129,7 @@ const Dashboard = () => {
                 <h2>Track your issues effortlessly.</h2>
 
                 <div className="user-info-container">
-                    <button name="add-issue" value="add-issue" className="add-issue-button">+ New Issue</button>
+                <button name="add-issue" value="add-issue" className="add-button" onClick={addHandler}>+ New Issue</button>
                 </div>
 
                 <div className="issues-container">
