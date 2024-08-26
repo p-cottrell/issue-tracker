@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../api/apiClient';
 
 import './Register.css';
 
@@ -11,14 +11,11 @@ const Register = () => {
 
     const navigate = useNavigate();
 
-    // configure the API depending on the environment
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
     const onSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${API_URL}/api/users/register`, {
+            const response = await apiClient.post('/api/users/register', {
                 username,
                 email,
                 password,
