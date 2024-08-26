@@ -27,7 +27,6 @@ const Dashboard = () => {
     const [issues, setIssues] = useState([]);
 
     //let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
-    
     const [fetched, setFetched] = useState(false); // Initialize to false
     let index = 0;
 
@@ -78,9 +77,8 @@ const Dashboard = () => {
         setShowPopup(false);
 
         // configure the API depending on the environment
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
         try {
-            const response = axios.post(`${API_URL}/issues`, {
+            const response = apiClient.post('api/issues', {
             title,
             description,
             location,
@@ -98,7 +96,7 @@ const Dashboard = () => {
         // let id = data._id;
         setShowPopup(false);
         console.log(data._id, " Deleted!")
-        
+
         // // configure the API depending on the environment
         // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
         // try {
@@ -107,13 +105,13 @@ const Dashboard = () => {
         // }, {withCredentials: true});
 
         // console.log('Issue deleted:', response.data);
-        
+
         // } catch (error) {
         //     console.log('There was an error deleting the issue:', error);
         // }
 
     }
-    
+
     if (!fetched) {
         return (
             <div className="loading-container">
@@ -123,11 +121,6 @@ const Dashboard = () => {
             </div>
         );
     }
-
-    function deleteHandler(key) {
-        // Placeholder for delete logic
-    }
-
 
     return (
         <div className="dashboard-wrapper">
