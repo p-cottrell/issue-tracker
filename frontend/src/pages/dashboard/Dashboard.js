@@ -136,7 +136,7 @@ const Dashboard = () => {
                     {issues.map((issue) => {
                         index++;
                         return (
-                            <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} />
+                            <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} clickHandler={clickHandler}/>
                         );
                     })}
                 </div>
