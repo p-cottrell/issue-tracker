@@ -11,6 +11,7 @@
  * @returns The rendered dashboard component.
  */
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
 import Popup from '../../components/Popup';

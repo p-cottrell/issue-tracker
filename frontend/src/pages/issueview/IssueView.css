@@ -1,0 +1,17 @@
+.issue-view {
+    padding: 20px;
+  }
+  
+  .issue-view h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  
+  .issue-view p {
+    margin-bottom: 5px;
+  }
+  
+  .issue-view h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
