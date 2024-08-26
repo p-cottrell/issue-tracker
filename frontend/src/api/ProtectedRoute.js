@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import apiClient from '../api/apiClient';
+import apiClient from './apiClient';
 import '../styles/styles.css';
 import '../styles/loadingRing.css';
 /**
