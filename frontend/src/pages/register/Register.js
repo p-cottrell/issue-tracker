@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState} from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
-
 import './Register.css';
 
 const Register = () => {
-    const [username, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
     const navigate = useNavigate();
+    const location = useLocation();
+    const [username, setName] = useState('');
+    const [email, setEmail] = useState(location.state?.email || '');  // Pre-fill email if available
+    const [password, setPassword] = useState('');
 
     const onSubmit = async (e) => {
         e.preventDefault();

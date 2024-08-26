@@ -1,6 +1,6 @@
 
 .lds-ring {
-    color: black;
+  color: var(--air-force-blue);
 }
 .lds-ring div {
   box-sizing: border-box;
@@ -40,4 +40,16 @@
     transform: rotate(360deg);
   }
 }
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height to center vertically */
+}
+
+.loading-text {
+  font-size: 24px; /* Adjust the size of the loading text or icon */
+}
+
 

@@ -14,7 +14,10 @@ import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
 import apiClient from '../../api/apiClient';
-import '../../styles/styles.css';
+
+
+// .css imports
+import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
 const Dashboard = () => {
@@ -52,13 +55,13 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="home-wrapper">
-            <div className="home-container">
+        <div className="dashboard-wrapper">
+            <div className="dashboard-container">
                 <h1>Intermittent Issue Tracker</h1>
                 <h2>Track your issues effortlessly.</h2>
 
                 <div className="user-info-container">
-                    <button name="add-issue" value="add-issue" className="add-button">+ New Issue</button>
+                    <button name="add-issue" value="add-issue" className="add-issue-button">+ New Issue</button>
                 </div>
 
                 <div className="issues-container">
