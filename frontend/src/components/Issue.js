@@ -1,12 +1,27 @@
 import React from "react";
 import "./Issue.css";
 
+
+
 export default function Issue({ data, index, deleteHandler }) {
+    const getStatusClass = () => {
+        if (data.status_id === 1) return 'completed';
+        if (data.status_id === 2) return 'in-progress';
+        if (data.status_id === 3) return 'cancelled';
+        return 'pending';  // Default class if status_id doesn't match 1, 2, or 3
+    };
+
+    const getStatusText = () => {
+        if (data.status_id === 1) return 'Complete';
+        if (data.status_id === 2) return 'In Progress';
+        if (data.status_id === 3) return 'Cancelled';
+        return 'Pending';  // Default value if status_id doesn't match 1, 2, or 3
+    };
     return (
         <div className={`issue-container ${index % 2 === 0 ? 'even' : 'odd'}`}>
             {/* Status at the top-right corner */}
-            <div className={`issue-status ${data.status === 'Completed' ? 'completed' : 'pending'}`}>
-                {data.status || 'Pending'}
+            <div className={`issue-status ${getStatusClass()}`}>
+                {getStatusText()}
             </div>
 
             {/* Icon and Title */}
@@ -34,9 +49,9 @@ export default function Issue({ data, index, deleteHandler }) {
             <p className="issue-attachments">
                 <strong>Attachment(s):</strong>
             </p>
-            <img 
+            <img
                 src={data.image || 'https://via.placeholder.com/250x150'} 
-                alt="Attachment" 
+                alt="Attachment"
                 className="issue-image"
             />
 
