@@ -3,24 +3,20 @@
  *
  * This component fetches issues from an API and displays them in a list format.
  *
- * - Uses `axios` to make a GET request to `API_URL/incidents`, including cookies for authentication.
+ * - Uses apiClient to make a GET request to `API_URL/issues`
  * - The fetched data is stored in the `issues` state using `useState` hook.
  * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
- * - Each incident is displayed with its title, description, location, and formatted date.
- *
- * Usage:
- * - Import this component and include it in a parent component or route.
- * - Ensure the server endpoint and authentication are correctly configured.
- * - Add relevant CSS in `Dashboard.css` to style the component.
+ * - Each issue is displayed with its title, description, location, and formatted date.
  *
  * @returns The rendered dashboard component.
  */
-
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
 import Popup from '../../components/Popup';
+import apiClient from '../../api/apiClient';
+import '../../styles/styles.css';
+import '../../styles/loadingRing.css';
 
 
 const Dashboard = () => {
@@ -29,25 +25,27 @@ const Dashboard = () => {
     const [popupType, setPopupType] = useState(null);
     const [selectedIssue, setSelectedIssue] = useState(null);
     const [issues, setIssues] = useState([]);
-    let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
-    
-    useEffect(() => {
-        // configure the API depending on the environment
-        const API_URL = process.env.API_URL || 'http://localhost:5000';
 
-        const fetchIncidents = async () => {
+    //let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
+    
+    const [fetched, setFetched] = useState(false); // Initialize to false
+    let index = 0;
+
+    useEffect(() => {
+        const fetchIssues = async () => {
             try {
-                const response = await axios.get(`${API_URL}/incidents`, {
-                    withCredentials: true,
-                });
+                const response = await apiClient.get('api/issues');
                 setIssues(response.data);
+                setFetched(true); // Set fetched to true after data is successfully fetched
             } catch (error) {
                 console.error('Error fetching issues:', error);
+                setFetched(true); // Set fetched to true to avoid infinite loading in case of an error
             }
         };
 
-        fetchIncidents();
+        fetchIssues();
     }, []);
+
 
     // Opens the ADD ISSUE popup
     function openAddHandler() {
@@ -82,7 +80,7 @@ const Dashboard = () => {
         // configure the API depending on the environment
         const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
         try {
-            const response = axios.post(`${API_URL}/incidents`, {
+            const response = axios.post(`${API_URL}/issues`, {
             title,
             description,
             location,
@@ -116,31 +114,43 @@ const Dashboard = () => {
 
     }
     
-    return (
-        <div className="home-wrapper">
-            <div className="home-container">
-                <h1>Intermittent Issue Tracker</h1>
-                <p>Track your issues effortlessly.</p>
-
-                <div className="user-info-container">
-                    <button name="add-issue" value="add-issue" className="add-button" onClick={openAddHandler}>+ New Issue</button>
-                    
-                </div>
-
-                {/* Displays all issues belonging to the logged-in user. */}
-                <div className="issues-container">
-                    {issues.map((incident) => {
-                            index++;
-                                return (
-                                    <Issue key={incident._id} index={index} data={incident} deleteHandler={openDeleteHandler} clickHandler={clickIssueHandler}/>
-                                );
-                        })}
+    if (!fetched) {
+        return (
+            <div className="loading-container">
+                <div className="loading-text">
+                    <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
                 </div>
             </div>
+        );
+    }
 
+    function deleteHandler(key) {
+        // Placeholder for delete logic
+    }
+
+
+    return (
+        <div className="dashboard-wrapper">
+            <div className="dashboard-container">
+                <h1>Intermittent Issue Tracker</h1>
+                <h2>Track your issues effortlessly.</h2>
+
+                <div className="user-info-container">
+                    <button name="add-issue" value="add-issue" className="add-issue-button">+ New Issue</button>
+                </div>
+
+                <div className="issues-container">
+                    {issues.map((issue) => {
+                        index++;
+                        return (
+                            <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} />
+                        );
+                    })}
+                </div>
+            </div>
             {showPopup ? <Popup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} selectedIssue={selectedIssue}/> : null}
         </div>
     );
-    }
+}
 
 export default Dashboard;

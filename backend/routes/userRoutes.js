@@ -1,92 +1,27 @@
 /**
- * User Authentication and Management Routes
+ * User  Management Routes
  *
  * This module defines routes for user registration and login.
  *
- * IMPORTANT: AuthenticateToken authenticates using cookies so when calling the API on
- * the front-end you must use {withCredentials: true} to ensure authentication cookies
- * are passed too.
+* IMPORTANT: AuthenticateToken authenticates using cookies so when calling the API on
+ * the front-end you must use apiClient (api/apiClient) to ensure authentication cookies
+ * are passed too
  *
  */
 
 require('dotenv').config();
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const RefreshToken = require('../models/refreshToken');
+const authenticateToken = require('../middleware/authenticateToken');
+const generateRefreshToken = require('../utils/generateRefreshToken');
+const validateEmail = require("..utils/validateEmail");
+const validatePassword = require("..utils/validatepassword");
+const isEmailTaken = require("..utils/isEmailTaken");
+const router = express.Router();
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const User = require('../models/User');
-const authenticateToken = require('../middleware/authenticateToken');
-const router = express.Router();
-
-/**
- * Validate the strength of the user's password.
- *
- * This function checks if the provided password meets specific criteria:
- * - At least 8 characters long
- * - Contains at least 1 uppercase letter
- * - Contains at least 1 special character
- * - Contains at least 1 number
- * - Does not contain any spaces
- *
- * @param {string} password - The password to validate.
- * @throws Will throw an error if the password does not meet the criteria.
- */
-function validatePassword(password) {
-  const minLength = 8;
-  const minUppercase = 1;
-  const specialChars = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
-  const uppercaseChars = /[A-Z]/;
-  const numberChars = /[0-9]/;
-  const spaces = /\s/;
-
-  if (password.length < minLength) {
-    throw new Error(`Password must be at least ${minLength} characters`);
-  }
-  if (!specialChars.test(password)) {
-    throw new Error('Password must contain at least one special character');
-  }
-
-  if (!uppercaseChars.test(password)) {
-    throw new Error(
-      `Password must contain at least ${minUppercase} uppercase character`
-    );
-  }
-  if (!numberChars.test(password)) {
-    throw new Error('Password must contain at least one number');
-  }
-
-  if (spaces.test(password)) {
-    throw new Error('Password cannot contain spaces');
-  }
-}
-
-/**
- * Validate the format of the user's email.
- *
- * This function checks if the provided email matches the expected email pattern.
- *
- * @param {string} email - The email to validate.
- * @throws Will throw an error if the email format is invalid.
- */
-function validateEmail(email) {
-  const emailChars = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-  if (!emailChars.test(email)) {
-    throw new Error('Invalid email');
-  }
-}
-
-/**
- * Check if an email is already associated with an existing user.
- *
- * This function queries the database to determine if a user with the given email already exists.
- *
- * @param {string} email - The email to check.
- * @returns {<boolean>} - Returns true if the email is taken, false otherwise.
- */
-async function isEmailTaken(email) {
-  const user = await User.findOne({ email });
-  return !!user;
-}
 
 /**
  * Route to register a new user.
@@ -105,53 +40,74 @@ router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
+    // Validate the provided email address.
     validateEmail(email);
-    // validatePassword(password);
 
-    // Check if the provided email is already associated with an existing user
+    // Check if the email is already taken.
     if (await isEmailTaken(email)) {
       return res.status(400).json({ error: 'Email already taken' });
     }
 
-    // Hash the user's password for secure storage in the database
-    const hashedPassword = bcrypt.hashSync(password, 8);
+    // Validate the password (commented out for testing purposes).
+    // validatePassword(password);
 
-    // Create a new user instance with the provided data
-    const user = new User({ username, email, password: hashedPassword });
+    // Generate a salt for hashing the password.
+    const salt = await bcrypt.genSalt(10);
 
-    // Save the new user to the database
+    // Hash the provided password with the generated salt.
+    const hashedPassword = await bcrypt.hashSync(password, salt);
+
+    // Create a new user instance with the provided username, email, and hashed password.
+    const user = new User({
+      username,
+      email,
+      password_hash: hashedPassword,
+    });
+
+    // Save the new user to the database.
     const newUser = await user.save();
 
-    // Prepare payload data for JWT generation (includes user ID and admin status)
+    // Create a payload for the JWT, including the user's ID and role.
     const payload = {
       id: newUser._id,
-      isAdministrator: newUser.isAdministrator,
+      role: newUser.role,
     };
-    // Generate a JWT token using the payload and the application's secret key
-    const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
 
-    // Set a secure cookie with the generated JWT, which will be used for subsequent authentication
+    // Generate an access token with a 1-hour expiration time.
+    const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+    // Set a cookie with the access token.
     res.cookie('access_token', token, {
-    httpOnly: true, // Ensures the cookie cannot be accessed via JavaScript
-    secure:false, // This will only use `secure` in production (False here so we can use HTTP in development)
-    sameSite: 'Strict', // Prevent CSRF
-    maxAge: 3600000, // Cookie expiration time set to 1 hour (in milliseconds)
-});
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Only secure in production, false during development.
+      sameSite: 'Strict', // Ensures the cookie is only sent with same-site requests (mitigates CSRF attacks)
+      maxAge: 3600000, // 1 hour
+    });
 
-    // Respond with the newly created user's ID and admin status
-    return res
-      .status(201)
-      .json({
-        userID: newUser._id,
-        isAdministrator: newUser.isAdministrator,
-      });
+    // Generate a refresh token for the user.
+    const refreshToken = await generateRefreshToken(newUser._id);
+
+    // Set a cookie with the refresh token.
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Only secure in production, false during development.
+      sameSite: 'Strict', // Ensures the cookie is only sent with same-site requests (mitigates CSRF attacks)
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    console.log(refreshToken) // DEBUG
+
+    // Respond with the new user's ID and role.
+    return res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+    });
   } catch (error) {
+    // Log any errors that occur during the process and respond with a 500 status code.
     console.error('Error saving user:', error);
-    return res
-      .status(500)
-      .json({ error: 'Error saving user', details: error.message });
+    return res.status(500).json({ error: 'Error saving user', details: error.message });
   }
 });
+
 
 /**
  * Route to log in an existing user.
@@ -171,8 +127,7 @@ router.post('/login', async (req, res) => {
   // Fetch the user from DB using provided email
   const user = await User.findOne({ email });
 
-  // Validate the user
-  if (!user || !bcrypt.compareSync(password, user.password)) {
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.json({
       success: false,
       message: 'Invalid login credentials'
@@ -181,35 +136,102 @@ router.post('/login', async (req, res) => {
 
   // Prepare payload data for JWT generation
   const payload = {
-    id: user._id
+    id: user._id,
+    role: user.role,
   };
-  // Generate a JWT token using the payload and the application's secret key
-  const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET);
+
+  const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1hr'});
 
   // Set a secure cookie with the generated JWT for authentication purposes
-  res.cookie('access_token', token, {
-    httpOnly: true, // Cannot be accessed via JavaScript
-    secure:false, // Set to true in production to enforce HTTPS (false here for development)
-    sameSite: 'Strict', // Prevent CSRF
-    maxAge: 3600000, // Expires after 1 hour
-});
+  res.cookie('access_token', accessToken, {
+    httpOnly: true, // Prevents client-side JavaScript from accessing the token
+    secure : process.env.NODE_ENV === 'production', // Only secure in production, false during development.
+    sameSite: 'Strict', //mitigates CSRF attacks
+    maxAge: 3600000, // 1 hour
+  });
 
-  // Respond with a success message for front end use
+  // Check if an existing refresh token exists for the user
+  let refreshToken = await RefreshToken.findOne({ userId: user._id });
+
+  if (!refreshToken) {
+    // If no valid refresh token exists, generate a new one
+    refreshToken = await generateRefreshToken(user._id);
+  }
+
+  // Set a cookie with the refresh token.
+  res.cookie('refresh_token', refreshToken.token, {
+    httpOnly: true, // Prevents client-side JavaScript from accessing the token
+    secure: process.env.NODE_ENV === 'production', // Only secure in production, false during development.
+    sameSite: 'Strict', //mitigates CSRF attacks
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
   res.json({
     success: true,
     message: 'Login successful',
   });
+
 });
 
-// Route to retrieve all users
+/**
+ * Route to log out a user.
+ *
+ * On logout the acces token and the refresh token are destroyed.
+ *
+ * @name POST /users/logout
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.cookies - The cookie containing the refresh token.
+ * @param {Object} res - The response object.
+ */
+router.post('/logout', authenticateToken, async (req, res) => {
+  const { refreshToken } = req.cookies;
+
+  try {
+    await RefreshToken.findOneAndDelete({ token: refreshToken });
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    res.status(200).send('Logged out successfully');
+  } catch (error) {
+    console.error('Error during logout:', error);
+    res.status(500).send('Error during logout');
+  }
+});
+
+
+//
+/**
+ * Route to validate a user token
+ *
+ * This route is used to validate users so they can't access protected routes,
+ * Used in protectedRoutes.js
+ *
+ * @name POST /users/check_token
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} res - The response object.
+ */
+router.get('/check_token', authenticateToken, (req, res) => {
+  // If the request reaches here, it means the token is valid
+  return res.status(200).json({ message: 'Token is valid' });
+});
+
+module.exports = router;
+
+
+
+// Route to retrieve all users if are an admin dude
 router.get('/all', async (req, res) => {
   try {
-    // Fetch all user documents from the database
+     if (req.user?.role !== 'admin') {
+      return res.status(403).send('You are not authorised to view users');
+    }
+
     const users = await User.find({});
-    // Respond with the retrieved users
+
     res.status(200).json(users);
   } catch (error) {
-    // Handle any errors that occur during user retrieval
+
     res.status(500).json({
       error: 'Error fetching users',
       details: error.message,
@@ -221,21 +243,21 @@ router.get('/all', async (req, res) => {
 // Route to delete a user by ID (Admin only)
 router.delete('/delete/:id', authenticateToken, async (req, res) => {
   try {
-    // Check if the requesting user is an administrator
-    if (!req.user.isAdministrator) {
+
+    if ((req.user?.role !== 'admin')) {
       return res.status(403).send('You are not authorised to delete users');
     }
 
-    // Attempt to delete the user with the specified ID from the database
+
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return res.status(404).send('User not found');
     }
 
-    // Respond with a confirmation message if the user is successfully deleted
+
     res.status(200).send('User deleted');
   } catch (error) {
-    // Handle any errors that occur during user deletion
+
     res.status(500).json({
       error: 'Error deleting user',
       details: error.message,
@@ -243,5 +265,6 @@ router.delete('/delete/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Export the router to be used in other parts of the application
+
+
 module.exports = router;

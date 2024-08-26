@@ -1,91 +1,59 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
-}
-
-.home-wrapper {
+.dashboard-wrapper {
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start;
+    padding-top: 20px;
+    width: 90%;
+    margin: 0 auto;
 }
 
-.home-container {
-    background-color: #fff;
-    padding: 40px;
+.dashboard-container {
+    width: 90%;
+    max-width: 1200px;
+    padding: 20px;
+    justify-content: center;
+    flex-grow: 1;
+    background-color: var(--green);
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 80%;
-    max-width: 600px;
 }
 
-h1 {
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 2em;
-}
 
-p {
-    color: #666;
-    margin-bottom: 30px;
-    font-size: 1.2em;
-}
-
-.buttons {
+.user-info-container {
     display: flex;
-    justify-content: center;
-    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
-.btn {
+.add-issue-button {
     padding: 10px 20px;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: white;
+    border-radius: 5px;
+    background-color: var(--air-force-blue) ;
+    color: var(--beige);
     font-size: 1em;
 }
 
-.btn:hover {
-    background-color: #0056b3;
+.add-issue-button:hover {
+    background-color: var(--black);
+    cursor: pointer;
 }
 
-.add-button {
-    display: flex;
-    justify-content: flex-start;
-    max-width: 100px;
+.issues-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
 }
 
-/* Media queries for responsive design */
+/* Responsive design */
 
-/*SMALL SCREENS*/
+/* SMALL SCREENS */
 @media (max-width: 600px) {
     .home-container {
-        width: 90%;
-        padding: 20px;
-    }
-
-    h1 {
-        font-size: 1.5em;
-    }
-
-    p {
-        font-size: 1em;
-    }
-
-    .btn {
-        padding: 8px 16px;
-        font-size: 0.9em;
-    }
-}
-
-/*MEDIUM SCREENS*/
-@media (min-width: 601px) and (max-width: 900px) {
-    .home-container {
-        width: 70%;
+        padding: 10px;
     }
 
     h1 {
@@ -93,18 +61,34 @@ p {
     }
 
     p {
+        font-size: 1em;
+    }
+
+    .add-button {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+}
+
+/* MEDIUM SCREENS */
+@media (min-width: 601px) and (max-width: 900px) {
+    h1 {
+        font-size: 2em;
+    }
+
+    p {
         font-size: 1.1em;
     }
 
-    .btn {
+    .add-button {
         padding: 9px 18px;
         font-size: 0.95em;
     }
 }
 
-/*LARGE SCREENS*/
+/* LARGE SCREENS */
 @media (min-width: 901px) {
     .home-container {
-        width: 50%;
+        padding: 20px;
     }
 }

@@ -1,12 +1,10 @@
 const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const userRoutes = require('./routes/userRoutes');
-const incidentRoutes = require('./routes/incidentRoutes');
-const occurrenceRoutes = require('./routes/occurrenceRoutes');
-
+const IssueRoutes = require('./routes/IssueRoutes');
+const UserRoutes = require('./routes/userRoutes');
+const OccurrenceRoutes = require('./routes/occurrenceRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -25,10 +23,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Define Routes
-app.use('/users', userRoutes);
-app.use('/incidents', incidentRoutes);
-app.use('/occurrences', occurrenceRoutes);
+app.use('/api/issues', IssueRoutes);
+app.use('/api/users', UserRoutes);
+app.use('/api/occurrences', OccurrenceRoutes);
 
+// Handle 404 errors for undefined routes
 app.use((req, res) => {
     res.status(404).send('Route not found');
 });
@@ -39,7 +38,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-// Port configure
+// Port configuration
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

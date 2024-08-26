@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../api/apiClient';
 import "./Login.css";
-
-
-
-
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -15,8 +11,6 @@ const Login = () => {
     // useNavigate to navigate to different routes
     const navigate = useNavigate();
 
-    // configure the API depending on the environment
-    const API_URL = process.env.API_URL || 'http://localhost:5000';
     // Form submission handler
     const onSubmit = async (e) => {
         e.preventDefault(); // Prevent the default form submission behavior
@@ -29,14 +23,15 @@ const Login = () => {
 
         try {
             // Make an API request to the server to log in the user
-            const response = await axios.post(`${API_URL}/users/login`, {
+            const response = await apiClient.post('/api/users/login', {
                 email,
                 password,
-            }, {withCredentials: true});
+            });
+
 
             // If successful, log the response and navigate to the dashboard
             if (response.data.success) {
-                console.log('User Logged In:', response.data);
+
                 navigate('/dashboard');
 
             } else {

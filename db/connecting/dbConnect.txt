@@ -1,0 +1,4 @@
+mongosh "mongodb+srv://intermittentissuetracke.7oyxe.mongodb.net/" --apiVersion 1 --username iit
+LfdTdr1hEKkSNIoF
+
+mongodb+srv://iit:LfdTdr1hEKkSNIoF@intermittentissuetracke.7oyxe.mongodb.net/?retryWrites=true&w=majority&appName=IntermittentIssueTracker
