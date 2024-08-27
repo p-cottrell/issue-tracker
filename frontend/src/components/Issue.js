@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 // .css imports
 import "./Issue.css";
@@ -15,8 +15,6 @@ function formatDate(dateString) {
 }
 
 export default function Issue({ data, deleteHandler }) {
-    const [image, setImage] = useState([]);
-    const [fetched, setFetched] = useState(false); // Initialize to false
 
     // This takes the status id and gives it a class name for colouring
     const getStatusClass = () => {
@@ -34,29 +32,6 @@ export default function Issue({ data, deleteHandler }) {
         return 'Pending';  // Default value if status_id doesn't match 1, 2, or 3
     };
 
-    useEffect(() => {
-        const fetchImage = async () => {
-            try {
-                const response = 'https://loremflickr.com/250/150/kitten';
-                setImage(response);
-                setFetched(true);
-            } catch (error) {
-                console.error('Error fetching image:', error);
-            }
-        };
-
-        fetchImage();
-    }, []);
-
-    if (!fetched) {
-        return (
-            <div className="loading-container">
-                <div className="loading-text">
-                    <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
-                </div>
-            </div>
-        );
-    }
     return (
         <div className={`issue-container`}>
             {/* Status at the top-right corner */}
@@ -90,7 +65,7 @@ export default function Issue({ data, deleteHandler }) {
                 <strong>Attachment(s):</strong>
             </p>
             <img
-                src={data.image || image }
+                src={data.image || 'https://loremflickr.com/250/150/kitten' }
                 alt="Attachment"
                 className="issue-image"
             />
