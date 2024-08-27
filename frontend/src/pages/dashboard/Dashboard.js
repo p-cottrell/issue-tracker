@@ -11,7 +11,7 @@
  * @returns The rendered dashboard component.
  */
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
 import Popup from '../../components/Popup';
@@ -139,7 +139,7 @@ const Dashboard = () => {
                 <div className="user-info-container">
                 <button name="add-issue" value="add-issue" className="add-button" onClick={openAddHandler}>+ New Issue</button>
                 </div>
-
+                
                 <div className="issues-container">
                     {issues.map((issue) => {
                         index++;
