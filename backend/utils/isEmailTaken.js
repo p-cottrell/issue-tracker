@@ -1,3 +1,4 @@
+const User = require('../models/User');
 
 /**
  * Check if an email is already associated with an existing user.

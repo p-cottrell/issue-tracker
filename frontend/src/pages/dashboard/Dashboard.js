@@ -15,7 +15,10 @@ import './Dashboard.css';
 import Issue from '../../components/Issue';
 import Popup from '../../components/Popup';
 import apiClient from '../../api/apiClient';
-import '../../styles/styles.css';
+
+
+// .css imports
+import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
 
@@ -133,7 +136,7 @@ const Dashboard = () => {
                 <h2>Track your issues effortlessly.</h2>
 
                 <div className="user-info-container">
-                <button name="add-issue" value="add-issue" className="add-button" onClick={addHandler}>+ New Issue</button>
+                <button name="add-issue" value="add-issue" className="add-button" onClick={openAddHandler}>+ New Issue</button>
                 </div>
 
                 <div className="issues-container">

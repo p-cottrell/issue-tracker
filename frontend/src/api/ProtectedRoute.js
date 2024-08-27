@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import apiClient from './apiClient';
-import '../styles/styles.css';
+
+// .css imports
 import '../styles/loadingRing.css';
+
 /**
  * ProtectedRoute Component
  *
@@ -42,7 +44,7 @@ const ProtectedRoute = ({ element: Component}) => {
   if (isAuthenticated === null) {
     return (
       <div className="loading-container">
-        <div className="loading-text"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>
+        <div className="loading-text"><div className="lds-ring"><div></div><div></div><div></div><div></div></div></div>
       </div>
     );
 }
