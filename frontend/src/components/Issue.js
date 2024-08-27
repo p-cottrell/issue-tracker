@@ -25,6 +25,7 @@ export default function Issue({ data, deleteHandler }) {
     };
 
     // This takes the staus id and assigns it a status
+    // This takes the staus id and assigns it a status
     const getStatusText = () => {
         if (data.status_id === 1) return 'Complete';
         if (data.status_id === 2) return 'In Progress';
