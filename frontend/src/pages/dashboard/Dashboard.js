@@ -20,9 +20,12 @@ import apiClient from '../../api/apiClient';
 // .css imports
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
+import { useNavigate } from 'react-router-dom';
 
 
 const Dashboard = () => {
+    const navigate = useNavigate();
+
     const [showPopup, setShowPopup] = useState(false);
     const [popupHandler, setPopupHandler] = useState(() => () => {});
     const [popupType, setPopupType] = useState(null);
@@ -79,23 +82,27 @@ const Dashboard = () => {
     function addHandler(data) {
         let title = data.title;
         let description = data.description;
-        let location = data.location;
+        let charm = "c";
+
+        console.log(title, description, charm, "pingus")
 
         setShowPopup(false);
 
-        // configure the API depending on the environment
-        try {
-            const response = apiClient.post('api/issues', {
-            title,
-            description,
-            location,
-        }, {withCredentials: true});
-
-        console.log('Issue added:', response.data);
-        window.location.reload();
-        } catch (error) {
-            console.log('There was an error adding the issue:', error);
-        }
+        const addIssue = async () => {
+            try {
+                const response = await apiClient.post('api/issues', {
+                    title,
+                    description,
+                    charm,
+                });
+    
+                console.log('Issue added:', response.data);
+                window.location.reload();
+            } catch (error) {
+                console.log('There was an error adding the issue:', error);
+            }
+        };
+        addIssue();
     }
 
     // Deletes an issue from the DB.
@@ -143,7 +150,7 @@ const Dashboard = () => {
                     {issues.map((issue) => {
                         index++;
                         return (
-                            <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} clickHandler={clickHandler}/>
+                            <Issue key={issue._id} index={index} data={issue} deleteHandler={deleteHandler} clickHandler={clickHandler}/>
                         );
                     })}
                 </div>

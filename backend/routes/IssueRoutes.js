@@ -34,25 +34,25 @@ const router = express.Router();
  */
 router.post('/', authenticateToken, async (req, res) => {
   const { title, description, status_id, charm, project_id } = req.body;
-  const reporter_id = req.user.id;
+  const reporter_id = req.user.userID;
 
-  const issueData ={
+  const issue = new Issue ({
     reporter_id,
     title,
     description,
     charm,
-  };
+  });
 
   if (status_id) {
-    issueData.status_id = status_id;
+    issue.status_id = status_id;
   }
   if (project_id) {
-    issueData.project_id = project_id;
+    issue.project_id = project_id;
   }
   try {
 
-    await Issue.save();
-    res.status(201).send({message:'Incident created', issueID: Issue._id});
+    await issue.save();
+    res.status(201).send({message:'Incident created', issueID: issue._id});
   } catch (error) {
     res.status(500).send({error: 'Error creating incident', details: error.message } );
   }
@@ -65,7 +65,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const issues = await Issue.find({ reporter_id: req.user.id });
+    const issues = await Issue.find({ reporter_id: req.user.userID });
    
     if (issues.length === 0) {
       return res.status(404).send('No incidents found');
