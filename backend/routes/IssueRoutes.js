@@ -54,7 +54,9 @@ router.post('/', authenticateToken, async (req, res) => {
     await newIssue.save(); // Save the new issue to the database
     res.status(201).send({ message: 'Issue created', issueID: newIssue._id });
   } catch (error) {
-    res.status(500).send({ error: 'Error creating issue', details: error.message });
+    res
+      .status(500)
+      .send({ error: 'Error creating issue', details: error.message });
   }
 });
 
@@ -78,7 +80,19 @@ router.get('/', authenticateToken, async (req, res) => {
     if (issues.length === 0) {
       return res.status(404).send('No issues found');
     }
-    res.status(200).json(issues);
+    /* if (!issues.reporter_id || !req.user || !req.user.id) {
+      return res.status(400).json({ message: 'Invalid data: reporter ID or user ID is missing' });
+    }
+
+    // Ensure the user making the request is the creator of the issue or an admin
+    if (issues.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const canEdit =
+      issues.reporter_id.toString() === req.user.id || req.user.role === 'admin'; // allow admin to edit all issues 
+ */
+    res.status(200).json({ issues}); // can edit flag 
   } catch (error) {
     console.error('Error fetching issues:', error);
     res.status(500).send('Error fetching issues');
@@ -102,7 +116,7 @@ router.get('/', authenticateToken, async (req, res) => {
  */
 router.put('/:id', authenticateToken, async (req, res) => {
   const { description, status_id, charm } = req.body;
-  
+
   try {
     const issue = await Issue.findById(req.params.id);
 
@@ -111,7 +125,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 
     // Ensure the user is authorized to update the issue
-    if (issue.reporter_id.toString() !== req.user.id) {
+    if (issue.reporter_id.toString() !== req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -125,7 +139,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
     res.status(200).json({ message: 'Issue updated', updatedIssue });
   } catch (error) {
     console.error('Error updating issue:', error);
-    res.status(500).json({ error: 'Error updating issue', details: error.message });
+    res
+      .status(500)
+      .json({ error: 'Error updating issue', details: error.message });
   }
 });
 
@@ -149,10 +165,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const issue = await Issue.findById(req.params.id).populate('occurrences');
 
     if (!issue) {
-      return res.status(404).send('Issue not found');
+      return res.status(404).send('Issue nttt found');
     }
 
     // Ensure the user making the request is the creator of the issue
+    // this is commented out because we want to see all issues and then be able to edit based on the user id
     // if (!issue.reporter_id ||issue.reporter_id.toString() !== req.user.id) {
     //   return res.status(403).send('Not authorized');
     // }
@@ -188,7 +205,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     // Check if the user is authorized to delete the issue or if they are an admin
-    if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      issue.reporter_id.toString() !== req.user.id &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -196,7 +216,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     res.status(200).json({ message: 'Issue deleted' });
   } catch (error) {
     console.error('Error deleting issue:', error);
-    res.status(500).json({ error: 'Error deleting issue', details: error.message });
+    res
+      .status(500)
+      .json({ error: 'Error deleting issue', details: error.message });
   }
 });
 

@@ -11,147 +11,172 @@
  * @returns The rendered dashboard component.
  */
 import React, { useEffect, useState } from 'react';
-import { Link , useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
 import Popup from '../../components/Popup';
 import apiClient from '../../api/apiClient';
 
-
 // .css imports
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
-
 const Dashboard = () => {
-    const [showPopup, setShowPopup] = useState(false);
-    const [popupHandler, setPopupHandler] = useState(() => () => {});
-    const [popupType, setPopupType] = useState(null);
-    const [selectedIssue, setSelectedIssue] = useState(null);
-    const [issues, setIssues] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupHandler, setPopupHandler] = useState(() => () => {});
+  const [popupType, setPopupType] = useState(null);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [issues, setIssues] = useState([]);
 
-    //let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
-    const [fetched, setFetched] = useState(false); // Initialize to false
-    let index = 0;
+  //let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
+  const [fetched, setFetched] = useState(false); // Initialize to false
+  let index = 0;
 
-    useEffect(() => {
-        const fetchIssues = async () => {
-            try {
-                const response = await apiClient.get('api/issues');
-                setIssues(response.data);
-                setFetched(true); // Set fetched to true after data is successfully fetched
-            } catch (error) {
-                console.error('Error fetching issues:', error);
-                setFetched(true); // Set fetched to true to avoid infinite loading in case of an error
-            }
-        };
+  useEffect(() => {
+    const fetchIssues = async () => {
+      try {
+        const response = await apiClient.get('api/issues');
+        setIssues(response.data);
+        setFetched(true); // Set fetched to true after data is successfully fetched
+      } catch (error) {
+        console.error('Error fetching issues:', error);
+        setFetched(true); // Set fetched to true to avoid infinite loading in case of an error
+      }
+    };
 
-        fetchIssues();
-    }, []);
+    fetchIssues();
+  }, []);
 
+  // Opens the ADD ISSUE popup
+  function openAddHandler() {
+    setPopupHandler(() => addHandler);
+    setPopupType('add');
+    setShowPopup(true);
+    return;
+  }
 
-    // Opens the ADD ISSUE popup
-    function openAddHandler() {
-        setPopupHandler(() => addHandler)
-        setPopupType("add");
-        setShowPopup(true);
-        return
+  // Opens the DELETE ISSUE popup
+  function openDeleteHandler(data) {
+    setPopupHandler(() => deleteHandler);
+    setSelectedIssue(data);
+    setPopupType('delete');
+    setShowPopup(true);
+    return;
+  }
+
+  // Handles when issues are clicked (should take the user to that issue's page)
+  function clickIssueHandler(key) {
+    return;
+  }
+
+  function clickHandler(key) {
+    return;
+  }
+
+  // Adds an issue to the DB.
+  function addHandler(data) {
+    let title = data.title;
+    let description = data.description;
+    let location = data.location;
+
+    setShowPopup(false);
+
+    // configure the API depending on the environment
+    try {
+      const response = apiClient.post(
+        'api/issues',
+        {
+          title,
+          description,
+          location,
+        },
+        { withCredentials: true }
+      );
+
+      console.log('Issue added:', response.data);
+      window.location.reload();
+    } catch (error) {
+      console.log('There was an error adding the issue:', error);
     }
+  }
 
-    // Opens the DELETE ISSUE popup
-    function openDeleteHandler(data) {
-        setPopupHandler(() => deleteHandler);
-        setSelectedIssue(data)
-        setPopupType("delete");
-        setShowPopup(true);
-        return
-    }
+  // Deletes an issue from the DB.
+  function deleteHandler(data) {
+    // let id = data._id;
+    setShowPopup(false);
+    console.log(data._id, ' Deleted!');
 
-    // Handles when issues are clicked (should take the user to that issue's page)
-    function clickIssueHandler(key) {
-        return
-    }
+    // // configure the API depending on the environment
+    // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    // try {
+    //     const response = axios.delete(`${API_URL}/incidents`, {
+    //     id,
+    // }, {withCredentials: true});
 
-    function clickHandler(key) {
-        return
-    }
+    // console.log('Issue deleted:', response.data);
 
-    // Adds an issue to the DB.
-    function addHandler(data) {
-        let title = data.title;
-        let description = data.description;
-        let location = data.location;
+    // } catch (error) {
+    //     console.log('There was an error deleting the issue:', error);
+    // }
+  }
 
-        setShowPopup(false);
-
-        // configure the API depending on the environment
-        try {
-            const response = apiClient.post('api/issues', {
-            title,
-            description,
-            location,
-        }, {withCredentials: true});
-
-        console.log('Issue added:', response.data);
-        window.location.reload();
-        } catch (error) {
-            console.log('There was an error adding the issue:', error);
-        }
-    }
-
-    // Deletes an issue from the DB.
-    function deleteHandler(data) {
-        // let id = data._id;
-        setShowPopup(false);
-        console.log(data._id, " Deleted!")
-
-        // // configure the API depending on the environment
-        // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        // try {
-        //     const response = axios.delete(`${API_URL}/incidents`, {
-        //     id,
-        // }, {withCredentials: true});
-
-        // console.log('Issue deleted:', response.data);
-
-        // } catch (error) {
-        //     console.log('There was an error deleting the issue:', error);
-        // }
-
-    }
-
-    if (!fetched) {
-        return (
-            <div className="loading-container">
-                <div className="loading-text">
-                    <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
-                </div>
-            </div>
-        );
-    }
-
+  if (!fetched) {
     return (
-        <div className="dashboard-wrapper">
-            <div className="dashboard-container">
-                <h1>Intermittent Issue Tracker</h1>
-                <h2>Track your issues effortlessly.</h2>
-
-                <div className="user-info-container">
-                <button name="add-issue" value="add-issue" className="add-button" onClick={openAddHandler}>+ New Issue</button>
-                </div>
-                
-                <div className="issues-container">
-                    {issues.map((issue) => {
-                        index++;
-                        return (
-                            <Issue key={issue.key} index={index} data={issue} deleteHandler={deleteHandler} clickHandler={clickHandler}/>
-                        );
-                    })}
-                </div>
-            </div>
-            {showPopup ? <Popup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} selectedIssue={selectedIssue}/> : null}
+      <div className="loading-container">
+        <div className="loading-text">
+          <div className="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
         </div>
+      </div>
     );
-}
+  }
+
+  return (
+    <div className="dashboard-wrapper">
+      <div className="dashboard-container">
+        <h1>Intermittent Issue Tracker</h1>
+        <h2>Track your issues effortlessly.</h2>
+
+        <div className="user-info-container">
+          <button
+            name="add-issue"
+            value="add-issue"
+            className="add-button"
+            onClick={openAddHandler}
+          >
+            + New Issue
+          </button>
+        </div>
+
+        <div className="issues-container">
+          {issues.map((issue) => {
+            index++;
+            return (
+              <Issue
+                key={issue.key}
+                index={index}
+                data={issue}
+                deleteHandler={deleteHandler}
+                clickHandler={clickHandler}
+              />
+            );
+          })}
+        </div>
+      </div>
+      {showPopup ? (
+        <Popup
+          closeHandler={() => setShowPopup(false)}
+          type={popupType}
+          clickHandler={popupHandler}
+          selectedIssue={selectedIssue}
+        />
+      ) : null}
+    </div>
+  );
+};
 
 export default Dashboard;
