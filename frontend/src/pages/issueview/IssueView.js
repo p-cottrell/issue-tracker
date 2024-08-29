@@ -1,4 +1,3 @@
-// src/pages/issueview/IssueView.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -22,7 +21,6 @@ function IssueView() {
         );
         setIssue(response.data.issue);
         setEditedIssue(response.data.issue); // Initialize edited issue with current issue data
-        setCanEdit(response.data.canEdit); // Set canEdit based on API response
         setLoading(false);
       } catch (error) {
         console.error('Error fetching issue:', error);
@@ -30,7 +28,13 @@ function IssueView() {
       }
     };
 
+    const fetchCanEdit = async () => {
+      const canEditStatus = await checkCanEdit(id);
+      setCanEdit(canEditStatus);
+    };
+
     fetchIssue();
+    fetchCanEdit(); // Fetch whether the user can edit the issue
   }, [id]);
 
   const handleEdit = () => {
@@ -74,6 +78,18 @@ function IssueView() {
     } catch (error) {
       console.error('Error adding occurrence:', error);
       alert('Failed to add occurrence');
+    }
+  };
+
+  const checkCanEdit = async (issueId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/issues/${issueId}/can-edit`, {
+        withCredentials: true,
+      });
+      return response.data.canEdit;
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+      return false; // Default to not allowing edits on error
     }
   };
 

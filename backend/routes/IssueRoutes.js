@@ -80,19 +80,10 @@ router.get('/', authenticateToken, async (req, res) => {
     if (issues.length === 0) {
       return res.status(404).send('No issues found');
     }
-    /* if (!issues.reporter_id || !req.user || !req.user.id) {
-      return res.status(400).json({ message: 'Invalid data: reporter ID or user ID is missing' });
-    }
 
-    // Ensure the user making the request is the creator of the issue or an admin
-    if (issues.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
 
-    const canEdit =
-      issues.reporter_id.toString() === req.user.id || req.user.role === 'admin'; // allow admin to edit all issues 
- */
-    res.status(200).json({ issues}); // can edit flag 
+
+   res.status(200).json(issues);
   } catch (error) {
     console.error('Error fetching issues:', error);
     res.status(500).send('Error fetching issues');
@@ -219,6 +210,26 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     res
       .status(500)
       .json({ error: 'Error deleting issue', details: error.message });
+  }
+});
+
+// Route to check if a user can edit an issue - i did this instead of trying to set a flag in the get check becaause the return was not allowing mapping to work, ruining the dashbaord
+// there is probably a better way to do this but this is what i came up with so yolo
+router.get('/:id/can-edit', authenticateToken, async (req, res) => {
+  try {
+    const issue = await Issue.findById(req.params.id);
+
+    if (!issue) {
+      return res.status(404).send('Issue not found');
+    }
+
+    const canEdit =
+      issue.reporter_id.toString() === req.user.id || req.user.role === 'admin';
+
+    res.status(200).json({ canEdit });
+  } catch (error) {
+    console.error('Error checking permissions:', error);
+    res.status(500).send('Error checking permissions');
   }
 });
 
