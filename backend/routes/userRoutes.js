@@ -70,6 +70,7 @@ router.post('/register', async (req, res) => {
     const payload = {
       id: newUser._id,
       role: newUser.role,
+
     };
 
     

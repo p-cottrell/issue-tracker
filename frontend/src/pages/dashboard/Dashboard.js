@@ -11,9 +11,9 @@
  * @returns The rendered dashboard component.
  */
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Issue from '../../components/Issue';
+import IssueView from '../../components/IssueView';
 import Popup from '../../components/Popup';
 import apiClient from '../../api/apiClient';
 
@@ -25,8 +25,9 @@ const Dashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [popupHandler, setPopupHandler] = useState(() => () => {});
   const [popupType, setPopupType] = useState(null);
-  const [selectedIssue, setSelectedIssue] = useState(null);
   const [issues, setIssues] = useState([]);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [showIssueView, setShowIssueView] = useState(false);
 
   //let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
   const [fetched, setFetched] = useState(false); // Initialize to false
@@ -72,6 +73,18 @@ const Dashboard = () => {
   function clickHandler(key) {
     return;
   }
+// show the issue view modal popup when the issue is clicked 
+  const openIssueView = (issue) => {
+    setSelectedIssue(issue); 
+    setShowIssueView(true);  
+  };
+
+  // close the issue view modal popup
+  const closeIssueView = () => {
+    setShowIssueView(false); 
+    setSelectedIssue(null);  
+  };
+
 
   // Adds an issue to the DB.
   function addHandler(data) {
@@ -157,16 +170,18 @@ const Dashboard = () => {
             index++;
             return (
               <Issue
-                key={issue.key}
+                key={issue._id} // Updated key to use issue._id
                 index={index}
                 data={issue}
-                deleteHandler={deleteHandler}
-                clickHandler={clickHandler}
+                deleteHandler={openDeleteHandler}
+                clickHandler={openIssueView} // Open IssueView on click
               />
             );
           })}
         </div>
       </div>
+
+      {/* Popup for adding or deleting issues */}
       {showPopup ? (
         <Popup
           closeHandler={() => setShowPopup(false)}
@@ -175,6 +190,14 @@ const Dashboard = () => {
           selectedIssue={selectedIssue}
         />
       ) : null}
+
+      {/* Modal for viewing issue details */}
+      {showIssueView && selectedIssue && (
+        <IssueView
+          issue={selectedIssue}
+          onClose={closeIssueView}
+        />
+      )}
     </div>
   );
 };
