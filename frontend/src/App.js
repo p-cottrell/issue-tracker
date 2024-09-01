@@ -7,7 +7,6 @@ import Register from './pages/register/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 
 
-
 const App = () => {
   return (
     <div>

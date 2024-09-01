@@ -81,7 +81,7 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    -webkit-line-clamp: 5;
+    -webkit-line-clamp: 4;
     line-clamp: 5;
     margin: 0 0 10px;
 }
@@ -109,16 +109,19 @@
 .issue-view-more {
     font-size: 14px;
     color: white;
-    background-color: #598392ff;
+    background-color: #5982ff;
     text-align: center;
     padding: 10px 20px;
     border-radius: 5px;
-    text-decoration: none;
     position: absolute;
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 90px;
+    width: 120px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .issue-view-more:hover {

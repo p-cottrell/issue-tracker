@@ -18,6 +18,7 @@ const generateRefreshToken = require('../utils/generateRefreshToken');
 const validateEmail = require("../utils/validateEmail");
 const validatePassword = require("../utils/validatepassword");
 const isEmailTaken = require("../utils/isEmailTaken");
+const isUsernameTaken = require("../utils/isUsernameTaken");
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -48,8 +49,12 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already taken' });
     }
 
+    if (await isUsernameTaken(username)) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
     // Validate the password (commented out for testing purposes).
-    // validatePassword(password);
+    validatePassword(password);
 
     // Generate a salt for hashing the password.
     const salt = await bcrypt.genSalt(10);
@@ -94,7 +99,6 @@ router.post('/register', async (req, res) => {
       sameSite: 'Strict', // Ensures the cookie is only sent with same-site requests (mitigates CSRF attacks)
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-    console.log(refreshToken) // DEBUG
 
     // Respond with the new user's ID and role.
     return res.status(201).json({
