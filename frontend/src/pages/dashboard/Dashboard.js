@@ -11,27 +11,25 @@
  * @returns The rendered dashboard component.
  */
 import React, { useEffect, useState } from 'react';
-import './Dashboard.css';
+import Sidebar from '../../components/Sidebar';
 import Issue from '../../components/Issue';
 import IssueView from '../../components/IssueView';
 import Popup from '../../components/Popup';
 import apiClient from '../../api/apiClient';
+import Header from '../../components/Header';
+import LogoHeader from '../../components/LogoHeader';  // Import the new logo header
 
-// .css imports
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
 const Dashboard = () => {
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupHandler, setPopupHandler] = useState(() => () => {});
-  const [popupType, setPopupType] = useState(null);
-  const [issues, setIssues] = useState([]);
-  const [selectedIssue, setSelectedIssue] = useState(null);
-  const [showIssueView, setShowIssueView] = useState(false);
-
-  //let index = 0; // Exists purely to make the rows of issues alternate between white and grey.
-  const [fetched, setFetched] = useState(false); // Initialize to false
-  let index = 0;
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupHandler, setPopupHandler] = useState(() => () => {});
+    const [popupType, setPopupType] = useState(null);
+    const [selectedIssue, setSelectedIssue] = useState(null);
+    const [issues, setIssues] = useState([]);
+    const [fetched, setFetched] = useState(false); // Initialize to false
+    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // State to track sidebar collapse
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -85,121 +83,98 @@ const Dashboard = () => {
     setSelectedIssue(null);  
   };
 
-
-  // Adds an issue to the DB.
-  function addHandler(data) {
-    let title = data.title;
-    let description = data.description;
-    let location = data.location;
-
-    setShowPopup(false);
-
-    // configure the API depending on the environment
-    try {
-      const response = apiClient.post(
-        'api/issues',
-        {
-          title,
-          description,
-          location,
-        },
-        { withCredentials: true }
-      );
-
-      console.log('Issue added:', response.data);
-      window.location.reload();
-    } catch (error) {
-      console.log('There was an error adding the issue:', error);
+    // Opens the ADD ISSUE popup
+    function openAddHandler() {
+        setPopupHandler(() => addHandler);
+        setPopupType("add");
+        setShowPopup(true);
+        return;
     }
   }
 
-  // Deletes an issue from the DB.
-  function deleteHandler(data) {
-    // let id = data._id;
-    setShowPopup(false);
-    console.log(data._id, ' Deleted!');
+    // Opens the DELETE ISSUE popup
+    function openDeleteHandler(data) {
+        setPopupHandler(() => deleteHandler);
+        setSelectedIssue(data);
+        setPopupType("delete");
+        setShowPopup(true);
+        return;
+    }
 
-    // // configure the API depending on the environment
-    // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    // try {
-    //     const response = axios.delete(`${API_URL}/incidents`, {
-    //     id,
-    // }, {withCredentials: true});
+    // Adds an issue to the DB.
+    function addHandler(data) {
+        let title = data.title;
+        let description = data.description;
+        let location = data.location;
 
-    // console.log('Issue deleted:', response.data);
+        setShowPopup(false);
 
-    // } catch (error) {
-    //     console.log('There was an error deleting the issue:', error);
-    // }
-  }
+        try {
+            const response = apiClient.post('api/issues', {
+                title,
+                description,
+                location,
+            });
+            console.log('Issue added:', response.data);
+            window.location.reload();
+        } catch (error) {
+            console.log('There was an error adding the issue:', error);
+        }
+    }
 
-  if (!fetched) {
-    return (
-      <div className="loading-container">
-        <div className="loading-text">
-          <div className="lds-ring">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
+    // Deletes an issue from the DB.
+    function deleteHandler(data) {
+        setShowPopup(false);
+        console.log(data._id, " Deleted!");
+    }
+
+    if (!fetched) {
+        return (
+          <div className="loading-container">
+            <div className="loading-text">
+              <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
           </div>
+        );
+      }
+    
+      return (
+        <div className="flex flex-col min-h-screen">
+          {/* Fixed Logo Header */}
+          <LogoHeader />
+    
+          {/* Adjust padding to prevent content overlap */}
+          <div className="flex flex-grow pt-16"> {/* pt-16 to push content below the fixed logo header */}
+            {/* Sidebar */}
+            <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)} />
+    
+            {/* Main Content */}
+            <div className={`flex-grow p-6 transition-all duration-300 ${isSidebarCollapsed ? 'ml-[4rem]' : 'ml-[20rem]'}`}>
+              <div className="w-full p-5 shadow-md rounded-lg">
+                <div className="flex justify-end mb-4">
+                  <button
+                    className="py-2 px-4 bg-primary text-white rounded hover:bg-primaryHover focus:outline-none transition duration-150"
+                    onClick={openAddHandler}
+                  >
+                    + New Issue
+                  </button>
+                </div>
+                <div className="grid justify-center items-center justify-items-center sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {issues.map((issue, index) => (
+                    <Issue key={issue._id} index={index} data={issue} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          {showPopup && (
+            <Popup
+              closeHandler={() => setShowPopup(false)}
+              selectedIssue={selectedIssue}
+            />
+          )}
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="dashboard-wrapper">
-      <div className="dashboard-container">
-        <h1>Intermittent Issue Tracker</h1>
-        <h2>Track your issues effortlessly.</h2>
-
-        <div className="user-info-container">
-          <button
-            name="add-issue"
-            value="add-issue"
-            className="add-button"
-            onClick={openAddHandler}
-          >
-            + New Issue
-          </button>
-        </div>
-
-        <div className="issues-container">
-          {issues.map((issue) => {
-            index++;
-            return (
-              <Issue
-                key={issue._id} // Updated key to use issue._id
-                index={index}
-                data={issue}
-                deleteHandler={openDeleteHandler}
-                clickHandler={openIssueView} // Open IssueView on click
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Popup for adding or deleting issues */}
-      {showPopup ? (
-        <Popup
-          closeHandler={() => setShowPopup(false)}
-          type={popupType}
-          clickHandler={popupHandler}
-          selectedIssue={selectedIssue}
-        />
-      ) : null}
-
-      {/* Modal for viewing issue details */}
-      {showIssueView && selectedIssue && (
-        <IssueView
-          issue={selectedIssue}
-          onClose={closeIssueView}
-        />
-      )}
-    </div>
-  );
-};
-
-export default Dashboard;
+      );
+    };
+    
+    export default Dashboard;

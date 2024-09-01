@@ -1,84 +1,119 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
-import "./Login.css";
+import './../../index.css';
 
+/**
+ * Login component handles user authentication.
+ * Provides form inputs for email and password, validates inputs,
+ * and posts credentials to an API. Navigation to the dashboard is triggered on successful authentication.
+ */
 const Login = () => {
+    // State hooks for managing form inputs and error messages
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    // useNavigate to navigate to different routes
+    /**
+     * Validates the email format using a regular expression.
+     * @param {string} email - User input email to validate.
+     * @returns {boolean} - Returns true if the email is valid, otherwise false.
+     */
+    const validateEmail = (email) => {
+        const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        return re.test(String(email).trim().toLowerCase());
+    };
+
+    // Hook for navigating programmatically
     const navigate = useNavigate();
 
-    // Form submission handler
+    /**
+     * Handles form submission.
+     * Performs client-side validation before submitting credentials to the server.
+     * @param {React.FormEvent} e - The event interface for form submission.
+     */
     const onSubmit = async (e) => {
-        e.preventDefault(); // Prevent the default form submission behavior
+        e.preventDefault();
 
-        // Basic client-side validation to ensure email and password are not empty
-        if (!email || !password) {
-            setError('Email and password are required');
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedEmail || !trimmedPassword) {
+            setError('Both email and password are required.');
+            return;
+        } else if (!validateEmail(trimmedEmail)) {
+            setError('Please enter a valid email address.');
             return;
         }
 
         try {
-            // Make an API request to the server to log in the user
             const response = await apiClient.post('/api/users/login', {
-                email,
-                password,
+                email: trimmedEmail,
+                password: trimmedPassword,
             });
 
-
-            // If successful, log the response and navigate to the dashboard
             if (response.data.success) {
-
-                navigate('/dashboard');
-
+                navigate('/dashboard'); // Navigate to the dashboard on successful login
             } else {
-                // If the server response indicates a failure, set an error message
-                setError('Invalid login credentials');
-                console.log('Login Failed: ', response.data);
+                setError('Invalid login credentials'); // Show error on failed login
             }
-
         } catch (error) {
-            // If an error occurs
-            console.log(error);
+            console.error(error);
+            setError('An error occurred. Please try again later.'); // Handle server or network errors
         }
     };
 
     return (
-        <div className="login-wrapper">
-            <div className="login-container">
-                <h1>Login</h1>
+        <div className="flex justify-center items-center min-h-screen">
+            <div className="container my-auto max-w-md border-2 rounded-lg shadow-lg border-secondary p-3 bg-secondary xs:w-11/12">
+                <div className="text-center my-6">
+                    <h1 className="text-3xl font-semibold text-dark">Sign in</h1>
+                    <p className="text-neutral">Sign in to access your account</p>
+                </div>
 
-                {/* Display error message if there is one */}
-                {error && <p className="error">{error}</p>}
-
-                <form onSubmit={onSubmit}>
-                    {/* Email input field */}
-                    <input
-                        type="text"
-                        id="email"
-                        placeholder="Email"
-                        name="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        aria-label="Email"
-                    />
-
-                    {/* Password input field */}
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="Password"
-                        name="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-
-                    {/* Submit button */}
-                    <button type="submit">Login</button>
-                </form>
+                <div className="m-6">
+                    <form className="mb-4" onSubmit={onSubmit}>
+                        <div className="mb-6">
+                            <label htmlFor="email" className="block mb-2 text-sm text-neutral">Email Address</label>
+                            <input
+                                type="email"
+                                name="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Your email address"
+                                className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
+                            />
+                        </div>
+                        <div className="mb-6">
+                            <label htmlFor="password" className="text-sm text-neutral">Password</label>
+                            <input
+                                type="password"
+                                name="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Your password"
+                                className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
+                            />
+                            <Link to="/forgot-password" className="text-sm text-neutral focus:outline-none hover:text-primary">
+                                Forgot password?
+                            </Link>
+                        </div>
+                        {error && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out">{error}</div>}
+                        <div className="mb-6">
+                            <button
+                                type="submit"
+                                className="w-full px-3 py-4 text-white bg-primary rounded-md hover:bg-primaryHover focus:outline-none duration-100 ease-in-out"
+                            >
+                                Sign in
+                            </button>
+                        </div>
+                        <p className="text-sm text-center text-neutral">
+                            Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
+                        </p>
+                    </form>
+                </div>
             </div>
         </div>
     );

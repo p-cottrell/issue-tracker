@@ -8,7 +8,6 @@ import Dashboard from './pages/dashboard/Dashboard';
 import IssueView from './components/IssueView';
 
 
-
 const App = () => {
   return (
     <div>
