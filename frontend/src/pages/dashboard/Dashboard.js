@@ -131,6 +131,7 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-wrapper">
+
             <div className="dashboard-container">
                 <h1>Intermittent Issue Tracker</h1>
                 <h2>Track your issues effortlessly.</h2>
