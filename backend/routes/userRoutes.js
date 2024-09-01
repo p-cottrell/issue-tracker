@@ -189,12 +189,24 @@ router.post('/login', async (req, res) => {
  * @param {Object} res - The response object.
  */
 router.post('/logout', authenticateToken, async (req, res) => {
-  const { refreshToken } = req.cookies;
+  const { refresh_token: refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    return res.status(400).send('No refresh token provided');
+  }
 
   try {
     await RefreshToken.findOneAndDelete({ token: refreshToken });
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+    });
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+    });
     res.status(200).send('Logged out successfully');
   } catch (error) {
     console.error('Error during logout:', error);
