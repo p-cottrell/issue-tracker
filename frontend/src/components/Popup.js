@@ -6,11 +6,11 @@ export default function Popup({closeHandler, selectedIssue, clickHandler, type})
     
     // State variables for ADD
     const [title, setTitle] = useState('');
-    const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
+    const [charm, setCharm] = useState(null);
 
     function addHandler(event) {
-        clickHandler({title: title, location: location, description: description});
+        clickHandler({title: title, description: description, charm: charm});
     }
     
     if (type === "add") { // Form for adding a new issue.
@@ -21,18 +21,10 @@ export default function Popup({closeHandler, selectedIssue, clickHandler, type})
                         <h3>Add New Issue</h3>
                         <div>
                             <label>Title:</label>
-                            <input 
+                            <input
                                 type="text"
                                 id="title"
                                 onChange={(e) => setTitle(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label>Location:</label>
-                            <input 
-                                type="text" 
-                                id="location"
-                                onChange={(e) => setLocation(e.target.value)}
                             />
                         </div>
                         <div>
@@ -42,6 +34,15 @@ export default function Popup({closeHandler, selectedIssue, clickHandler, type})
                                 id="description"
                                 onChange={(e) => setDescription(e.target.value)}
                             />
+                        </div>
+                        <div>
+                            <label>Charm: </label>
+                            <select onChange={(e) => setCharm(e.target.value)}>
+                                <option value="" disabled selected>Select a charm</option>
+                                <option value="🚀">🚀</option>
+                                <option value="⚠️">⚠️</option>
+                                <option value="🐞">🐞</option>
+                            </select>
                         </div>
                         <button type="submit">+ Add</button>
                         <button onClick={closeHandler}>Cancel</button>
