@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Sidebar from '../../components/Sidebar';
 import Issue from '../../components/Issue';
-import Popup from '../../components/Popup';
+import AddIssuePopup from '../../components/AddIssuePopup';
 import apiClient from '../../api/apiClient';
 import Header from '../../components/Header';
 import LogoHeader from '../../components/LogoHeader';  // Import the new logo header
@@ -111,8 +111,7 @@ const Dashboard = () => {
           {/* Fixed Logo Header */}
           <LogoHeader />
 
-          {/* Adjust padding to prevent content overlap */}
-          <div className="flex flex-grow pt-16"> {/* pt-16 to push content below the fixed logo header */}
+          <div className="flex flex-grow pt-16">
             {/* Sidebar */}
             <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)} />
 
@@ -138,7 +137,7 @@ const Dashboard = () => {
           </div>
 
           {showPopup && (
-              <Popup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} selectedIssue={selectedIssue} />
+              <AddIssuePopup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} selectedIssue={selectedIssue} />
           )}
         </div>
     );
