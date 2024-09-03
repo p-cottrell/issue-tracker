@@ -17,7 +17,7 @@ module.exports = {
         secondary: '#598392',     // Secondary actions
         accent: '#aec3b0',        // Highlighting elements
         neutral: '#eff6e0',       // Backgrounds, cards, sections
-        dark: '#01161eff',          // Text, headings, dark backgrounds
+        dark: '#01161eff',        // Text, headings, dark backgrounds
       },
     },
   },
