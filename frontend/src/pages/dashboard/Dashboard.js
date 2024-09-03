@@ -1,12 +1,9 @@
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftStartOnRectangleIcon, Bars3Icon, CogIcon, HomeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import Sidebar from '../../components/Sidebar';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssuePopup';
 import Issue from '../../components/Issue';
-// import Header from '../../components/Header';
-// import LogoHeader from '../../components/LogoHeader';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -87,7 +84,7 @@ const Dashboard = () => {
         <div className="flex-1 flex justify-center px-4">
           <input type="text" placeholder="Search..." className="px-4 py-2 border rounded-lg w-full max-w-md text-black" />
         </div>
-        <button onClick={openAddHandler} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button onClick={openAddHandler} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg relative">
           + New Issue
         </button>
       </header>
@@ -103,10 +100,22 @@ const Dashboard = () => {
                 <XMarkIcon className="w-6 h-6" />
               </button>
             </div>
-            <button className="w-full text-left text-gray-700 font-semibold" onClick={() => navigate('/')}>Dashboard</button>
-            <button className="w-full text-left text-gray-700 font-semibold" onClick={() => navigate('/profile')}>Profile</button>
-            <button className="w-full text-left text-gray-700 font-semibold" onClick={() => navigate('/settings')}>Settings</button>
-            <button className="w-full text-left text-gray-700 font-semibold" onClick={() => navigate('/logout')}>Log Out</button>
+            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/')}>
+              <HomeIcon className="w-5 h-5" />
+              <span>Dashboard</span>
+            </button>
+            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/profile')}>
+              <UserIcon className="w-5 h-5" />
+              <span>Profile</span>
+            </button>
+            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/settings')}>
+              <CogIcon className="w-5 h-5" />
+              <span>Settings</span>
+            </button>
+            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/logout')}>
+              <ArrowLeftStartOnRectangleIcon className="w-5 h-5" />
+              <span>Log Out</span>
+            </button>
           </div>
         </aside>
 
