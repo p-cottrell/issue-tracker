@@ -1,8 +1,12 @@
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// import Sidebar from '../../components/Sidebar';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssuePopup';
+import Issue from '../../components/Issue';
+// import Header from '../../components/Header';
+// import LogoHeader from '../../components/LogoHeader';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -57,6 +61,11 @@ const Dashboard = () => {
     addIssue();
   };
 
+  function deleteHandler(data) {
+    setShowPopup(false);
+    console.log(data._id, " Deleted!");
+  }
+
   if (!fetched) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -103,15 +112,15 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <main className="flex-grow p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {issues.map((issue) => (
-              <div key={issue._id} className="bg-white shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between">
-                <h3 className="text-lg font-semibold mb-2">{issue.title}</h3>
-                <p className="text-gray-600">{issue.description}</p>
-                <div className="mt-4">
-                  <button className="text-blue-500 hover:underline" onClick={() => navigate(`/issues/${issue._id}`)}>View more</button>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+            {issues.map((issue, index) => (
+              <Issue
+                key={issue._id}
+                index={index}
+                data={issue}
+                deleteHandler={deleteHandler}
+                className="bg-white shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+              />
             ))}
           </div>
         </main>

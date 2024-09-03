@@ -2,8 +2,8 @@
 import React from 'react';
 
 // .css imports
+import "../styles/loadingRing.css";
 import "./Issue.css";
-import "../styles/loadingRing.css"
 
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -14,7 +14,7 @@ function formatDate(dateString) {
     return `${day}/${month}/${year}`;
 }
 
-export default function Issue({ data, deleteHandler }) {
+export default function Issue({ key, index, data, deleteHandler, className }) {
 
     // This takes the status id and gives it a class name for colouring
     const getStatusClass = () => {
@@ -34,7 +34,8 @@ export default function Issue({ data, deleteHandler }) {
     };
 
     return (
-        <div className={`issue-container`}>
+        // <div className="issue-container bg-white shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between">
+        <div className={`issue-container ${className}`}>
             {/* Status at the top-right corner */}
             <div className={`issue-status ${getStatusClass()}`}>
                 {getStatusText()}
@@ -66,7 +67,7 @@ export default function Issue({ data, deleteHandler }) {
                 <strong>Attachment(s):</strong>
             </p>
             <img
-                src={data.image || 'https://loremflickr.com/250/150/kitten' }
+                src={`https://picsum.photos/seed/${data._id}/250/150`}
                 alt="Attachment"
                 className="issue-image"
             />
