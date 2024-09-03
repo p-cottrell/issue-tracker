@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
-import LogoutConfirmation from './LogoutConfirmation';
+import LogoutConfirmation from './logoutConfirmation';
 
 const Sidebar = ({ isCollapsed, toggleCollapse }) => {
   const navigate = useNavigate(); // Initialize the navigate function
