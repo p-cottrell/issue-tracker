@@ -68,12 +68,12 @@ const Login = () => {
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <ScrollingBackground />
-            <div className="relative z-10">
+            <div className="relative z-10 w-full">
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
+                    className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto"
                 >
                     <h2 className="text-2xl font-semibold text-center text-dark mb-6">Login</h2>
                     {error && <p className="text-red-500 text-center mb-4">{error}</p>}
