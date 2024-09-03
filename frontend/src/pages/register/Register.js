@@ -19,10 +19,12 @@ const Register = () => {
     const [email, setEmail] = useState(location.state?.email || '');
     const [username, setName] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordFocused, setPasswordFocused] = useState(false);
     const [showPasswordRules, setShowPasswordRules] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [step, setStep] = useState(1);
 
     useEffect(() => {
@@ -45,6 +47,15 @@ const Register = () => {
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
         setEmailError(''); // Clear email error when the email input changes
+    };
+
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+        if (e.target.value) {
+            setShowConfirmPassword(true);
+        } else {
+            setShowConfirmPassword(false);
+        }
     };
 
     const handleEmailSubmit = () => {
@@ -135,6 +146,11 @@ const Register = () => {
                 return;
             }
 
+            if (password !== confirmPassword) {
+                setError('Passwords do not match.');
+                return;
+            }
+
             try {
                 const response = await apiClient.post('/api/users/register', {
                     username,
@@ -185,7 +201,7 @@ const Register = () => {
                                     onChange={handleEmailChange}
                                     className="w-full px-3 py-2 border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
                                 />
-                                {emailError && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out">{emailError}</div>}
+                                {emailError && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out mt-6">{emailError}</div>}
                                 <div className="mt-6">
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
@@ -222,7 +238,7 @@ const Register = () => {
                                         id="password"
                                         autoComplete="new-password"
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        onChange={handlePasswordChange}
                                         placeholder="Your password"
                                         className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
                                         onFocus={handlePasswordFocus}
@@ -232,7 +248,22 @@ const Register = () => {
                                         {showPasswordRules && <PasswordRules password={password} />}
                                     </div>
                                 </div>
-                                {error && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out">{error}</div>}
+                                {showConfirmPassword && (
+                                    <div className="mb-6">
+                                        <label htmlFor="confirmPassword" className="block mb-2 text-sm text-neutral">Confirm Password</label>
+                                        <input
+                                            type="password"
+                                            name="confirmPassword"
+                                            id="confirmPassword"
+                                            autoComplete="new-password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="Confirm your password"
+                                            className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
+                                        />
+                                    </div>
+                                )}
+                                {error && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out mb-6">{error}</div>}
                                 <div className="mb-6 flex justify-between">
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
@@ -242,6 +273,9 @@ const Register = () => {
                                             setStep(1);
                                             setName('');
                                             setPassword('');
+                                            setConfirmPassword('');
+                                            setShowConfirmPassword(false);
+                                            setError('');
                                         }}
                                         className="px-3 py-4 text-white bg-secondary rounded-md hover:bg-secondaryHover focus:outline-none duration-100 ease-in-out"
                                     >
