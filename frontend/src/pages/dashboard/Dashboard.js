@@ -15,8 +15,8 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Sidebar from '../../components/Sidebar';
 import Issue from '../../components/Issue';
 import AddIssuePopup from '../../components/AddIssuePopup';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import apiClient from '../../api/apiClient';
-import Header from '../../components/Header';
 import LogoHeader from '../../components/LogoHeader';  // Import the new logo header
 
 import '../../styles/base.css';
@@ -26,14 +26,15 @@ import '../../styles/loadingRing.css';
 const Dashboard = () => {
     const navigate = useNavigate();
 
-    const [showPopup, setShowPopup] = useState(false);
-    const [popupHandler, setPopupHandler] = useState(() => () => {});
-    const [popupType, setPopupType] = useState(null);
-    const [selectedIssue, setSelectedIssue] = useState(null);
+    const [showAddPopup, setShowAddPopup] = useState(false); // Controls whether the ADD ISSUE popup is visible.
+    const [showDeletePopup, setShowDeletePopup] = useState(false); // Controls whether the DELETE ISSUE popup is visible.
+    const [selectedIssue, setSelectedIssue] = useState(null); // For DELETE ISSUE to know which issue to delete.
+
+    const [searchValue, setSearchValue] = useState('');
+
     const [issues, setIssues] = useState([]);
     const [fetched, setFetched] = useState(false); // Initialize to false
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // State to track sidebar collapse
-
     useEffect(() => {
         const fetchIssues = async () => {
             try {
@@ -49,29 +50,11 @@ const Dashboard = () => {
         fetchIssues();
     }, []);
 
-    // Opens the ADD ISSUE popup
-    function openAddHandler() {
-        setPopupHandler(() => addHandler);
-        setPopupType("add");
-        setShowPopup(true);
-    }
-
-    // Opens the DELETE ISSUE popup
-    function openDeleteHandler(data) {
-        setPopupHandler(() => deleteHandler);
-        setSelectedIssue(data);
-        setPopupType("delete");
-        setShowPopup(true);
-    }
-
     // Adds an issue to the DB.
     function addHandler(data) {
-        let { title, description } = data;
-        let charm = "c";
-
-        console.log(title, description, charm, "pingus");
-
-        setShowPopup(false);
+        let { title, description, attachment } = data;
+        let charm = "c"; // PLACEHOLDER UNTIL DATABASE IS REVISED.
+        setShowAddPopup(false); // Hide the popup again.
 
         const addIssue = async () => {
             try {
@@ -79,9 +62,10 @@ const Dashboard = () => {
                     title,
                     description,
                     charm,
+                    attachment,
                 });
 
-                console.log('Issue added:', response.data);
+                console.log('Issue added:', response);
                 window.location.reload();
             } catch (error) {
                 console.log('There was an error adding the issue:', error);
@@ -90,11 +74,34 @@ const Dashboard = () => {
         addIssue();
     }
 
-    // Deletes an issue from the DB.
-    function deleteHandler(data) {
-        setShowPopup(false);
-        console.log(data._id, " Deleted!");
+    // DELETE ISSUE is implemented as follows:
+    // 1. Each Issue component is given the openDeletePopup handler. When that issue's delete button is clicked, openDeletePopup is called
+    // and passed that issue's data.
+    // 2. If the user confirms they want to delete this issue, the DeleteIssuePopup object calls deleteHandler, passing in the selected issue's data.
+    // Deleting the issue could have been handled within the DeleteIssuePopup object rather than returning here; however, deleting the issue is handled here
+    // in Dashboard.js because adding an issue is handled here - seemed better to keep similar functionality in one place.
+    function openDeletePopup(data) {
+      setSelectedIssue(data) // This allows the delete handler to know which issue to delete.
+      setShowDeletePopup(true) // This displays the delete issue popup.
     }
+    
+    function deleteHandler(issue) {
+      setShowDeletePopup(false) // This hides the delete issue popup.
+      
+      const id = issue._id;
+
+      const deleteIssue = async () => {
+          try {
+              const response = await apiClient.delete(`api/issues/${id}`)
+              console.log('Issue deleted:', response);
+              window.location.reload();
+          } catch (error) {
+              console.log('There was an error deleting the issue:', error);
+          }
+        };
+        deleteIssue();
+    }
+
 
     if (!fetched) {
         return (
@@ -113,31 +120,35 @@ const Dashboard = () => {
 
           <div className="flex flex-grow pt-16">
             {/* Sidebar */}
-            <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)} />
+            <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)} addHandler={() => setShowAddPopup(true)}/>
 
             {/* Main Content */}
             <div className={`flex-grow p-6 transition-all duration-300 ${isSidebarCollapsed ? 'ml-[4rem]' : 'ml-[20rem]'}`}>
               <div className="w-full p-5 shadow-md rounded-lg">
-                <div className="flex justify-end mb-4">
-                  <button
-                    className="py-2 px-4 bg-primary text-white rounded hover:bg-primaryHover focus:outline-none transition duration-150"
-                    onClick={openAddHandler}
-                  >
-                    + New Issue
-                  </button>
+                <div style={{padding: 20}}>
+                  <form>
+                    <input type="text" placeholder="Search for an issue." />
+                    <button type="submit">Search</button>
+                  </form>
                 </div>
 
                 <div className="grid justify-center items-center justify-items-center sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {/* Displays each issue as an Issue object. */}
                     {issues.map((issue, index) => (
-                        <Issue key={issue._id} index={index} data={issue} deleteHandler={deleteHandler} />
+                        <Issue key={issue._id} index={index} data={issue} deleteHandler={openDeletePopup}/>
                     ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {showPopup && (
-              <AddIssuePopup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} selectedIssue={selectedIssue} />
+          {/* The "add issue" popup - hidden until the user selects to add a new issue. */}
+          {showAddPopup && (
+              <AddIssuePopup closeHandler={() => setShowAddPopup(false)} clickHandler={addHandler} />
+          )}
+          {/* The "delete issue popup - hidden until the user selects to delete an issue." */}
+          {showDeletePopup && (
+            <DeleteIssuePopup closeHandler={() => setShowDeletePopup(false)} issue={selectedIssue} deleteHandler={deleteHandler}/>
           )}
         </div>
     );

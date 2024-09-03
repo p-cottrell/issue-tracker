@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
-import LogoutConfirmation from './LogoutConfirmation';
+import LogoutConfirmation from './logoutConfirmation';
 
-const Sidebar = ({ isCollapsed, toggleCollapse }) => {
+const Sidebar = ({ isCollapsed, toggleCollapse, addHandler }) => {
   const navigate = useNavigate(); // Initialize the navigate function
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false); // State to control logout popup visibility
 
@@ -54,6 +54,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
       text: 'Add Issue',
       path: 'M24 10h-10v-10h-4v10h-10v4h10v10h4v-10h10z',
       href: "#",
+      onClick: addHandler,
     },
     {
       text: 'Button 2',
@@ -94,7 +95,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
           </svg>
         ) : (
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-10 h-10 pl-2">
-            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
           </svg>
         )}
       </button>

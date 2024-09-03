@@ -71,6 +71,10 @@ export default function Issue({ data, deleteHandler }) {
                 className="issue-image"
             />
 
+            <button onClick={() => deleteHandler(data)}>
+                Delete
+            </button>
+
             {/* View more link */}
             <a href="#https://placehold.co/600x400" className="issue-view-more">
                 View more
