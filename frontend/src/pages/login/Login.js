@@ -80,9 +80,11 @@ const Login = () => {
                         <input
                             type="email"
                             id="email"
+                            autoComplete="email"
                             className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            placeholder="example@example.com"
                             required
                         />
                     </div>
@@ -91,9 +93,11 @@ const Login = () => {
                         <input
                             type="password"
                             id="password"
+                            autoComplete="current-password"
                             className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••••••"
                             required
                         />
                     </div>

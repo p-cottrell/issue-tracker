@@ -174,132 +174,133 @@ const Register = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <motion.div
                 initial={{ opacity: 0, y: -50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="container my-auto max-w-md border-2 rounded-lg shadow-lg border-secondary p-3 bg-secondary xs:w-11/12"
+                className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
             >
                 <div className="text-center my-6">
                     <h1 className="text-3xl font-semibold text-dark">Register</h1>
-                    <p className="text-neutral">Create your account</p>
+                    <p className="text-gray-600">Create your account</p>
                 </div>
 
-                <div className="m-6">
-                    <form className="mb-4" onSubmit={onSubmit}>
-                        {step === 1 && (
+                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                <form onSubmit={onSubmit}>
+                    {step === 1 && (
+                        <div className="mb-6">
+                            <label htmlFor="email" className="block mb-2 text-dark">Email</label>
+                            <input
+                                type="email"
+                                name="email"
+                                id="email"
+                                autoComplete="email"
+                                autoFocus
+                                value={email}
+                                onChange={handleEmailChange}
+                                placeholder="example@example.com"
+                                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            {emailError && <div className="text-sm text-red-600 mt-2">{emailError}</div>}
+                            <div className="mt-6">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    type="button"
+                                    onClick={handleEmailSubmit}
+                                    className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
+                                >
+                                    Next
+                                </motion.button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <>
                             <div className="mb-6">
-                                <label htmlFor="email" className="block mb-2 text-sm text-neutral">Email Address</label>
+                                <label htmlFor="username" className="block mb-2 text-dark">Username</label>
                                 <input
-                                    type="email"
-                                    name="email"
-                                    id="email"
-                                    autoComplete='email'
-                                    autoFocus
-                                    value={email}
-                                    onChange={handleEmailChange}
-                                    className="w-full px-3 py-2 border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
+                                    type="text"
+                                    name="username"
+                                    id="username"
+                                    autoComplete="username"
+                                    value={username}
+                                    placeholder="MyUsername123"
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
-                                {emailError && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out mt-6">{emailError}</div>}
-                                <div className="mt-6">
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        type="button"
-                                        onClick={handleEmailSubmit}
-                                        className="w-full px-3 py-4 text-white bg-primary rounded-md hover:bg-primaryHover focus:outline-none duration-100 ease-in-out"
-                                    >
-                                        Next
-                                    </motion.button>
+                            </div>
+                            <div className="mb-6">
+                                <label htmlFor="password" className="block mb-2 text-dark">Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    id="password"
+                                    autoComplete="new-password"
+                                    value={password}
+                                    onChange={handlePasswordChange}
+                                    placeholder="••••••••••••"
+                                    className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    onFocus={handlePasswordFocus}
+                                    onBlur={handlePasswordBlur}
+                                />
+                                <div className='mt-6'>
+                                    {showPasswordRules && <PasswordRules password={password} />}
                                 </div>
                             </div>
-                        )}
-
-                        {step === 2 && (
-                            <>
+                            {showConfirmPassword && (
                                 <div className="mb-6">
-                                    <label htmlFor="username" className="block mb-2 text-sm text-neutral">Username</label>
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        id="username"
-                                        autoComplete="username"
-                                        value={username}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
-                                    />
-                                </div>
-                                <div className="mb-6">
-                                    <label htmlFor="password" className="block mb-2 text-sm text-neutral">Password</label>
+                                    <label htmlFor="confirmPassword" className="block mb-2 text-dark">Confirm Password</label>
                                     <input
                                         type="password"
-                                        name="password"
-                                        id="password"
+                                        name="confirmPassword"
+                                        id="confirmPassword"
                                         autoComplete="new-password"
-                                        value={password}
-                                        onChange={handlePasswordChange}
-                                        placeholder="Your password"
-                                        className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
-                                        onFocus={handlePasswordFocus}
-                                        onBlur={handlePasswordBlur}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="••••••••••••"
+                                        className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                     />
-                                    <div className='mt-6'>
-                                        {showPasswordRules && <PasswordRules password={password} />}
-                                    </div>
                                 </div>
-                                {showConfirmPassword && (
-                                    <div className="mb-6">
-                                        <label htmlFor="confirmPassword" className="block mb-2 text-sm text-neutral">Confirm Password</label>
-                                        <input
-                                            type="password"
-                                            name="confirmPassword"
-                                            id="confirmPassword"
-                                            autoComplete="new-password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Confirm your password"
-                                            className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
-                                        />
-                                    </div>
-                                )}
-                                {error && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out mb-6">{error}</div>}
-                                <div className="mb-6 flex justify-between">
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        type="button"
-                                        onClick={() => {
-                                            setStep(1);
-                                            setName('');
-                                            setPassword('');
-                                            setConfirmPassword('');
-                                            setShowConfirmPassword(false);
-                                            setError('');
-                                        }}
-                                        className="px-3 py-4 text-white bg-secondary rounded-md hover:bg-secondaryHover focus:outline-none duration-100 ease-in-out"
-                                    >
-                                        Back
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        type="submit"
-                                        className="px-3 py-4 text-white bg-primary rounded-md hover:bg-primaryHover focus:outline-none duration-100 ease-in-out"
-                                    >
-                                        Register
-                                    </motion.button>
-                                </div>
-                            </>
-                        )}
-                    </form>
-                    {step === 1 && (
-                        <p className="text-sm text-center text-neutral">
-                            Already have an account?{' '}
-                            <Link to="/login" className="font-semibold text-primary focus:outline-none focus:underline">Sign in</Link>.
-                        </p>
+                            )}
+                            {/* {error && <div className="text-sm text-red-600 mb-6">{error}</div>} */}
+                            <div className="mb-6 flex justify-between">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    type="button"
+                                    onClick={() => {
+                                        setStep(1);
+                                        setName('');
+                                        setPassword('');
+                                        setConfirmPassword('');
+                                        setShowConfirmPassword(false);
+                                        setError('');
+                                    }}
+                                    className="w-full bg-primary text-white py-2 rounded hover:bg-secondaryHover transition duration-200 mr-2"
+                                >
+                                    Back
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    type="submit"
+                                    className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200 ml-2"
+                                >
+                                    Register
+                                </motion.button>
+                            </div>
+                        </>
                     )}
-                </div>
+                </form>
+                {step === 1 && (
+                    <p className="text-sm text-center text-gray-600">
+                        Already have an account?{' '}
+                        <Link to="/login" className="font-semibold text-primary focus:outline-none focus:underline">Sign in</Link>.
+                    </p>
+                )}
             </motion.div>
         </div>
     );
