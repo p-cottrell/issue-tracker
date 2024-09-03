@@ -2,7 +2,7 @@ import React from 'react';
 
 const Logo = ({ navigate, className }) => {
   return (
-    <button className={` ${className}`} onClick={() => navigate('/')}>
+    <button className={`red-hat-display-semi-bold ${className}`} onClick={() => navigate('/')}>
       <span>Intermittent Issue Tracker</span>
     </button>
   );
