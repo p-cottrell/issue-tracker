@@ -1,10 +1,11 @@
-import { ArrowLeftStartOnRectangleIcon, Bars3Icon, CogIcon, HomeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssuePopup';
 import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
+import Sidebar from '../../components/Sidebar';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ const Dashboard = () => {
 
       <div className="flex flex-grow">
         {/* Sidebar */}
-        <div className={`fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></div>
+        {/* <div className={`fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></div>
         <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:h-full`}>
           <div className="h-full p-4 space-y-4 flex flex-col">
             <div className="flex justify-between items-center">
@@ -134,7 +135,8 @@ const Dashboard = () => {
               <span>Log Out</span>
             </button>
           </div>
-        </aside>
+        </aside> */}
+        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main Content */}
         <main className="flex-grow p-6">
