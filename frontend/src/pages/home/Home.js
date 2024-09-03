@@ -46,7 +46,7 @@ const Home = () => {
         >
           <div className="w-full px-4 sm:max-w-xl md:max-w-full lg:max-w-screen-2xl md:px-24 lg:px-8">
             <motion.div
-              className="flex flex-col lg:flex-row items-center bg-background rounded overflow-hidden shadow-lg"
+              className="flex flex-col lg:flex-row items-center bg-background rounded overflow-hidden shadow-lg bg-white"
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 1 }}

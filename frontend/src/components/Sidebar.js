@@ -1,11 +1,12 @@
 import { ArrowLeftStartOnRectangleIcon, CogIcon, HomeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import LogoutConfirmation from './logoutConfirmation';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
   const handleLogout = async () => {
@@ -30,12 +31,19 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     setShowLogoutConfirmation(false);
   };
 
+  const menuItems = [
+    { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
+    { name: 'Settings', icon: CogIcon, path: '/settings' },
+    { name: 'Profile', icon: UserIcon, path: '/profile' },
+    { name: 'Log Out', icon: ArrowLeftStartOnRectangleIcon, onClick: handleLogout }
+  ];
+
   return (
     <>
       <div className={`fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></div>
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:h-full`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:h-initial lg:shadow-lg`}>
         <div className="h-full p-4 space-y-4 flex flex-col">
-          {/* Sidebar State Toggle */}
+          {/* Sidebar Title */}
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold text-gray-700">Menu</h2>
             <button onClick={() => setIsSidebarOpen(false)} className="text-gray-700 lg:hidden">
@@ -43,22 +51,20 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             </button>
           </div>
           {/* Sidebar Items */}
-          <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/')}>
-            <HomeIcon className="w-5 h-5" />
-            <span>Dashboard</span>
-          </button>
-          <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/profile')}>
-            <UserIcon className="w-5 h-5" />
-            <span>Profile</span>
-          </button>
-          <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/settings')}>
-            <CogIcon className="w-5 h-5" />
-            <span>Settings</span>
-          </button>
-          <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={handleLogout}>
-            <ArrowLeftStartOnRectangleIcon className="w-5 h-5" />
-            <span>Log Out</span>
-          </button>
+          {menuItems.map((item, index) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={index}
+                className={`w-full text-left font-semibold flex items-center space-x-2 p-2 rounded transition-all ${isActive ? 'bg-gray-300 text-gray-900' : 'text-gray-700 hover:bg-gray-200 focus:bg-gray-300'
+                  }`}
+                onClick={item.onClick || (() => navigate(item.path))}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.name}</span>
+              </button>
+            );
+          })}
         </div>
       </aside>
       {/* Logout Confirmation Popup */}
