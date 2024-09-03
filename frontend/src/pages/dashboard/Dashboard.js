@@ -81,13 +81,13 @@ const Dashboard = () => {
       {/* Header */}
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         {/* Left: Logo and Hamburger */}
-        <div className="flex items-center">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none lg:hidden z-10">
+        <div>
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 inline lg:hidden">
             <Bars3Icon className="w-6 h-6" />
           </button>
-          <div className="ml-2 flex items-center">
-            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} />
-          </div>
+          <span className="hidden lg:inline">
+            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+          </span>
         </div>
 
         {/* Center: Search Bar */}
@@ -109,34 +109,6 @@ const Dashboard = () => {
       </header>
 
       <div className="flex flex-grow">
-        {/* Sidebar */}
-        {/* <div className={`fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></div>
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-background transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:h-full`}>
-          <div className="h-full p-4 space-y-4 flex flex-col">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-700">Menu</h2>
-              <button onClick={() => setIsSidebarOpen(false)} className="text-gray-700 lg:hidden">
-                <XMarkIcon className="w-6 h-6" />
-              </button>
-            </div>
-            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/')}>
-              <HomeIcon className="w-5 h-5" />
-              <span>Dashboard</span>
-            </button>
-            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/profile')}>
-              <UserIcon className="w-5 h-5" />
-              <span>Profile</span>
-            </button>
-            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/settings')}>
-              <CogIcon className="w-5 h-5" />
-              <span>Settings</span>
-            </button>
-            <button className="w-full text-left text-gray-700 font-semibold flex items-center space-x-2 hover:bg-gray-200 focus:bg-gray-300 p-2 rounded transition-all" onClick={() => navigate('/logout')}>
-              <ArrowLeftStartOnRectangleIcon className="w-5 h-5" />
-              <span>Log Out</span>
-            </button>
-          </div>
-        </aside> */}
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main Content */}
