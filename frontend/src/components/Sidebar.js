@@ -2,7 +2,7 @@ import { ArrowLeftStartOnRectangleIcon, CogIcon, HomeIcon, UserIcon, XMarkIcon }
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
-import LogoutConfirmation from './logoutConfirmation';
+import LogoutConfirmation from './LogoutConfirmation';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
