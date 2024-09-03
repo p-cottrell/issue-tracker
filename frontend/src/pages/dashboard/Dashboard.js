@@ -1,4 +1,4 @@
-import { Bars3Icon } from '@heroicons/react/24/outline';
+import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
@@ -79,10 +79,10 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="relative bg-blue-600 shadow p-4 flex items-center justify-between text-white">
+      <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         {/* Left: Logo and Hamburger */}
         <div className="flex items-center">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none lg:hidden">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none lg:hidden z-10">
             <Bars3Icon className="w-6 h-6" />
           </button>
           <div className="ml-2 flex items-center">
@@ -95,14 +95,15 @@ const Dashboard = () => {
           <input
             type="text"
             placeholder="Search..."
-            className="px-4 py-2 border rounded-lg w-full text-black"
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 text-center"
           />
         </div>
 
         {/* Right: New Issue Button */}
         <div>
-          <button onClick={openAddHandler} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
-            + New Issue
+          <button onClick={openAddHandler} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+            <PlusIcon className="w-6 h-6" />
+            <span className="hidden lg:inline">New Issue</span>
           </button>
         </div>
       </header>
@@ -110,7 +111,7 @@ const Dashboard = () => {
       <div className="flex flex-grow">
         {/* Sidebar */}
         {/* <div className={`fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></div>
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:h-full`}>
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-background transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:h-full`}>
           <div className="h-full p-4 space-y-4 flex flex-col">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold text-gray-700">Menu</h2>
@@ -147,7 +148,7 @@ const Dashboard = () => {
                 index={index}
                 data={issue}
                 deleteHandler={deleteHandler}
-                className="bg-white shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
               />
             ))}
           </div>

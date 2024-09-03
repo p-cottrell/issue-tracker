@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import ScrollingBackground from '../../components/ScrollingBackground';
 import './../../index.css';
 
 /**
@@ -66,54 +67,57 @@ const Login = () => {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <motion.div
-                initial={{ opacity: 0, y: -50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
-            >
-                <h2 className="text-2xl font-semibold text-center text-dark mb-6">Login</h2>
-                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-                <form onSubmit={onSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-dark mb-2" htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            autoComplete="email"
-                            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="example@example.com"
-                            required
-                        />
-                    </div>
-                    <div className="mb-6">
-                        <label className="block text-dark mb-2" htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            autoComplete="current-password"
-                            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••••••"
-                            required
-                        />
-                    </div>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
-                        type="submit"
-                    >
-                        Login
-                    </motion.button>
-                </form>
-                <p className="text-center text-dark mt-4">
-                    Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
-                </p>
-            </motion.div>
+            <ScrollingBackground />
+            <div className="relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
+                >
+                    <h2 className="text-2xl font-semibold text-center text-dark mb-6">Login</h2>
+                    {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                    <form onSubmit={onSubmit}>
+                        <div className="mb-4">
+                            <label className="block text-dark mb-2" htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                autoComplete="email"
+                                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="example@example.com"
+                                required
+                            />
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-dark mb-2" htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                autoComplete="current-password"
+                                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••••••"
+                                required
+                            />
+                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
+                            type="submit"
+                        >
+                            Login
+                        </motion.button>
+                    </form>
+                    <p className="text-center text-dark mt-4">
+                        Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
+                    </p>
+                </motion.div>
+            </div>
         </div>
     );
 };

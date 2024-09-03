@@ -54,7 +54,7 @@ export default function Issue({ data }) {
             {/* Header Line */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
-                    <div className={`flex-shrink-0 w-10 h-10 ${isLetter(data.charm) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
+                    <div className={`flex-shrink-0 w-10 h-10 ${isLetter(data.charm) ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
                         {data.charm}
                     </div>
                     <h3 className="ml-4 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
@@ -96,7 +96,7 @@ export default function Issue({ data }) {
             {/* View More Button */}
             <button
                 onClick={() => navigate(`/issues/${data._id}`)}
-                className="mt-auto bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-semibold hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-auto bg-primary text-white py-2 px-4 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
                 View More
             </button>
