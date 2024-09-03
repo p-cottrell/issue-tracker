@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useModal } from '../context/ModalContext';
 import '../styles/loader.css';
 
 export default function Issue({ data }) {
     const navigate = useNavigate();
+    const { openModal, closeModal } = useModal();
     const [isLoading, setIsLoading] = useState(true);
 
     const getStatusClass = () => {
@@ -34,6 +36,14 @@ export default function Issue({ data }) {
 
     const isLetter = (char) => {
         return /\p{L}/u.test(char); // More extensive Unicode support (i.e., accented characters, kanji, etc.)
+    };
+
+    const handleImageClick = (imageSrc) => {
+        openModal(
+            <div className="relative">
+                <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full" />
+            </div>
+        );
     };
 
     // We dynamically colour the charm background based on whether it's a letter or not, for readability
@@ -76,8 +86,9 @@ export default function Issue({ data }) {
                     <img
                         src={`https://picsum.photos/seed/${data._id}/250/150`}
                         alt="Attachment"
-                        className="rounded-md object-cover"
+                        className="rounded-md object-cover cursor-pointer"
                         onLoad={() => setIsLoading(false)}
+                        onClick={() => handleImageClick(`https://picsum.photos/seed/${data._id}/250/150`)}
                     />
                 </div>
             </div>
