@@ -230,6 +230,31 @@ router.get('/check_token', authenticateToken, (req, res) => {
 });
 
 /**
+ * Route to determine if an email is already taken
+ *
+ * This route is used to check if an email is already taken during registration
+ *
+ * @name POST /users/check_email
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.body.email - The email to check.
+ * @param {Object} res - The response object.
+ */
+router.post('/check_email', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const isTaken = await isEmailTaken(email);
+    res.json({ taken: isTaken });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error checking email',
+      details: error.message,
+    });
+  }
+});
+
+/**
  * Route to retrieve all users
  *
  * This route is used to retrieve all users from the database
@@ -242,7 +267,7 @@ router.get('/check_token', authenticateToken, (req, res) => {
  */
 router.get('/all', async (req, res) => {
   try {
-     if (req.user?.role !== 'admin') {
+    if (req.user?.role !== 'admin') {
       return res.status(403).send('You are not authorised to view users');
     }
 
