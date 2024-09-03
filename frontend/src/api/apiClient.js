@@ -21,4 +21,17 @@ const apiClient = axios.create({
     withCredentials: true, // Include cookies in requests for authentication
 });
 
+export const isAuthenticated = async () => {
+    try {
+        const response = await apiClient.get('api/users/check_token');
+        return response.status === 200;
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            return false;
+        }
+
+        throw error;
+    }
+};
+
 export default apiClient;

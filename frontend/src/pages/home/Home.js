@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { isAuthenticated } from '../../api/apiClient';
 import './../../index.css';
 import hero from "./hero.jpg";
 
@@ -10,16 +11,24 @@ import hero from "./hero.jpg";
  * an image, and navigation links.
  */
 const Home = () => {
-  // State hook to store the user's email input
   const [email, setEmail] = useState('');
-
-  // Hook for programmatically navigating to different routes
   const navigate = useNavigate();
 
-  /**
-   * Handles the 'Get Started' button click by navigating to the registration page.
-   * Passes the captured email through route state for potential pre-filling.
-   */
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await isAuthenticated();
+      if (authenticated) {
+        console.log('User is authenticated');
+        navigate('/dashboard');
+      }
+      else {
+        console.log('User is not authenticated');
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
   const handleGetStarted = () => {
     navigate('/register', { state: { email } });
   };
@@ -73,10 +82,10 @@ const Home = () => {
               whileHover={{ scale: 1.03 }}
             >
               <span className="font-bold">Issue Tracker</span> simplifies how you log, track, and analyse issues, enhancing efficiency and productivity.
-              It provides a clear platform to manage tasks, offering insights for better decision-making and swift problem resolution.
+              Use our platform to clearly manage tasks, get insights into better decision-making, and achieve swift problem resolution.
             </motion.p>
 
-            {/* Form input and button for starting the registration process */}
+            {/* Get Started sign-up form */}
             <div className="flex w-full justify-between">
               <motion.input
                 type="email"
@@ -98,6 +107,7 @@ const Home = () => {
             <motion.div
               whileHover={{ scale: 1.01 }}
             >
+              {/* Alternate Sign-in link */}
               <motion.div
                 className="pt-4 text-sm font-semibold leading-none sm:text-base md:text-lg text-secondary"
                 initial={{ opacity: 0 }}

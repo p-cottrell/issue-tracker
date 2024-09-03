@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import apiClient from './apiClient';
 
@@ -21,7 +21,7 @@ import '../styles/loadingRing.css';
  * @returns {React.Component | Element} - The protected component if authenticated, or a redirect to the login page.
  */
 
-const ProtectedRoute = ({ element: Component}) => {
+const ProtectedRoute = ({ element: Component }) => {
   // State to keep track of whether the user is authenticated
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
