@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/loader.css';
 
 export default function Issue({ data }) {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
 
     const getStatusClass = () => {
         switch (data.status_id) {
@@ -31,7 +33,6 @@ export default function Issue({ data }) {
     };
 
     const isLetter = (char) => {
-        // return /^[a-zA-Z]$/.test(char);
         return /\p{L}/u.test(char); // More extensive Unicode support (i.e., accented characters, kanji, etc.)
     };
 
@@ -64,13 +65,19 @@ export default function Issue({ data }) {
             </p>
 
             {/* Attachments */}
-            <div className="mb-4">
+            <div className="mb-4 relative">
                 <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
-                <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center">
+                <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
+                    {isLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="loader"></div>
+                        </div>
+                    )}
                     <img
                         src={`https://picsum.photos/seed/${data._id}/250/150`}
                         alt="Attachment"
                         className="rounded-md object-cover"
+                        onLoad={() => setIsLoading(false)}
                     />
                 </div>
             </div>
