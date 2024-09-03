@@ -35,3 +35,9 @@ p {
     font-size: 1em;
     color: var(--rich-black);
 }
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

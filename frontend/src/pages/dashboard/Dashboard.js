@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssuePopup';
 import Issue from '../../components/Issue';
+import Logo from '../../components/Logo';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Dashboard = () => {
 
   const addHandler = (data) => {
     let { title, description } = data;
-    let charm = "c";
+    let charm = "🐞";
 
     setShowPopup(false);
 
@@ -77,16 +78,32 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-blue-600 shadow p-4 flex justify-between items-center text-white">
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none lg:hidden">
-          <Bars3Icon className="w-6 h-6" />
-        </button>
-        <div className="flex-1 flex justify-center px-4">
-          <input type="text" placeholder="Search..." className="px-4 py-2 border rounded-lg w-full max-w-md text-black" />
+      <header className="relative bg-blue-600 shadow p-4 flex items-center justify-between text-white">
+        {/* Left: Logo and Hamburger */}
+        <div className="flex items-center">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none lg:hidden">
+            <Bars3Icon className="w-6 h-6" />
+          </button>
+          <div className="ml-2 flex items-center">
+            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} />
+          </div>
         </div>
-        <button onClick={openAddHandler} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg relative">
-          + New Issue
-        </button>
+
+        {/* Center: Search Bar */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="px-4 py-2 border rounded-lg w-full text-black"
+          />
+        </div>
+
+        {/* Right: New Issue Button */}
+        <div>
+          <button onClick={openAddHandler} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
+            + New Issue
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-grow">

@@ -30,12 +30,20 @@ export default function Issue({ data }) {
         }
     };
 
+    const isLetter = (char) => {
+        // return /^[a-zA-Z]$/.test(char);
+        return /\p{L}/u.test(char); // More extensive Unicode support (i.e., accented characters, kanji, etc.)
+    };
+
+    // We dynamically colour the charm background based on whether it's a letter or not, for readability
+    //  data.charm = '私'; // Test Unicode character that we want to consider as a "letter"
+    //  data.charm = '😂'; // Test Unicode character that we want to consider as an "emoji"
     return (
         <div className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative">
             {/* Header Line */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
-                    <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex justify-center items-center text-lg">
+                    <div className={`flex-shrink-0 w-10 h-10 ${isLetter(data.charm) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
                         {data.charm}
                     </div>
                     <h3 className="ml-4 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
@@ -57,7 +65,7 @@ export default function Issue({ data }) {
 
             {/* Attachments */}
             <div className="mb-4">
-                <strong className="block mb-2 text-gray-700">Attachment(s):</strong>
+                <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
                 <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center">
                     <img
                         src={`https://picsum.photos/seed/${data._id}/250/150`}
