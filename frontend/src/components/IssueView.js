@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import './IssueView.css';
 import apiClient from '../api/apiClient'
 
