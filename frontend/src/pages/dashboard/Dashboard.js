@@ -6,6 +6,7 @@ import AddIssuePopup from '../../components/AddIssuePopup';
 import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
+import IssueView from '../../components/IssueView';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ const Dashboard = () => {
   const [issues, setIssues] = useState([]);
   const [fetched, setFetched] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -64,6 +67,16 @@ const Dashboard = () => {
     setShowPopup(false);
     console.log(data._id, " Deleted!");
   }
+
+  const openIssueModal = (issue) => {
+    setSelectedIssue(issue);
+    setIsIssueModalOpen(true);
+  };
+
+  const closeIssueModal = () => {
+    setSelectedIssue(null);
+    setIsIssueModalOpen(false);
+  };
 
   if (!fetched) {
     return (
@@ -120,6 +133,7 @@ const Dashboard = () => {
                 index={index}
                 data={issue}
                 deleteHandler={deleteHandler}
+                openIssueModal={() => openIssueModal(issue)}
                 className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
               />
             ))}
@@ -129,6 +143,13 @@ const Dashboard = () => {
 
       {showPopup && (
         <AddIssuePopup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} />
+      )}
+
+      {isIssueModalOpen && (
+        <IssueView
+          issue={selectedIssue}
+          onClose={closeIssueModal}
+        />
       )}
     </div>
   );

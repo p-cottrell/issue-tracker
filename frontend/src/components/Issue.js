@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
 import '../styles/loader.css';
 
-export default function Issue({ data }) {
+export default function Issue({ data, openIssueModal }) {
     const navigate = useNavigate();
     const { openModal, closeModal } = useModal();
     const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +95,7 @@ export default function Issue({ data }) {
 
             {/* View More Button */}
             <button
-                onClick={() => navigate(`/issues/${data._id}`)}
+                onClick={() => openIssueModal(data)}
                 className="mt-auto bg-primary text-white py-2 px-4 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
                 View More
