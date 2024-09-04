@@ -30,7 +30,8 @@ const Dashboard = () => {
     const [showDeletePopup, setShowDeletePopup] = useState(false); // Controls whether the DELETE ISSUE popup is visible.
     const [selectedIssue, setSelectedIssue] = useState(null); // For DELETE ISSUE to know which issue to delete.
 
-    const [searchValue, setSearchValue] = useState('');
+    const [searchValue, setSearchValue] = useState(null);
+    const [issuesBackup, setIssuesBackup] = useState([]);
 
     const [issues, setIssues] = useState([]);
     const [fetched, setFetched] = useState(false); // Initialize to false
@@ -40,6 +41,7 @@ const Dashboard = () => {
             try {
                 const response = await apiClient.get('api/issues');
                 setIssues(response.data);
+                setIssuesBackup(response.data)
                 setFetched(true); // Set fetched to true after data is successfully fetched
             } catch (error) {
                 console.error('Error fetching issues:', error);
@@ -102,6 +104,17 @@ const Dashboard = () => {
         deleteIssue();
     }
 
+    function searchHandler(event, reset) {
+      event.preventDefault(); // Prevent form submission
+
+      if (reset) { // If "undo" was clicked...
+        setIssues(issuesBackup)
+      } else { // Otherwise, look for issues with the provided search value.
+        const result = issues.filter((issue) => issue.title.toLowerCase().trim() === searchValue.toLowerCase().trim());
+        result.length > 0 ? setIssues(result) : alert("not found");
+      }
+    }
+
 
     if (!fetched) {
         return (
@@ -125,11 +138,18 @@ const Dashboard = () => {
             {/* Main Content */}
             <div className={`flex-grow p-6 transition-all duration-300 ${isSidebarCollapsed ? 'ml-[4rem]' : 'ml-[20rem]'}`}>
               <div className="w-full p-5 shadow-md rounded-lg">
+
+                {/* Search bar */}
                 <div style={{padding: 20}}>
-                  <form>
-                    <input type="text" placeholder="Search for an issue." />
+                  <form onSubmit={(e) => searchHandler(e)}>
+                    <input type="text" placeholder="Search for an issue." onChange={(e) => setSearchValue(e.target.value)}/>
                     <button type="submit">Search</button>
+                    <button onClick={(e) => searchHandler(e, true)}>Undo</button>
                   </form>
+                </div>
+
+                <div stype={{padding: 20}}>
+                  Showing {issues.length} of {issues.length} issues.
                 </div>
 
                 <div className="grid justify-center items-center justify-items-center sm:grid-cols-2 lg:grid-cols-3 gap-5">

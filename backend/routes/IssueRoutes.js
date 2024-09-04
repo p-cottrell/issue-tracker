@@ -33,14 +33,17 @@ const router = express.Router();
  * @param {Object} res - The response object.
  */
 router.post('/', authenticateToken, async (req, res) => {
-  const { title, description, status_id, charm, project_id } = req.body;
+  const { title, description, status_id, charm, project_id, attachment } = req.body;
   const reporter_id = req.user.userID;
+  const newAttachment = [reporter_id, attachment]
+  console.log(newAttachment)
 
   const issue = new Issue ({
     reporter_id,
     title,
     description,
     charm,
+    attachments: newAttachment,
   });
 
   if (status_id) {
