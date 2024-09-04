@@ -14,7 +14,7 @@ function formatDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
-export default function Issue({ data, deleteHandler, clickHandler }) {
+export default function Issue({ data, deleteHandler, onClick }) {
   // This takes the status id and gives it a class name for colouring
   const getStatusClass = () => {
     if (data.status_id === 1) return 'completed';
@@ -34,7 +34,7 @@ export default function Issue({ data, deleteHandler, clickHandler }) {
 
   return (
     // click handler to get data from dashboard to pass to handler for issueview popup
-    <div className={`issue-container`} onClick={() => clickHandler(data)}>
+    <div className={`issue-container`} onClick={() => onClick(data)}>
       {/* Status at the top-right corner */}
       <div className={`issue-status ${getStatusClass()}`}>
         {getStatusText()}
@@ -71,8 +71,11 @@ export default function Issue({ data, deleteHandler, clickHandler }) {
         className="issue-image"
       />
 
-      {/* View more link */}
-      <p className="view-more">
+      {/* Update the View More link */}
+      <p className="view-more" onClick={(e) => {
+        e.stopPropagation();
+        onClick(data);
+      }}>
         View More
       </p>
     </div>

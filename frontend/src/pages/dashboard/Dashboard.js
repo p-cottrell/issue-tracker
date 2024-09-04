@@ -30,6 +30,7 @@ const Dashboard = () => {
     const [issues, setIssues] = useState([]);
     const [fetched, setFetched] = useState(false); // Initialize to false
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // State to track sidebar collapse
+    const [showIssueView, setShowIssueView] = useState(false);
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -49,18 +50,16 @@ const Dashboard = () => {
   // Opens the ADD ISSUE popup
   function openAddHandler() {
     setPopupHandler(() => addHandler);
-    setPopupType('add');
+    setPopupType("add");
     setShowPopup(true);
-    return;
   }
 
   // Opens the DELETE ISSUE popup
   function openDeleteHandler(data) {
     setPopupHandler(() => deleteHandler);
     setSelectedIssue(data);
-    setPopupType('delete');
+    setPopupType("delete");
     setShowPopup(true);
-    return;
   }
 
   // Handles when issues are clicked (should take the user to that issue's page)
@@ -82,24 +81,6 @@ const Dashboard = () => {
     setShowIssueView(false); 
     setSelectedIssue(null);  
   };
-
-    // Opens the ADD ISSUE popup
-    function openAddHandler() {
-        setPopupHandler(() => addHandler);
-        setPopupType("add");
-        setShowPopup(true);
-        return;
-    }
-  }
-
-    // Opens the DELETE ISSUE popup
-    function openDeleteHandler(data) {
-        setPopupHandler(() => deleteHandler);
-        setSelectedIssue(data);
-        setPopupType("delete");
-        setShowPopup(true);
-        return;
-    }
 
     // Adds an issue to the DB.
     function addHandler(data) {
@@ -161,7 +142,12 @@ const Dashboard = () => {
                 </div>
                 <div className="grid justify-center items-center justify-items-center sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {issues.map((issue, index) => (
-                    <Issue key={issue._id} index={index} data={issue} />
+                    <Issue 
+                      key={issue._id} 
+                      index={index} 
+                      data={issue} 
+                      onClick={openIssueView}
+                    />
                   ))}
                 </div>
               </div>
@@ -171,6 +157,12 @@ const Dashboard = () => {
             <Popup
               closeHandler={() => setShowPopup(false)}
               selectedIssue={selectedIssue}
+            />
+          )}
+          {showIssueView && (
+            <IssueView
+              issue={selectedIssue}
+              onClose={closeIssueView}
             />
           )}
         </div>

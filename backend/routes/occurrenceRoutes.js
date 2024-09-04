@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
-
+const Issue = require('../models/Issue'); 
 
 /**
  * Occurrence Management Routes
@@ -34,33 +34,30 @@ const authenticateToken = require('../middleware/authenticateToken');
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
   const { description } = req.body;
-  const issueID = req.params.issueId.trim();
+  const issueId = req.params.issueId;
 
   try {
-    // Find the related issue by ID
-    const issue = await Issue.findById(issueID);
-    if (!issue) {
-      console.log({ issueID });
-      return res.status(404).json({ error: 'Issue not found' });
-    }
-
-    // Create a new occurrence
-    const newOccurrence = new Occurrence({
-      user_id: req.user.id, // Associate the occurrence with the authenticated user
+    const newOccurrence = {
+      user_id: req.user.id,
       description,
       created_at: Date.now(),
       updated_at: Date.now(),
-    });
+    };
+    // used to push the new occurrence to the issue without requiring all the other fields to exist
+    const updatedIssue = await Issue.findByIdAndUpdate(
+      issueId,
+      { $push: { occurrences: newOccurrence } },
+      { new: true, runValidators: false }
+    );
 
-    await newOccurrence.save(); // Save the occurrence to the database
+    if (!updatedIssue) {
+      return res.status(404).json({ error: 'Issue not found' });
+    }
 
-    // Add the occurrence to the issue's occurrences array
-    issue.occurrences.push(newOccurrence._id);
-    await issue.save(); // Save the updated issue
-
-    res.status(201).json({ message: 'Occurrence created', occurrenceId: newOccurrence._id });
+    res.status(201).json({ message: 'Occurrence added', occurrence: newOccurrence });
   } catch (error) {
-    res.status(500).json({ error: 'Error creating occurrence', details: error.message });
+    console.error('Error adding occurrence:', error);
+    res.status(500).json({ error: 'Error adding occurrence', details: error.message });
   }
 });
 

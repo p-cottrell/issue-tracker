@@ -3,12 +3,17 @@ import axios from 'axios';
 import './IssueView.css';
 
 export default function IssueView({ issue, onClose }) {
+  // State for the full issue details, separate from the initial 'issue' prop
   const [detailedIssue, setDetailedIssue] = useState(issue);
-  const [editMode, setEditMode] = useState(false); // For toggling edit mode
+  // Toggle for edit mode
+  const [editMode, setEditMode] = useState(false);
+  // Separate state for edited issue to prevent direct mutation of detailedIssue
   const [editedIssue, setEditedIssue] = useState({});
+  // State for new occurrence input
   const [newOccurrence, setNewOccurrence] = useState('');
 
   useEffect(() => {
+    // Fetch full issue details when component mounts or issue ID changes
     const fetchIssueDetails = async () => {
       try {
         const response = await axios.get(
@@ -34,6 +39,7 @@ export default function IssueView({ issue, onClose }) {
 
   const handleSave = async () => {
     try {
+      // Send PUT request to update the issue
       const response = await axios.put(
         `http://localhost:5000/api/issues/${issue._id}`,
         editedIssue,
@@ -42,7 +48,6 @@ export default function IssueView({ issue, onClose }) {
         }
       );
       setDetailedIssue(response.data);
-      console.log(response.data); // Log the new data
       setEditMode(false);
       alert('Issue updated successfully');
       onClose();
@@ -53,28 +58,31 @@ export default function IssueView({ issue, onClose }) {
   };
 
   const handleCancel = () => {
+    // Reset edited issue to original state and exit edit mode
     setEditMode(false);
-    setEditedIssue(detailedIssue); // Reset editedIssue to the original data
+    setEditedIssue(detailedIssue);
   };
 
   const handleAddOccurrence = async () => {
     if (!newOccurrence.trim()) return;
 
     try {
+      // Send POST request to add new occurrence
       const response = await axios.post(
-        `http://localhost:5000/api/issues/${issue._id}/occurrences`,
+        `http://localhost:5000/api/occurrences/${issue._id}`,
         { description: newOccurrence },
         { withCredentials: true }
       );
+      
       setDetailedIssue({
         ...detailedIssue,
         occurrences: [...detailedIssue.occurrences, response.data.occurrence],
       });
-      setNewOccurrence(''); // Clear the input field
+      setNewOccurrence('');
       alert('Occurrence added successfully');
     } catch (error) {
-      console.error('Error adding occurrence:', error);
-      alert('Failed to add occurrence');
+      console.error('Error adding occurrence:', error.response ? error.response.data : error.message);
+      alert(`Failed to add occurrence: ${error.response ? error.response.data.message : error.message}`);
     }
   };
 
@@ -90,8 +98,10 @@ export default function IssueView({ issue, onClose }) {
           X
         </button>
         <div className="modal-content">
+          {/* Issue header section */}
           <div className="issue-header">
             {editMode ? (
+             
               <>
                 <input
                   type="text"
@@ -109,11 +119,13 @@ export default function IssueView({ issue, onClose }) {
                 />
               </>
             ) : (
+              // Render title and charm in view mode
               <>
                 <h1 className="issue-title">{detailedIssue.title}</h1>
                 <p className="issue-charm">{detailedIssue.charm}</p>
               </>
             )}
+            {/* Status display/edit */}
             <p className="issue-status">
               Status:{' '}
               {editMode ? (
@@ -128,6 +140,7 @@ export default function IssueView({ issue, onClose }) {
                 detailedIssue.status_id
               )}
             </p>
+            {/* Edit/Save/Cancel buttons */}
             {!editMode && (
               <button onClick={handleEdit} className="edit-button">
                 Edit Issue
@@ -144,8 +157,10 @@ export default function IssueView({ issue, onClose }) {
               </div>
             )}
           </div>
+          {/* Issue body section */}
           <div className="issue-body">
             <div className="issue-main">
+              {/* Description section */}
               <h2>Description</h2>
               {editMode ? (
                 <textarea
@@ -158,6 +173,7 @@ export default function IssueView({ issue, onClose }) {
                 <p>{detailedIssue.description}</p>
               )}
 
+              {/* Occurrences section */}
               <h2>Occurrences</h2>
               <ul className="occurrences-list">
                 {(detailedIssue.occurrences || []).map((occurrence) => (
@@ -172,6 +188,7 @@ export default function IssueView({ issue, onClose }) {
                   </li>
                 ))}
               </ul>
+              {/* New occurrence input */}
               <textarea
                 placeholder="Add new occurrence"
                 value={newOccurrence}
@@ -185,6 +202,7 @@ export default function IssueView({ issue, onClose }) {
                 Add Occurrence
               </button>
 
+              {/* Attachments section */}
               <h2>Attachments</h2>
               <ul className="attachments-list">
                 {(detailedIssue.attachments || []).map((attachment) => (
@@ -205,6 +223,7 @@ export default function IssueView({ issue, onClose }) {
                 ))}
               </ul>
 
+              {/* Comments section */}
               <h2>Comments</h2>
               <ul className="comments-list">
                 {(detailedIssue.comments || []).map((comment) => (
@@ -218,6 +237,7 @@ export default function IssueView({ issue, onClose }) {
                 ))}
               </ul>
             </div>
+            {/* Issue sidebar with metadata */}
             <div className="issue-sidebar">
               <div className="issue-meta">
                 <p>
