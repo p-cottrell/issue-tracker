@@ -12,6 +12,11 @@ export default function IssueView({ issue, onClose }) {
   // State for new occurrence input
   const [newOccurrence, setNewOccurrence] = useState('');
 
+  // New state for occurrence editing
+  const [selectedOccurrence, setSelectedOccurrence] = useState(null);
+  
+  const [editedOccurrence, setEditedOccurrence] = useState('');
+
   useEffect(() => {
     // Fetch full issue details when component mounts or issue ID changes
     const fetchIssueDetails = async () => {
@@ -89,6 +94,66 @@ export default function IssueView({ issue, onClose }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditedIssue({ ...editedIssue, [name]: value });
+  };
+
+  const handleSelectOccurrence = (occurrence) => {
+    setSelectedOccurrence(occurrence);
+    setEditedOccurrence(occurrence.description);
+  };
+
+  const handleEditOccurrence = async () => {
+    if (!selectedOccurrence || !editedOccurrence.trim()) return;
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
+        { description: editedOccurrence },
+        { withCredentials: true }
+      );
+
+      const updatedOccurrences = detailedIssue.occurrences.map(occ =>
+        occ._id === selectedOccurrence._id ? response.data.occurrence : occ
+      );
+
+      setDetailedIssue({
+        ...detailedIssue,
+        occurrences: updatedOccurrences,
+      });
+      setSelectedOccurrence(null);
+      setEditedOccurrence('');
+      alert('Occurrence updated successfully');
+    } catch (error) {
+      console.error('Error updating occurrence:', error);
+      alert('Error updating occurrence');
+    }
+  };
+
+  const handleDeleteOccurrence = async () => {
+    if (!selectedOccurrence) return;
+    console.log(selectedOccurrence._id);
+
+    
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
+        { withCredentials: true }
+      );
+
+      const updatedOccurrences = detailedIssue.occurrences.filter(
+        occ => occ._id !== selectedOccurrence._id
+      );
+
+      setDetailedIssue({
+        ...detailedIssue,
+        occurrences: updatedOccurrences,
+      });
+      setSelectedOccurrence(null);
+      setEditedOccurrence('');
+      alert('Occurrence deleted successfully');
+    } catch (error) {
+      console.error('Error deleting occurrence:', error);
+      alert('Error deleting occurrence');
+    }
   };
 
   return (
@@ -177,7 +242,11 @@ export default function IssueView({ issue, onClose }) {
               <h2>Occurrences</h2>
               <ul className="occurrences-list">
                 {(detailedIssue.occurrences || []).map((occurrence) => (
-                  <li key={occurrence._id} className="occurrence-item">
+                  <li 
+                    key={occurrence._id} 
+                    className={`occurrence-item ${selectedOccurrence && selectedOccurrence._id === occurrence._id ? 'selected' : ''}`}
+                    onClick={() => handleSelectOccurrence(occurrence)}
+                  >
                     <p>
                       <strong>Date:</strong>{' '}
                       {new Date(occurrence.created_at).toLocaleString()}
@@ -188,6 +257,29 @@ export default function IssueView({ issue, onClose }) {
                   </li>
                 ))}
               </ul>
+
+              {/* Occurrence edit section */}
+              {selectedOccurrence && (
+                <div className="occurrence-edit">
+                  <textarea
+                    value={editedOccurrence}
+                    onChange={(e) => setEditedOccurrence(e.target.value)}
+                    className="edit-occurrence-input"
+                  />
+                  <div className="occurrence-edit-buttons">
+                    <button onClick={handleEditOccurrence} className="save-occurrence-button">
+                      Save Occurrence
+                    </button>
+                    <button onClick={handleDeleteOccurrence} className="delete-occurrence-button">
+                      Delete Occurrence
+                    </button>
+                    <button onClick={() => setSelectedOccurrence(null)} className="cancel-edit-button">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* New occurrence input */}
               <textarea
                 placeholder="Add new occurrence"

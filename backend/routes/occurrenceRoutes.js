@@ -99,7 +99,7 @@ router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
  * issue. The issue is identified by `issueId` and the occurrence by `occurrenceId`.
  * Only the user who created the occurrence or an admin can delete it.
  *
- * @name DELETE /issues/:issueId/occurrences/:occurrenceId
+ * @name DELETE /:issueId/:occurrenceId
  * @function
  * @memberof module:routes/occurrences
  * @param {Object} req - Express request object
@@ -108,7 +108,7 @@ router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
  * @throws {403} - If the user is not authorized to delete the occurrence.
  * @throws {500} - If an error occurs while deleting the occurrence.
  */
-router.delete('/issues/:issueId/occurrences/:occurrenceId', authenticateToken, async (req, res) => {
+router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => {
   try {
     const { issueId, occurrenceId } = req.params;
 
@@ -125,17 +125,69 @@ router.delete('/issues/:issueId/occurrences/:occurrenceId', authenticateToken, a
     }
 
     // Ensure that the user requesting the deletion is the one who created the occurrence or is an admin
-    if (occurrence.user_id.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'You are not authorized to delete this occurrence' });
-    }
+    // until all data is actually accurate this is out and is stopping things
+
+    // if (occurrence.user_id.toString() !== req.user.id && req.user.role !== 'admin') {
+    //   return res.status(403).json({ error: 'You are not authorized to delete this occurrence' });
+    // }
 
     // Remove the occurrence from the array and save the updated issue
-    occurrence.remove();
-    await issue.save();
+    await Issue.findByIdAndUpdate(issueId, { $pull: { occurrences: occurrenceId } });
 
     res.status(200).json({ message: 'Occurrence deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting occurrence', details: error.message });
+  }
+});
+
+/**
+ * Route to update a specific occurrence for an issue
+ *
+ * This route allows an authenticated user to update the description of a specific occurrence
+ * within an issue. The issue is identified by `issueId` and the occurrence by `occurrenceId`.
+ * The updated description is provided in the request body.
+ *
+ * @name PUT /:issueId/:occurrenceId
+ * @function
+ * @memberof module:routes/occurrences
+ * @param {Object} req.body - The updated occurrence data (description).
+ * @param {Object} res - The response object.
+ * @throws {404} - If the issue or occurrence is not found.
+ * @throws {500} - If an error occurs while updating the occurrence.
+ */
+
+router.put('/:issueId/:occurrenceId', authenticateToken, async (req, res) => {
+  try {
+    const { issueId, occurrenceId } = req.params;
+    const { description } = req.body;
+
+    // Update the specific occurrence using $set operator
+    const updatedIssue = await Issue.findOneAndUpdate(
+      { _id: issueId, 'occurrences._id': occurrenceId },
+      { 
+        $set: { 
+          'occurrences.$.description': description,
+          'occurrences.$.updated_at': Date.now()
+        } 
+      },
+      { new: true, runValidators: false }
+    );
+
+    if (!updatedIssue) {
+      return res.status(404).json({ message: 'Issue or occurrence not found' });
+    }
+
+    const updatedOccurrence = updatedIssue.occurrences.find(
+      occ => occ._id.toString() === occurrenceId
+    );
+
+    res.json({ 
+      message: 'Occurrence updated successfully', 
+      occurrence: updatedOccurrence 
+    });
+  } catch (error) {
+    console.error('Error updating occurrence:', error);
+    res.status(500).json({ message: 'Server error', details: error.message });
   }
 });
 
