@@ -2,6 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './IssueView.css';
 
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
 export default function IssueView({ issue, onClose }) {
   // State for the full issue details, separate from the initial 'issue' prop
   const [detailedIssue, setDetailedIssue] = useState(issue);
@@ -337,11 +346,11 @@ export default function IssueView({ issue, onClose }) {
                 </p>
                 <p>
                   <strong>Created at:</strong>{' '}
-                  {new Date(detailedIssue.created_at).toLocaleString()}
+                  {formatDate(detailedIssue.created_at)}
                 </p>
                 <p>
                   <strong>Updated at:</strong>{' '}
-                  {new Date(detailedIssue.updated_at).toLocaleString()}
+                  {formatDate(detailedIssue.updated_at)}
                 </p>
               </div>
             </div>
