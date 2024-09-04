@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './IssueView.css';
+import apiClient from '../api/apiClient'
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -30,11 +31,8 @@ export default function IssueView({ issue, onClose }) {
     // Fetch full issue details when component mounts or issue ID changes
     const fetchIssueDetails = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/api/issues/${issue._id}`,
-          {
-            withCredentials: true,
-          }
+        const response = await apiClient.get(
+          `/api/issues/${issue._id}`,
         );
 
         setDetailedIssue(response.data);
@@ -54,12 +52,9 @@ export default function IssueView({ issue, onClose }) {
   const handleSave = async () => {
     try {
       // Send PUT request to update the issue
-      const response = await axios.put(
-        `http://localhost:5000/api/issues/${issue._id}`,
+      const response = await apiClient.put(
+        `/api/issues/${issue._id}`,
         editedIssue,
-        {
-          withCredentials: true,
-        }
       );
       setDetailedIssue(response.data);
       setEditMode(false);
@@ -82,12 +77,11 @@ export default function IssueView({ issue, onClose }) {
 
     try {
       // Send POST request to add new occurrence
-      const response = await axios.post(
-        `http://localhost:5000/api/occurrences/${issue._id}`,
+      const response = await apiClient.post(
+        `/api/occurrences/${issue._id}`,
         { description: newOccurrence },
-        { withCredentials: true }
       );
-      
+
       setDetailedIssue({
         ...detailedIssue,
         occurrences: [...detailedIssue.occurrences, response.data.occurrence],
@@ -114,10 +108,9 @@ export default function IssueView({ issue, onClose }) {
     if (!selectedOccurrence || !editedOccurrence.trim()) return;
 
     try {
-      const response = await axios.put(
-        `http://localhost:5000/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
+      const response = await apiClient.put(
+        `/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
         { description: editedOccurrence },
-        { withCredentials: true }
       );
 
       const updatedOccurrences = detailedIssue.occurrences.map(occ =>
@@ -143,9 +136,8 @@ export default function IssueView({ issue, onClose }) {
 
     
     try {
-      await axios.delete(
-        `http://localhost:5000/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
-        { withCredentials: true }
+      await apiClient.delete(
+        `/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
       );
 
       const updatedOccurrences = detailedIssue.occurrences.filter(
