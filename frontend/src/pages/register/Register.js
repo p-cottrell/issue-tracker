@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
-import './../../index.css';
+import ScrollingBackground from '../../components/ScrollingBackground';
 import PasswordRules from './../../components/PasswordRules';
+import './../../index.css';
 
 /**
  * Register component for handling user registration with validation.
@@ -18,16 +20,14 @@ const Register = () => {
     const [email, setEmail] = useState(location.state?.email || '');
     const [username, setName] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [passwordFocused, setPasswordFocused] = useState(false);
     const [showPasswordRules, setShowPasswordRules] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [step, setStep] = useState(1);
 
-
-    /**
-     * UseEffect to manage password focus state with a delay. If we don't use this the user will click on the submit buton
-     * but it won't register because the password rules disappear too quick and the submit button will have moved. All this
-     * does is delay that by 200 milliseconds.
-     */
     useEffect(() => {
         const handleFocus = passwordFocused;
         const timer = setTimeout(() => {
@@ -45,26 +45,41 @@ const Register = () => {
         setPasswordFocused(false);
     };
 
-    /**
-     * Validates the email address against a regular expression.
-     * @param {string} email - Email address to validate.
-     * @returns {boolean} - True if the email is valid; otherwise, false.
-     */
-    const validateEmail = (email) => {
-        const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        return re.test(String(email).trim().toLowerCase());
+    const handleEmailChange = (e) => {
+        setEmail(e.target.value);
+        setEmailError(''); // Clear email error when the email input changes
     };
 
-    /**
-     * Validates the password to ensure it meets the specified criteria:
-     * - Minimum length of 8 characters
-     * - Includes at least one uppercase letter
-     * - Includes at least one number
-     * - Includes at least one special character
-     * - Does not contain spaces
-     * @param {string} password - Password to validate.
-     * @returns {boolean} - True if the password is valid; otherwise, false.
-     */
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+        if (e.target.value) {
+            setShowConfirmPassword(true);
+        } else {
+            setShowConfirmPassword(false);
+        }
+    };
+
+    const handleEmailSubmit = () => {
+        if (!email.trim()) {
+            setEmailError('Email is required.');
+            return;
+        }
+
+        if (!validateEmail(email.trim())) {
+            setEmailError('Please enter a valid email address.');
+            return;
+        }
+
+        checkEmailAvailability();
+    };
+
+    const validateEmail = (email) => {
+        const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        const valid = re.test(String(email).trim().toLowerCase());
+        console.log('Email validation:', valid);
+        return valid;
+    };
+
     const validatePassword = (password) => {
         if (password.length < 8) {
             setError('Password must be at least 8 characters long.');
@@ -89,128 +104,207 @@ const Register = () => {
         return true;
     };
 
-    /**
-     * Handles the form submission.
-     * Validates input fields and submits the registration request to the server.
-     * @param {React.FormEvent<HTMLFormElement>} e - Form event.
-     */
+    const checkEmailAvailability = async () => {
+        try {
+            const response = await apiClient.post('/api/users/check_email', { email: email.trim() });
+            if (response.data.taken) {
+                setEmailError('Email is already in use.');
+            } else {
+                setStep(2);
+            }
+        } catch (error) {
+            setEmailError('An error occurred while checking email availability.');
+        }
+    };
+
     const onSubmit = async (e) => {
         e.preventDefault();
 
-        if (!email.trim()) {
-            setError('Email is required.');
-            return;
-        }
-
-        if (!username.trim()) {
-            setError('Username is required.');
-            return;
-        }
-
-        if (!password.trim()) {
-            setError('Password is required.');
-            return;
-        }
-
-        if (!validateEmail(email.trim())) {
-            setError('Please enter a valid email address.');
-            return;
-        }
-
-        if (!validatePassword(password.trim())) {
-            // Error message is set inside the validatePassword function
-            return;
-        }
-
-        try {
-            const response = await apiClient.post('/api/users/register', {
-                username,
-                email: email.trim(),
-                password: password.trim(),
-            });
-
-            if (response.data.success) {
-                navigate('/dashboard'); // Navigate to dashboard on successful registration
-            } else if (response.data.error) {
-                setError(response.data.error); // Set the error from the server response
+        if (step === 1) {
+            if (!email.trim()) {
+                setEmailError('Email is required.');
+                return;
             }
-        } catch (error) {
-            if (error.response && error.response.data && error.response.data.error) {
-                setError(error.response.data.error);
-            } else {
-                setError('An error occurred. Please try again later.');
+
+            if (!validateEmail(email.trim())) {
+                setEmailError('Please enter a valid email address.');
+                return;
+            }
+
+            await checkEmailAvailability();
+        } else {
+            if (!username.trim()) {
+                setError('Username is required.');
+                return;
+            }
+
+            if (!password.trim()) {
+                setError('Password is required.');
+                return;
+            }
+
+            if (!validatePassword(password.trim())) {
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                setError('Passwords do not match.');
+                return;
+            }
+
+            try {
+                const response = await apiClient.post('/api/users/register', {
+                    username,
+                    email: email.trim(),
+                    password: password.trim(),
+                });
+
+                if (response.data.success) {
+                    navigate('/dashboard');
+                } else if (response.data.error) {
+                    setError(response.data.error);
+                }
+            } catch (error) {
+                if (error.response && error.response.data && error.response.data.error) {
+                    setError(error.response.data.error);
+                } else {
+                    setError('An error occurred. Please try again later.');
+                }
             }
         }
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
-            <div className="container my-auto max-w-md border-2 rounded-lg shadow-lg border-secondary p-3 bg-secondary xs:w-11/12">
-                <div className="text-center my-6">
-                    <h1 className="text-3xl font-semibold text-dark">Register</h1>
-                    <p className="text-neutral">Create your account</p>
-                </div>
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <ScrollingBackground />
+            <div className="relative z-10 w-full">
+                <motion.div
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto"
+                >
+                    <div className="text-center my-6">
+                        <h1 className="text-3xl font-semibold text-dark">Register</h1>
+                        <p className="text-gray-600">Create your account</p>
+                    </div>
 
-                <div className="m-6">
-                    <form className="mb-4" onSubmit={onSubmit}>
-                        <div className="mb-6">
-                            <label htmlFor="email" className="block mb-2 text-sm text-neutral">Email Address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                id="email"
-                                autoComplete='email'
-                                autoFocus
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-3 py-2 border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
-                            />
-                        </div>
-                        <div className="mb-6">
-                            <label htmlFor="username" className="block mb-2 text-sm text-neutral">Username</label>
-                            <input
-                                type="text"
-                                name="username"
-                                id="username"
-                                autoComplete="username"
-                                value={username}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
-                            />
-                        </div>
-                        <div className="mb-6">
-                            <label htmlFor="password" className="block mb-2 text-sm text-neutral">Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                id="password"
-                                autoComplete="new-password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Your password"
-                                className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
-                                onFocus={handlePasswordFocus}
-                                onBlur={handlePasswordBlur}
-                            />
-                            <div className='mt-6'>
-                                {showPasswordRules && <PasswordRules password={password} />}
+                    {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                    <form onSubmit={onSubmit}>
+                        {step === 1 && (
+                            <div className="mb-6">
+                                <label htmlFor="email" className="block mb-2 text-dark">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    id="email"
+                                    autoComplete="email"
+                                    autoFocus
+                                    value={email}
+                                    onChange={handleEmailChange}
+                                    placeholder="example@example.com"
+                                    className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                {emailError && <div className="text-sm text-red-600 mt-2">{emailError}</div>}
+                                <div className="mt-6">
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        type="button"
+                                        onClick={handleEmailSubmit}
+                                        className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
+                                    >
+                                        Next
+                                    </motion.button>
+                                </div>
                             </div>
-                        </div>
-                        {error && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out">{error}</div>}
-                        <div className="mb-6">
-                            <button
-                                type="submit"
-                                className="w-full px-3 py-4 text-white bg-primary rounded-md hover:bg-primaryHover focus:outline-none duration-100 ease-in-out"
-                            >
-                                Register
-                            </button>
-                        </div>
-                        <p className="text-sm text-center text-neutral">
+                        )}
+
+                        {step === 2 && (
+                            <>
+                                <div className="mb-6">
+                                    <label htmlFor="username" className="block mb-2 text-dark">Username</label>
+                                    <input
+                                        type="text"
+                                        name="username"
+                                        id="username"
+                                        autoComplete="username"
+                                        value={username}
+                                        placeholder="MyUsername123"
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+                                <div className="mb-6">
+                                    <label htmlFor="password" className="block mb-2 text-dark">Password</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        id="password"
+                                        autoComplete="new-password"
+                                        value={password}
+                                        onChange={handlePasswordChange}
+                                        placeholder="••••••••••••"
+                                        className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                        onFocus={handlePasswordFocus}
+                                        onBlur={handlePasswordBlur}
+                                    />
+                                    <div className='mt-6'>
+                                        {showPasswordRules && <PasswordRules password={password} />}
+                                    </div>
+                                </div>
+                                {showConfirmPassword && (
+                                    <div className="mb-6">
+                                        <label htmlFor="confirmPassword" className="block mb-2 text-dark">Confirm Password</label>
+                                        <input
+                                            type="password"
+                                            name="confirmPassword"
+                                            id="confirmPassword"
+                                            autoComplete="new-password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="••••••••••••"
+                                            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                        />
+                                    </div>
+                                )}
+                                {/* {error && <div className="text-sm text-red-600 mb-6">{error}</div>} */}
+                                <div className="mb-6 flex justify-between">
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        type="button"
+                                        onClick={() => {
+                                            setStep(1);
+                                            setName('');
+                                            setPassword('');
+                                            setConfirmPassword('');
+                                            setShowConfirmPassword(false);
+                                            setError('');
+                                        }}
+                                        className="w-full bg-primary text-white py-2 rounded hover:bg-secondaryHover transition duration-200 mr-2"
+                                    >
+                                        Back
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        type="submit"
+                                        className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200 ml-2"
+                                    >
+                                        Register
+                                    </motion.button>
+                                </div>
+                            </>
+                        )}
+                    </form>
+                    {step === 1 && (
+                        <p className="text-sm text-center text-gray-600">
                             Already have an account?{' '}
                             <Link to="/login" className="font-semibold text-primary focus:outline-none focus:underline">Sign in</Link>.
                         </p>
-                    </form>
-                </div>
+                    )}
+                </motion.div>
             </div>
         </div>
     );

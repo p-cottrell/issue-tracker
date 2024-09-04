@@ -1,26 +1,28 @@
-/* base.css */
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap');
 
 :root {
-    --black: #01161eff; /* var(--black) */
-    --green: #124559ff; /* var(--green) */
-    --air-force-blue: #598392ff; /* var(--air-force-blue) */
-    --ash-gray: #aec3b0ff; /* var(--ash-gray) */
-    --beige: #eff6e0ff; /* var(--beige) */
+    --color-background: #ffffffff; /* var(--color-background) */
+    --color-text-primary: #01161eff; /* var(--text-color-primary) */
+    --color-text-secondary: #124559ff; /* var(--text-color-secondary) */
+    --color-text-tertiary: #6b7280ff; /* var(--text-color-tertiary) */
 }
 
-
-
 body {
-    font-family: Arial, sans-serif;
-    background-color: var(--beige);
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    background-color: var(--color-background);
     margin: 0;
     min-height: 100vh;
 }
 
 h1, h2, p {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 600;
+    font-style: normal;
     margin: 0 0 10px;
-    color: var(--ash-gray);
+    color: var(--color-text-primary);
 }
 
 h1 {
@@ -33,5 +35,65 @@ h2 {
 
 p {
     font-size: 1em;
-    color: var(--rich-black);
+    color: var(--color-text-secondary);
+}
+
+.inter-thin {
+    font-family: "Inter", sans-serif;
+    font-weight: 100;
+    font-style: normal;
+}
+
+.inter-extra-light {
+    font-family: "Inter", sans-serif;
+    font-weight: 200;
+    font-style: normal;
+}
+
+.inter-regular {
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.red-hat-display-light {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 300;
+    font-style: normal;
+}
+
+.red-hat-display-regular {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.red-hat-display-medium {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 500;
+    font-style: normal;
+}
+
+.red-hat-display-semi-bold {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 600;
+    font-style: normal;
+}
+
+.red-hat-display-bold {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+}
+
+.red-hat-display-black {
+    font-family: "Red Hat Display", sans-serif;
+    font-weight: 900;
+    font-style: normal;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

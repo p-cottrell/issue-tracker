@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import ScrollingBackground from '../../components/ScrollingBackground';
 import './../../index.css';
 
 /**
@@ -64,56 +66,57 @@ const Login = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
-            <div className="container my-auto max-w-md border-2 rounded-lg shadow-lg border-secondary p-3 bg-secondary xs:w-11/12">
-                <div className="text-center my-6">
-                    <h1 className="text-3xl font-semibold text-dark">Sign in</h1>
-                    <p className="text-neutral">Sign in to access your account</p>
-                </div>
-
-                <div className="m-6">
-                    <form className="mb-4" onSubmit={onSubmit}>
-                        <div className="mb-6">
-                            <label htmlFor="email" className="block mb-2 text-sm text-neutral">Email Address</label>
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <ScrollingBackground />
+            <div className="relative z-10 w-full">
+                <motion.div
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto"
+                >
+                    <h2 className="text-2xl font-semibold text-center text-dark mb-6">Login</h2>
+                    {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                    <form onSubmit={onSubmit}>
+                        <div className="mb-4">
+                            <label className="block text-dark mb-2" htmlFor="email">Email</label>
                             <input
                                 type="email"
-                                name="email"
                                 id="email"
+                                autoComplete="email"
+                                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Your email address"
-                                className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
+                                placeholder="example@example.com"
+                                required
                             />
                         </div>
                         <div className="mb-6">
-                            <label htmlFor="password" className="text-sm text-neutral">Password</label>
+                            <label className="block text-dark mb-2" htmlFor="password">Password</label>
                             <input
                                 type="password"
-                                name="password"
                                 id="password"
+                                autoComplete="current-password"
+                                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Your password"
-                                className="w-full px-3 py-2 placeholder-neutral border border-neutral rounded-md focus:outline-none focus:ring focus:ring-accent focus:border-primary bg-neutral text-dark"
+                                placeholder="••••••••••••"
+                                required
                             />
-                            <Link to="/forgot-password" className="text-sm text-neutral focus:outline-none hover:text-primary">
-                                Forgot password?
-                            </Link>
                         </div>
-                        {error && <div className="text-sm bg-red-200 text-red-800 p-2 rounded transition-opacity duration-300 ease-in-out">{error}</div>}
-                        <div className="mb-6">
-                            <button
-                                type="submit"
-                                className="w-full px-3 py-4 text-white bg-primary rounded-md hover:bg-primaryHover focus:outline-none duration-100 ease-in-out"
-                            >
-                                Sign in
-                            </button>
-                        </div>
-                        <p className="text-sm text-center text-neutral">
-                            Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
-                        </p>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
+                            type="submit"
+                        >
+                            Login
+                        </motion.button>
                     </form>
-                </div>
+                    <p className="text-center text-dark mt-4">
+                        Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
+                    </p>
+                </motion.div>
             </div>
         </div>
     );

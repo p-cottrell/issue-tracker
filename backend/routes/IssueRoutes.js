@@ -32,27 +32,26 @@ const router = express.Router();
  * @throws {500} - If an error occurs while creating the issue.
  */
 router.post('/', authenticateToken, async (req, res) => {
-  const { title, description, status_id, charm, project_id } = req.body;
-  const reporter_id = req.user.id;
-
-  const issueData = {
-    reporter_id,
-    title,
-    description,
-    charm,
-  };
-
-  if (status_id) {
-    issueData.status_id = status_id;
-  }
-  if (project_id) {
-    issueData.project_id = project_id;
-  }
-
   try {
-    const newIssue = new Issue(issueData); // Create a new instance of Issue
-    await newIssue.save(); // Save the new issue to the database
-    res.status(201).send({ message: 'Issue created', issueID: newIssue._id });
+    const { title, description, status_id, charm, project_id } = req.body;
+    const reporter_id = req.user.userID;
+
+    const issue = new Issue({
+      reporter_id,
+      title,
+      description,
+      charm,
+    });
+
+    if (status_id) {
+      issue.status_id = status_id;
+    }
+    if (project_id) {
+      issue.project_id = project_id;
+    }
+
+    await issue.save();
+    res.status(201).send({message:'Issue created', issueID: issue._id});
   } catch (error) {
     res
       .status(500)
@@ -75,8 +74,8 @@ router.post('/', authenticateToken, async (req, res) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const issues = await Issue.find({ reporter_id: req.user.id });
-
+    const issues = await Issue.find({ reporter_id: req.user.userID });
+   
     if (issues.length === 0) {
       return res.status(404).send('No issues found');
     }

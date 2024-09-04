@@ -13,12 +13,12 @@ const PasswordRules = ({ password }) => {
         <div>
             <ul className="list-none pl-0 text-sm text-neutral">
                 {rules.map(rule => (
-                    <li key={rule.id} className="flex justify-between items-center">
+                    <li key={rule.id} className={`flex justify-between items-center ${rule.test(password) ? 'text-green-500' : 'text-red-500'}`}>
                         {rule.text}
                         {rule.test(password) ? (
-                            <span className="text-green-500">✓</span>
+                            <span>✓</span>
                         ) : (
-                            <span className="text-red-500">✗</span>
+                            <span>✗</span>
                         )}
                     </li>
                 ))}

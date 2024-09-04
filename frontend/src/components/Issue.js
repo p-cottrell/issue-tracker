@@ -1,83 +1,105 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useModal } from '../context/ModalContext';
+import '../styles/loader.css';
 
-// .css imports
-import './Issue.css';
-import '../styles/loadingRing.css';
+export default function Issue({ data }) {
+    const navigate = useNavigate();
+    const { openModal, closeModal } = useModal();
+    const [isLoading, setIsLoading] = useState(true);
 
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+    const getStatusClass = () => {
+        switch (data.status_id) {
+            case 1:
+                return 'bg-green-500 text-white';
+            case 2:
+                return 'bg-yellow-500 text-white';
+            case 3:
+                return 'bg-red-500 text-white';
+            default:
+                return 'bg-gray-500 text-white';
+        }
+    };
 
-  return `${day}/${month}/${year}`;
-}
+    const getStatusText = () => {
+        switch (data.status_id) {
+            case 1:
+                return 'Complete';
+            case 2:
+                return 'In Progress';
+            case 3:
+                return 'Cancelled';
+            default:
+                return 'Pending';
+        }
+    };
 
-export default function Issue({ data, deleteHandler, onClick }) {
-  // This takes the status id and gives it a class name for colouring
-  const getStatusClass = () => {
-    if (data.status_id === 1) return 'completed';
-    if (data.status_id === 2) return 'in-progress';
-    if (data.status_id === 3) return 'cancelled';
-    return 'pending'; // Default class if status_id doesn't match 1, 2, or 3
-  };
+    const isLetter = (char) => {
+        return /\p{L}/u.test(char); // More extensive Unicode support (i.e., accented characters, kanji, etc.)
+    };
 
-  // This takes the staus id and assigns it a status
-  // This takes the staus id and assigns it a status
-  const getStatusText = () => {
-    if (data.status_id === 1) return 'Complete';
-    if (data.status_id === 2) return 'In Progress';
-    if (data.status_id === 3) return 'Cancelled';
-    return 'Pending'; // Default value if status_id doesn't match 1, 2, or 3
-  };
+    const handleImageClick = (imageSrc) => {
+        openModal(
+            <div className="relative">
+                <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full" />
+            </div>
+        );
+    };
 
-  return (
-    // click handler to get data from dashboard to pass to handler for issueview popup
-    <div className={`issue-container`} onClick={() => onClick(data)}>
-      {/* Status at the top-right corner */}
-      <div className={`issue-status ${getStatusClass()}`}>
-        {getStatusText()}
-      </div>
+    // We dynamically colour the charm background based on whether it's a letter or not, for readability
+    //  data.charm = '私'; // Test Unicode character that we want to consider as a "letter"
+    //  data.charm = '😂'; // Test Unicode character that we want to consider as an "emoji"
+    return (
+        <div className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative">
+            {/* Header Line */}
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center">
+                    <div className={`flex-shrink-0 w-10 h-10 ${isLetter(data.charm) ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
+                        {data.charm}
+                    </div>
+                    <h3 className="ml-4 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
+                        {data.title}
+                    </h3>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusClass()}`}>
+                    {getStatusText()}
+                </div>
+            </div>
 
-      {/* Icon and Title */}
-      <div className="issue-header">
-        <div className="issue-icon">{data.charm}</div>
-        <h3 className="issue-title">{data.title}</h3>
-      </div>
+            {/* Description */}
+            <p className="text-gray-700 mb-4">{data.description}</p>
 
-      {/* Date */}
-      <p className="issue-date">
-        <strong>Issue Created:</strong> {formatDate(data.created_at)}
-      </p>
+            {/* Reference */}
+            <p className="text-sm text-gray-500 mb-4">
+                <strong>Reference:</strong> {data._id}
+            </p>
 
-      {/* Description */}
-      <p className="issue-description">
-        <strong>Description:</strong> {data.description}
-      </p>
+            {/* Attachments */}
+            <div className="mb-4 relative">
+                <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
+                <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
+                    {isLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="loader"></div>
+                        </div>
+                    )}
+                    <img
+                        src={`https://picsum.photos/seed/${data._id}/250/150`}
+                        alt="Attachment"
+                        className="rounded-md object-cover cursor-pointer"
+                        onLoad={() => setIsLoading(false)}
+                        onClick={() => handleImageClick(`https://picsum.photos/seed/${data._id}/250/150`)}
+                    />
+                </div>
+            </div>
 
-      {/* Reference */}
-      <p className="issue-reference">
-        <strong>Reference:</strong> {data.key}
-      </p>
-
-      {/* Attachments */}
-      <p className="issue-attachments">
-        <strong>Attachment(s):</strong>
-      </p>
-      <img
-        src={data.image || 'https://loremflickr.com/250/150/kitten'}
-        alt="Attachment"
-        className="issue-image"
-      />
-
-      {/* Update the View More link */}
-      <p className="view-more" onClick={(e) => {
-        e.stopPropagation();
-        onClick(data);
-      }}>
-        View More
-      </p>
-    </div>
-  );
+            {/* View More Button */}
+            <button
+                onClick={() => navigate(`/issues/${data._id}`)}
+                className="mt-auto bg-primary text-white py-2 px-4 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+                View More
+            </button>
+        </div>
+    );
 }
