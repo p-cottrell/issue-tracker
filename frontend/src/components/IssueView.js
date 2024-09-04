@@ -26,18 +26,36 @@ export default function IssueView({ issue, onClose }) {
   
   const [editedOccurrence, setEditedOccurrence] = useState('');
 
+  const [reporterName, setReporterName] = useState(''); // Reporter name
+
   useEffect(() => {
-    // Fetch full issue details when component mounts or issue ID changes
     const fetchIssueDetails = async () => {
       try {
-        const response = await apiClient.get(
-          `/api/issues/${issue._id}`,
-        );
-
+        // Fetch full issue details
+        const response = await apiClient.get(`/api/issues/${issue._id}`);
         setDetailedIssue(response.data);
         setEditedIssue(response.data);
+
+        // Fetch the reporter's username after getting issue details
+        if (response.data.reporter_id) {
+          fetchReporterName(response.data.reporter_id);
+        }
       } catch (error) {
         console.error('Error fetching issue details:', error);
+      }
+    };
+
+    // Function to fetch reporter's username
+    const fetchReporterName = async (reporterId) => {
+      try {
+        const response = await apiClient.get(`/api/users/${reporterId}`);
+        if (response.data && response.data.username) {
+          setReporterName(response.data.username); // Set the username from fetched user data
+        } else {
+          console.error('Reporter data not found or invalid format');
+        }
+      } catch (error) {
+        console.error('Error fetching reporter name:', error);
       }
     };
 
@@ -333,7 +351,7 @@ export default function IssueView({ issue, onClose }) {
             <div className="issue-sidebar">
               <div className="issue-meta">
                 <p>
-                  <strong>Reported by:</strong> {detailedIssue.reporter_id}
+                  <strong>Reported by:</strong> {reporterName || detailedIssue.reporter_id}
                 </p>
                 <p>
                   <strong>Created at:</strong>{' '}

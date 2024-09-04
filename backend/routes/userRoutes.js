@@ -255,6 +255,38 @@ router.post('/check_email', async (req, res) => {
 });
 
 /**
+ * Route to retrieve a user by ID
+ *
+ * This route is used to retrieve a user by their ID from the database.
+ *
+ * @name GET /users/:id
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.params.id - The user ID.
+ * @param {Object} res - The response object.
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error fetching user details',
+      details: error.message,
+    });
+  }
+});
+
+/**
  * Route to retrieve all users
  *
  * This route is used to retrieve all users from the database
