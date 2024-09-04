@@ -56,10 +56,10 @@ router.post('/register', async (req, res) => {
     // Validate the password (commented out for testing purposes).
     validatePassword(password);
 
-    // Generate a salt for hashing the password.
+ 
     const salt = await bcrypt.genSalt(10);
 
-    // Hash the provided password with the generated salt.
+
     const hashedPassword = await bcrypt.hashSync(password, salt);
 
     // Create a new user instance with the provided username, email, and hashed password.
@@ -69,16 +69,16 @@ router.post('/register', async (req, res) => {
       password_hash: hashedPassword,
     });
 
-    // Save the new user to the database.
     const newUser = await user.save();
 
     // Create a payload for the JWT, including the user's ID and role.
     const payload = {
       id: newUser._id,
       role: newUser.role,
+
     };
 
-    // Generate an access token with a 1-hour expiration time.
+    
     const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
     // Set a cookie with the access token.
@@ -147,17 +147,17 @@ router.post('/login', async (req, res) => {
 
   // Set a secure cookie with the generated JWT for authentication purposes
   res.cookie('access_token', accessToken, {
-    httpOnly: true, // Prevents client-side JavaScript from accessing the token
+    httpOnly: true, 
     secure : process.env.NODE_ENV === 'production', // Only secure in production, false during development.
-    sameSite: 'Strict', //mitigates CSRF attacks
-    maxAge: 3600000, // 1 hour
+    sameSite: 'Strict', 
+    maxAge: 3600000, 
   });
 
-  // Check if an existing refresh token exists for the user
+ 
   let refreshToken = await RefreshToken.findOne({ userId: user._id });
 
   if (!refreshToken) {
-    // If no valid refresh token exists, generate a new one
+    
     refreshToken = await generateRefreshToken(user._id);
   }
 

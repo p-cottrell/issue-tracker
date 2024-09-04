@@ -1,0 +1,216 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+}
+
+/* Modal Content */
+.issue-view-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 800px;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-y: auto; /* Enables scrolling if content overflows */
+  max-height: 80vh; /* Ensures the modal doesn't exceed viewport height */
+}
+
+/* Close Button */
+.close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Issue Header */
+.issue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Adjust spacing for the title and charm */
+.issue-title-input,
+.issue-charm-input {
+  margin-right: 20px;
+}
+
+.issue-charm {
+  margin-left: 10px;
+}
+
+/* Adjust spacing for the status */
+.issue-status {
+  margin-left: auto;
+  margin-right: 20px;
+}
+
+/* Style the edit button */
+.edit-button {
+  margin-top: 0;
+  margin-left: 20px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-button:hover {
+  background-color: #0056b3;
+}
+
+/* Ensure proper alignment of header elements */
+.issue-header h1.issue-title {
+  flex: 1;
+}
+
+.issue-header p.issue-status {
+  margin-left: 20px;
+}
+
+.issue-header input.issue-status-input {
+  margin-left: 10px;
+}
+
+.save-button,
+.cancel-button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+}
+
+.save-button:hover {
+  background-color: #0056b3;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+/* Issue Body */
+.issue-body {
+  display: flex;
+  padding: 20px 0;
+}
+
+.issue-main {
+  flex: 3;
+  padding-right: 20px;
+}
+
+.issue-sidebar {
+  flex: 1;
+  border-left: 1px solid #ddd;
+  padding-left: 20px;
+}
+
+.issue-main h2 {
+  font-size: 18px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.issue-main p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Textareas and Input Styling */
+.issue-description-textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  height: 80px;
+  resize: vertical;
+}
+
+/* List Styles */
+.occurrences-list,
+.attachments-list,
+.comments-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.occurrence-item,
+.attachment-item,
+.comment-item {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Attachment Link */
+.attachment-link {
+  color: #007bff;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
+/* Occurrence Input */
+.new-occurrence-input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.add-occurrence-button {
+  display: inline-block;
+  background-color: #28a745;
+  color: #fff;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.add-occurrence-button:hover {
+  background-color: #218838;
+}
