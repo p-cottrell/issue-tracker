@@ -17,7 +17,8 @@ export default function IssueView({ issue, onClose }) {
   // Toggle for edit mode
   const [editMode, setEditMode] = useState(false);
   // Separate state for edited issue to prevent direct mutation of detailedIssue
-  const [editedIssue, setEditedIssue] = useState({});
+  const [editedIssue, setEditedIssue] = useState(issue);
+
   // State for new occurrence input
   const [newOccurrence, setNewOccurrence] = useState('');
 
@@ -64,19 +65,23 @@ export default function IssueView({ issue, onClose }) {
 
   const handleEdit = () => {
     setEditMode(true);
+    setEditedIssue({...detailedIssue}); // Ensure we're working with a fresh copy
   };
 
   const handleSave = async () => {
     try {
-      // Send PUT request to update the issue
+      // Ensure the title is included in the request
       const response = await apiClient.put(
         `/api/issues/${issue._id}`,
-        editedIssue,
+        {
+          ...editedIssue,
+          title: editedIssue.title // Explicitly include the title
+        }
       );
       setDetailedIssue(response.data);
       setEditMode(false);
       alert('Issue updated successfully');
-      onClose();
+      onClose(response.data); // Pass the updated issue data to the onClose function
     } catch (error) {
       console.error('Error updating issue:', error);
       alert('Error updating issue');

@@ -33,28 +33,24 @@ const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-  const [searchTerms, setSearchTerms] = useState({
-    title: "",
-    description: "",
-    status: "",
-  });
+  const [searchTerm, setSearchTerm] = useState('');
   const [allIssues, setAllIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
-  useEffect(() => {
-    const fetchIssues = async () => {
-      try {
-        const response = await apiClient.get('api/issues');
-        setAllIssues(response.data);
-        setFilteredIssues(response.data);
-        setFetched(true);
-      } catch (error) {
-        console.error('Error fetching issues:', error);
-        setFetched(true);
-      }
-    };
+  const fetchIssues = async () => {
+    try {
+      const response = await apiClient.get('api/issues');
+      setAllIssues(response.data);
+      setFilteredIssues(response.data);
+      setFetched(true);
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+      setFetched(true);
+    }
+  };
 
+  useEffect(() => {
     fetchIssues();
   }, []);
 
@@ -97,26 +93,35 @@ const Dashboard = () => {
     setIsIssueModalOpen(true);
   };
 
-  const closeIssueModal = () => {
+  const closeIssueModal = (updatedIssue) => {
     setSelectedIssue(null);
     setIsIssueModalOpen(false);
+    if (updatedIssue) {
+      // Update the issue in both allIssues and filteredIssues
+      const updateIssues = (issues) =>
+        issues.map(issue => issue._id === updatedIssue._id ? {...issue, ...updatedIssue} : issue);
+      
+      setAllIssues(prevIssues => updateIssues(prevIssues));
+      setFilteredIssues(prevIssues => updateIssues(prevIssues));
+    } else {
+      fetchIssues(); // Fetch all issues if no specific update was provided
+    }
   };
 
-  const handleSearch = (field) => (event) => {
-    const newSearchTerms = { ...searchTerms, [field]: event.target.value };
-    setSearchTerms(newSearchTerms);
+  const handleSearch = (event) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
 
     const newFilteredIssues = allIssues.filter(issue => 
-      (newSearchTerms.title === '' || (issue.title && issue.title.toLowerCase().includes(newSearchTerms.title.toLowerCase()))) &&
-      (newSearchTerms.description === '' || (issue.description && issue.description.toLowerCase().includes(newSearchTerms.description.toLowerCase()))) &&
-      (newSearchTerms.status === '' || (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase() === newSearchTerms.status.toLowerCase()))
+      (issue.title && issue.title.toLowerCase().includes(term)) ||
+      (issue.description && issue.description.toLowerCase().includes(term)) ||
+      (issue._id && issue._id.toLowerCase().includes(term)) ||
+      (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
     );
     setFilteredIssues(newFilteredIssues);
   };
 
-  const toggleSearch = () => {
-    setIsSearchExpanded(!isSearchExpanded);
-  };
+
 
   if (!fetched) {
     return (
@@ -143,15 +148,15 @@ const Dashboard = () => {
           </span>
         </div>
 
-        {/* Center: Search Bar Toggle */}
-        <div className="absolute left-1/2 transform -translate-x-1/2">
-          <button
-            onClick={toggleSearch}
-            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
-          >
-            <MagnifyingGlassIcon className="w-6 h-6" />
-            <span className="hidden sm:inline">Search</span>
-          </button>
+        {/* Search Bar */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+          <input
+            type="text"
+            placeholder="Search issues..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
         </div>
 
         {/* Right: New Issue Button */}
@@ -163,38 +168,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Collapsible Search Bar */}
-      {isSearchExpanded && (
-        <div className="bg-white shadow-md p-4 transition-all duration-300 ease-in-out">
-          <div className="max-w-3xl mx-auto space-y-2">
-            <input
-              type="text"
-              placeholder="Search by title..."
-              value={searchTerms.title}
-              onChange={handleSearch('title')}
-              className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <input
-              type="text"
-              placeholder="Search by description..."
-              value={searchTerms.description}
-              onChange={handleSearch('description')}
-              className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <select
-              value={searchTerms.status}
-              onChange={handleSearch('status')}
-              className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="in progress">In Progress</option>
-              <option value="complete">Complete</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
-      )}
+      
 
       <div className="flex flex-grow">
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
