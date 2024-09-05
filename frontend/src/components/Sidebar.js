@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import LogoutConfirmation from './logoutConfirmation';
 
-const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, addHandler }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);

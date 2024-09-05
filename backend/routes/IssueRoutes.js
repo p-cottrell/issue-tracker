@@ -32,6 +32,7 @@ const router = express.Router();
  * @throws {500} - If an error occurs while creating the issue.
  */
 router.post('/', authenticateToken, async (req, res) => {
+
   try {
     const { title, description, status_id, charm, project_id } = req.body;
     const reporter_id = req.user.userID;
@@ -198,6 +199,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       issue.reporter_id.toString() !== req.user.userID &&
       req.user.role !== 'admin'
     ) {
+
       return res.status(403).json({ message: 'Not authorized' });
     }
 

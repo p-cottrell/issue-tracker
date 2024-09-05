@@ -7,7 +7,15 @@ import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
-import IssueView from '../../components/IssueView';
+import Issue from '../../components/Issue';
+import AddIssuePopup from '../../components/AddIssuePopup';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
+import apiClient from '../../api/apiClient';
+import LogoHeader from '../../components/LogoHeader';  // Import the new logo header
+
+import '../../styles/base.css';
+import '../../styles/loadingRing.css';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,10 +50,15 @@ const Dashboard = () => {
     setIsIssueModalOpen(true);
   };
 
-  const closeIssueModal = () => {
-    setSelectedIssue(null);
-    setIsIssueModalOpen(false);
-  };
+    if (!fetched) {
+        return (
+          <div className="loading-container">
+            <div className="loading-text">
+              <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+          </div>
+        );
+    }
 
   function openDeleteHandler(issue) {
     setSelectedIssue(issue) // Now the delete handler knows which issue is targeted for deletion.
@@ -54,10 +67,49 @@ const Dashboard = () => {
 
   if (!fetched) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
-          <p>Loading...</p>
+        <div className="flex flex-col min-h-screen">
+          {/* Fixed Logo Header */}
+          <LogoHeader />
+
+          <div className="flex flex-grow pt-16">
+            {/* Sidebar */}
+            <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)} addHandler={() => setShowAddPopup(true)}/>
+
+            {/* Main Content */}
+            <div className={`flex-grow p-6 transition-all duration-300 ${isSidebarCollapsed ? 'ml-[4rem]' : 'ml-[20rem]'}`}>
+              <div className="w-full p-5 shadow-md rounded-lg">
+
+                {/* Search bar */}
+                <div style={{padding: 20}}>
+                  <form onSubmit={(e) => searchHandler(e)}>
+                    <input type="text" placeholder="Search for an issue." onChange={(e) => setSearchValue(e.target.value)}/>
+                    <button type="submit">Search</button>
+                    <button onClick={(e) => searchHandler(e, true)}>Undo</button>
+                  </form>
+                </div>
+
+                <div stype={{padding: 20}}>
+                  Showing {issues.length} of {issues.length} issues.
+                </div>
+
+                <div className="grid justify-center items-center justify-items-center sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {/* Displays each issue as an Issue object. */}
+                    {issues.map((issue, index) => (
+                        <Issue key={issue._id} index={index} data={issue} deleteHandler={openDeletePopup}/>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* The "add issue" popup - hidden until the user selects to add a new issue. */}
+          {showAddPopup && (
+              <AddIssuePopup closeHandler={() => setShowAddPopup(false)} clickHandler={addHandler} />
+          )}
+          {/* The "delete issue popup - hidden until the user selects to delete an issue." */}
+          {showDeletePopup && (
+            <DeleteIssuePopup closeHandler={() => setShowDeletePopup(false)} issue={selectedIssue} deleteHandler={deleteHandler}/>
+          )}
         </div>
       </div>
     );

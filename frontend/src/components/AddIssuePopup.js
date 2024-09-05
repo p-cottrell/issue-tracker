@@ -31,10 +31,11 @@ const AddIssuePopup = ({ closeHandler }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white p-6 rounded shadow-lg w-11/12 max-w-xl sm:w-9/12 md:w-9/12"> {/* Adjust width for smaller screens */}
         <h2 className="text-lg text-dark font-semibold mb-4 text-center">Add New Issue</h2>
+        <p><font color="red">*</font> denotes a required field.</p>
         <form onSubmit={addHandler}>
           {/* Title Input */}
           <div className="mb-4">
-            <label className="block text-dark mb-2">Title:</label>
+            <label className="block text-dark mb-2">Title: <font color="red">*</font></label>
             <input
               className="bg-neutral border border-secondary p-2 outline-none w-full"
               type="text"
@@ -59,7 +60,7 @@ const AddIssuePopup = ({ closeHandler }) => {
 
           {/* Charm Selection */}
           <div className="mb-4">
-            <label className="block text-dark mb-2">Charm:</label>
+            <label className="block text-dark mb-2">Charm: <font color="red">*</font></label>
             <select
               className="bg-neutral border border-secondary p-2 outline-none w-full"
               value={charm}
@@ -74,6 +75,20 @@ const AddIssuePopup = ({ closeHandler }) => {
               <option value="🐞">🐞</option>
             </select>
           </div>
+
+          {/* Add attachment */}
+          <div className="mb-4">
+          <label className="block text-dark mb-2">Add attachment:</label>
+            <input
+              type="file"
+              id="myFile"
+              name="filename"
+              accept="image/*" // MAKE SURE SERVER-SIDE VALIDATION IS ALSO IMPLEMENTED.
+              onChange={(e) => setAttachment(e.target.value)}
+            />
+          </div>
+          
+          
 
           {/* Buttons */}
           <div className="flex justify-center">
@@ -91,6 +106,8 @@ const AddIssuePopup = ({ closeHandler }) => {
               Cancel
             </button>
           </div>
+
+
         </form>
       </div>
     </div>
