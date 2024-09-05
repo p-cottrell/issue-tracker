@@ -93,6 +93,11 @@ export default function Issue({ data, openIssueModal }) {
                 </div>
             </div>
 
+
+            <button onClick={() => deleteHandler(data)}>
+                Delete
+            </button>
+
             {/* View More Button */}
             <button
                 onClick={() => openIssueModal(data)}
@@ -100,6 +105,7 @@ export default function Issue({ data, openIssueModal }) {
             >
                 View More
             </button>
+
         </div>
     );
 }

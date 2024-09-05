@@ -1,89 +1,164 @@
 import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import apiClient from '../../api/apiClient';
-import AddIssuePopup from '../../components/AddIssuePopup';
-import Issue from '../../components/Issue';
-import Logo from '../../components/Logo';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Sidebar from '../../components/Sidebar';
-import IssueView from '../../components/IssueView';
+import Issue from '../../components/Issue';
+import AddIssuePopup from '../../components/AddIssuePopup';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
+import apiClient from '../../api/apiClient';
+import LogoHeader from '../../components/LogoHeader';  // Import the new logo header
+
+import '../../styles/base.css';
+import '../../styles/loadingRing.css';
+
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupHandler, setPopupHandler] = useState(() => () => { });
-  const [popupType, setPopupType] = useState(null);
-  const [issues, setIssues] = useState([]);
-  const [fetched, setFetched] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState(null);
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchIssues = async () => {
-      try {
-        const response = await apiClient.get('api/issues');
-        setIssues(response.data);
-        setFetched(true);
-      } catch (error) {
-        console.error('Error fetching issues:', error);
-        setFetched(true);
+    const [showAddPopup, setShowAddPopup] = useState(false); // Controls whether the ADD ISSUE popup is visible.
+    const [showDeletePopup, setShowDeletePopup] = useState(false); // Controls whether the DELETE ISSUE popup is visible.
+    const [selectedIssue, setSelectedIssue] = useState(null); // For DELETE ISSUE to know which issue to delete.
+
+    const [searchValue, setSearchValue] = useState(null);
+    const [issuesBackup, setIssuesBackup] = useState([]);
+
+    const [issues, setIssues] = useState([]);
+    const [fetched, setFetched] = useState(false); // Initialize to false
+    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // State to track sidebar collapse
+    useEffect(() => {
+        const fetchIssues = async () => {
+            try {
+                const response = await apiClient.get('api/issues');
+                setIssues(response.data);
+                setIssuesBackup(response.data)
+                setFetched(true); // Set fetched to true after data is successfully fetched
+            } catch (error) {
+                console.error('Error fetching issues:', error);
+                setFetched(true); // Set fetched to true to avoid infinite loading in case of an error
+            }
+        };
+
+        fetchIssues();
+    }, []);
+
+    // Adds an issue to the DB.
+    function addHandler(data) {
+        let { title, description, attachment } = data;
+        let charm = "c"; // PLACEHOLDER UNTIL DATABASE IS REVISED.
+        setShowAddPopup(false); // Hide the popup again.
+
+        const addIssue = async () => {
+            try {
+                const response = await apiClient.post('api/issues', {
+                    title,
+                    description,
+                    charm,
+                    attachment,
+                });
+
+                console.log('Issue added:', response);
+                window.location.reload();
+            } catch (error) {
+                console.log('There was an error adding the issue:', error);
+            }
+        };
+        addIssue();
+    }
+
+    // DELETE ISSUE is implemented as follows:
+    // 1. Each Issue component is given the openDeletePopup handler. When that issue's delete button is clicked, openDeletePopup is called
+    // and passed that issue's data.
+    // 2. If the user confirms they want to delete this issue, the DeleteIssuePopup object calls deleteHandler, passing in the selected issue's data.
+    // Deleting the issue could have been handled within the DeleteIssuePopup object rather than returning here; however, deleting the issue is handled here
+    // in Dashboard.js because adding an issue is handled here - seemed better to keep similar functionality in one place.
+    function openDeletePopup(data) {
+      setSelectedIssue(data) // This allows the delete handler to know which issue to delete.
+      setShowDeletePopup(true) // This displays the delete issue popup.
+    }
+    
+    function deleteHandler(issue) {
+      setShowDeletePopup(false) // This hides the delete issue popup.
+      
+      const id = issue._id;
+
+      const deleteIssue = async () => {
+          try {
+              const response = await apiClient.delete(`api/issues/${id}`)
+              console.log('Issue deleted:', response);
+              window.location.reload();
+          } catch (error) {
+              console.log('There was an error deleting the issue:', error);
+          }
+        };
+        deleteIssue();
+    }
+
+    function searchHandler(event, reset) {
+      event.preventDefault(); // Prevent form submission
+
+      if (reset) { // If "undo" was clicked...
+        setIssues(issuesBackup)
+      } else { // Otherwise, look for issues with the provided search value.
+        const result = issues.filter((issue) => issue.title.toLowerCase().trim() === searchValue.toLowerCase().trim());
+        result.length > 0 ? setIssues(result) : alert("not found");
       }
-    };
+    }
 
-    fetchIssues();
-  }, []);
 
-  const openAddHandler = () => {
-    setPopupHandler(() => addHandler);
-    setPopupType("add");
-    setShowPopup(true);
-  };
+    if (!fetched) {
+        return (
+          <div className="loading-container">
+            <div className="loading-text">
+              <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+            </div>
+          </div>
+        );
+    }
 
-  const addHandler = (data) => {
-    let { title, description } = data;
-    let charm = "🐞";
-
-    setShowPopup(false);
-
-    const addIssue = async () => {
-      try {
-        const response = await apiClient.post('api/issues', {
-          title,
-          description,
-          charm,
-        });
-
-        console.log('Issue added:', response.data);
-        window.location.reload();
-      } catch (error) {
-        console.log('There was an error adding the issue:', error);
-      }
-    };
-    addIssue();
-  };
-
-  function deleteHandler(data) {
-    setShowPopup(false);
-    console.log(data._id, " Deleted!");
-  }
-
-  const openIssueModal = (issue) => {
-    setSelectedIssue(issue);
-    setIsIssueModalOpen(true);
-  };
-
-  const closeIssueModal = () => {
-    setSelectedIssue(null);
-    setIsIssueModalOpen(false);
-  };
-
-  if (!fetched) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
-          <p>Loading...</p>
+        <div className="flex flex-col min-h-screen">
+          {/* Fixed Logo Header */}
+          <LogoHeader />
+
+          <div className="flex flex-grow pt-16">
+            {/* Sidebar */}
+            <Sidebar isCollapsed={isSidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!isSidebarCollapsed)} addHandler={() => setShowAddPopup(true)}/>
+
+            {/* Main Content */}
+            <div className={`flex-grow p-6 transition-all duration-300 ${isSidebarCollapsed ? 'ml-[4rem]' : 'ml-[20rem]'}`}>
+              <div className="w-full p-5 shadow-md rounded-lg">
+
+                {/* Search bar */}
+                <div style={{padding: 20}}>
+                  <form onSubmit={(e) => searchHandler(e)}>
+                    <input type="text" placeholder="Search for an issue." onChange={(e) => setSearchValue(e.target.value)}/>
+                    <button type="submit">Search</button>
+                    <button onClick={(e) => searchHandler(e, true)}>Undo</button>
+                  </form>
+                </div>
+
+                <div stype={{padding: 20}}>
+                  Showing {issues.length} of {issues.length} issues.
+                </div>
+
+                <div className="grid justify-center items-center justify-items-center sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {/* Displays each issue as an Issue object. */}
+                    {issues.map((issue, index) => (
+                        <Issue key={issue._id} index={index} data={issue} deleteHandler={openDeletePopup}/>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* The "add issue" popup - hidden until the user selects to add a new issue. */}
+          {showAddPopup && (
+              <AddIssuePopup closeHandler={() => setShowAddPopup(false)} clickHandler={addHandler} />
+          )}
+          {/* The "delete issue popup - hidden until the user selects to delete an issue." */}
+          {showDeletePopup && (
+            <DeleteIssuePopup closeHandler={() => setShowDeletePopup(false)} issue={selectedIssue} deleteHandler={deleteHandler}/>
+          )}
         </div>
       </div>
     );

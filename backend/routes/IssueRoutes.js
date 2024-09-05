@@ -32,6 +32,7 @@ const router = express.Router();
  * @throws {500} - If an error occurs while creating the issue.
  */
 router.post('/', authenticateToken, async (req, res) => {
+
   try {
     const { title, description, status_id, charm, project_id } = req.body;
     const reporter_id = req.user.userID;
@@ -193,11 +194,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    // Check if the user is authorized to delete the issue or if they are an admin
-    if (
-      issue.reporter_id.toString() !== req.user.id &&
-      req.user.role !== 'admin'
-    ) {
+    // Check if the user is authorized to delete the issue or if they are an admin then can delete any issue
+    // if (issue.reporter_id.toString() !== req.user.userID || req.user.role !== 'admin') { // Check if the user is an admin was removed because req.user.role is undefined.
+    if (issue.reporter_id.toString() !== req.user.userID) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
