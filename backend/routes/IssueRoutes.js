@@ -195,7 +195,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     // Check if the user is authorized to delete the issue or if they are an admin
     if (
-      issue.reporter_id.toString() !== req.user.id &&
+      issue.reporter_id.toString() !== req.user.userID &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({ message: 'Not authorized' });

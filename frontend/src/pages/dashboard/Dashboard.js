@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssuePopup';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
@@ -10,13 +11,15 @@ import IssueView from '../../components/IssueView';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupHandler, setPopupHandler] = useState(() => () => { });
-  const [popupType, setPopupType] = useState(null);
+
+  // Show/hide the add and delete popups.
+  const [showAddPopup, setShowAddPopup] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+
   const [issues, setIssues] = useState([]);
   const [fetched, setFetched] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [selectedIssue, setSelectedIssue] = useState(null); // To let the delete handler know which issue to delete.
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
 
   useEffect(() => {
@@ -34,40 +37,6 @@ const Dashboard = () => {
     fetchIssues();
   }, []);
 
-  const openAddHandler = () => {
-    setPopupHandler(() => addHandler);
-    setPopupType("add");
-    setShowPopup(true);
-  };
-
-  const addHandler = (data) => {
-    let { title, description } = data;
-    let charm = "🐞";
-
-    setShowPopup(false);
-
-    const addIssue = async () => {
-      try {
-        const response = await apiClient.post('api/issues', {
-          title,
-          description,
-          charm,
-        });
-
-        console.log('Issue added:', response.data);
-        window.location.reload();
-      } catch (error) {
-        console.log('There was an error adding the issue:', error);
-      }
-    };
-    addIssue();
-  };
-
-  function deleteHandler(data) {
-    setShowPopup(false);
-    console.log(data._id, " Deleted!");
-  }
-
   const openIssueModal = (issue) => {
     setSelectedIssue(issue);
     setIsIssueModalOpen(true);
@@ -77,6 +46,11 @@ const Dashboard = () => {
     setSelectedIssue(null);
     setIsIssueModalOpen(false);
   };
+
+  function openDeleteHandler(issue) {
+    setSelectedIssue(issue) // Now the delete handler knows which issue is targeted for deletion.
+    setShowDeletePopup(true); // Show the delete issue popup.
+  }
 
   if (!fetched) {
     return (
@@ -114,7 +88,7 @@ const Dashboard = () => {
 
         {/* Right: New Issue Button */}
         <div>
-          <button onClick={openAddHandler} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+          <button onClick={() => setShowAddPopup(true)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
             <PlusIcon className="w-6 h-6" />
             <span className="hidden lg:inline">New Issue</span>
           </button>
@@ -132,7 +106,7 @@ const Dashboard = () => {
                 key={issue._id}
                 index={index}
                 data={issue}
-                deleteHandler={deleteHandler}
+                deleteHandler={() => openDeleteHandler(issue)}
                 openIssueModal={() => openIssueModal(issue)}
                 className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
               />
@@ -141,8 +115,11 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {showPopup && (
-        <AddIssuePopup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} />
+      {showAddPopup && (
+        <AddIssuePopup closeHandler={() => setShowAddPopup(false)}/>
+      )}
+      {showDeletePopup && (
+        <DeleteIssuePopup closeHandler={() => setShowDeletePopup(false)} issue={selectedIssue}/>
       )}
 
       {isIssueModalOpen && (

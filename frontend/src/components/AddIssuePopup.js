@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
+import apiClient from '../api/apiClient';
 
-const AddIssuePopup = ({ closeHandler, clickHandler }) => {
+const AddIssuePopup = ({ closeHandler }) => {
   // State variables for the form
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [charm, setCharm] = useState(null);
+  const [charm, setCharm] = useState('');
 
-  // Handler for form submission
-  const addHandler = (event) => {
-    event.preventDefault(); // Prevent form submission
-    clickHandler({ title, description, charm });
+  function addHandler() {
+    closeHandler(); // Close the add issue popup.
+
+    const addIssue = async () => {
+      try {
+        const response = await apiClient.post('api/issues', {
+          title,
+          description,
+          charm,
+        });
+
+        console.log('Issue added:', response.data);
+        window.location.reload();
+      } catch (error) {
+        console.log('There was an error adding the issue:', error);
+      }
+    };
+    addIssue();
   };
 
   return (
@@ -26,6 +41,7 @@ const AddIssuePopup = ({ closeHandler, clickHandler }) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What is the issue?"
+              required
             />
           </div>
 
@@ -48,8 +64,9 @@ const AddIssuePopup = ({ closeHandler, clickHandler }) => {
               className="bg-neutral border border-secondary p-2 outline-none w-full"
               value={charm}
               onChange={(e) => setCharm(e.target.value)}
+              required
             >
-              <option value="" disabled>
+              <option value="" disabled selected>
                 Select a charm
               </option>
               <option value="🚀">🚀</option>
