@@ -70,18 +70,14 @@ export default function IssueView({ issue, onClose }) {
 
   const handleSave = async () => {
     try {
-      // Ensure the title is included in the request
       const response = await apiClient.put(
         `/api/issues/${issue._id}`,
-        {
-          ...editedIssue,
-          title: editedIssue.title // Explicitly include the title
-        }
+        editedIssue
       );
       setDetailedIssue(response.data);
       setEditMode(false);
       alert('Issue updated successfully');
-      onClose(response.data); // Pass the updated issue data to the onClose function
+      onClose(response.data); // Pass the updated issue data
     } catch (error) {
       console.error('Error updating issue:', error);
       alert('Error updating issue');

@@ -105,13 +105,14 @@ router.get('/', authenticateToken, async (req, res) => {
  * @throws {500} - If an error occurs while updating the issue.
  */
 router.put('/:id', authenticateToken, async (req, res) => {
-  const { description, status_id, charm } = req.body;
+  const { title, description, status_id, charm } = req.body;
 
   try {
     const updateFields = {
       updated_at: Date.now()
     };
 
+    if (title !== undefined) updateFields.title = title; // Add this line
     if (description !== undefined) updateFields.description = description;
     if (status_id !== undefined) updateFields.status_id = status_id;
     if (charm !== undefined) updateFields.charm = charm;

@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [allIssues, setAllIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   const fetchIssues = async () => {
     try {
@@ -52,7 +53,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchIssues();
-  }, []);
+  }, [updateTrigger]); // Add updateTrigger to the dependency array
 
   const openAddHandler = () => {
     setPopupHandler(() => addHandler);
@@ -97,14 +98,8 @@ const Dashboard = () => {
     setSelectedIssue(null);
     setIsIssueModalOpen(false);
     if (updatedIssue) {
-      // Update the issue in both allIssues and filteredIssues
-      const updateIssues = (issues) =>
-        issues.map(issue => issue._id === updatedIssue._id ? {...issue, ...updatedIssue} : issue);
-      
-      setAllIssues(prevIssues => updateIssues(prevIssues));
-      setFilteredIssues(prevIssues => updateIssues(prevIssues));
-    } else {
-      fetchIssues(); // Fetch all issues if no specific update was provided
+      // Increment updateTrigger to force a re-fetch
+      setUpdateTrigger(prev => prev + 1);
     }
   };
 
