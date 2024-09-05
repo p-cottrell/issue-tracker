@@ -1,15 +1,4 @@
-/**
- * React component to display a dashboard of issues
- *
- * This component fetches issues from an API and displays them in a list format.
- *
- * - Uses apiClient to make a GET request to `API_URL/issues`
- * - The fetched data is stored in the `issues` state using `useState` hook.
- * - The `useEffect` hook is used to trigger the fetch operation when the component mounts.
- * - Each issue is displayed with its title, description, location, and formatted date.
- *
- * @returns The rendered dashboard component.
- */
+import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Sidebar from '../../components/Sidebar';
@@ -171,7 +160,74 @@ const Dashboard = () => {
             <DeleteIssuePopup closeHandler={() => setShowDeletePopup(false)} issue={selectedIssue} deleteHandler={deleteHandler}/>
           )}
         </div>
+      </div>
     );
-}
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="relative bg-primary shadow p-4 flex items-center justify-between">
+        {/* Left: Logo and Hamburger */}
+        <div>
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 inline lg:hidden">
+            <Bars3Icon className="w-6 h-6" />
+          </button>
+          <span className="hidden lg:inline">
+            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+          </span>
+        </div>
+
+        {/* Center: Search Bar */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 text-center"
+          />
+        </div>
+
+        {/* Right: New Issue Button */}
+        <div>
+          <button onClick={openAddHandler} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+            <PlusIcon className="w-6 h-6" />
+            <span className="hidden lg:inline">New Issue</span>
+          </button>
+        </div>
+      </header>
+
+      <div className="flex flex-grow">
+        <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
+
+        {/* Main Content */}
+        <main className="flex-grow p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+            {issues.map((issue, index) => (
+              <Issue
+                key={issue._id}
+                index={index}
+                data={issue}
+                deleteHandler={deleteHandler}
+                openIssueModal={() => openIssueModal(issue)}
+                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+              />
+            ))}
+          </div>
+        </main>
+      </div>
+
+      {showPopup && (
+        <AddIssuePopup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} />
+      )}
+
+      {isIssueModalOpen && (
+        <IssueView
+          issue={selectedIssue}
+          onClose={closeIssueModal}
+        />
+      )}
+    </div>
+  );
+};
 
 export default Dashboard;

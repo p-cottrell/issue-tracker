@@ -56,10 +56,10 @@ router.post('/register', async (req, res) => {
     // Validate the password (commented out for testing purposes).
     validatePassword(password);
 
-    // Generate a salt for hashing the password.
+ 
     const salt = await bcrypt.genSalt(10);
 
-    // Hash the provided password with the generated salt.
+
     const hashedPassword = await bcrypt.hashSync(password, salt);
 
     // Create a new user instance with the provided username, email, and hashed password.
@@ -69,16 +69,16 @@ router.post('/register', async (req, res) => {
       password_hash: hashedPassword,
     });
 
-    // Save the new user to the database.
     const newUser = await user.save();
 
     // Create a payload for the JWT, including the user's ID and role.
     const payload = {
       id: newUser._id,
       role: newUser.role,
+
     };
 
-    // Generate an access token with a 1-hour expiration time.
+    
     const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
     // Set a cookie with the access token.
@@ -111,7 +111,6 @@ router.post('/register', async (req, res) => {
     return res.status(500).json({ error: 'Error saving user', details: error.message });
   }
 });
-
 
 /**
  * Route to log in an existing user.
@@ -148,17 +147,17 @@ router.post('/login', async (req, res) => {
 
   // Set a secure cookie with the generated JWT for authentication purposes
   res.cookie('access_token', accessToken, {
-    httpOnly: true, // Prevents client-side JavaScript from accessing the token
+    httpOnly: true, 
     secure : process.env.NODE_ENV === 'production', // Only secure in production, false during development.
-    sameSite: 'Strict', //mitigates CSRF attacks
-    maxAge: 3600000, // 1 hour
+    sameSite: 'Strict', 
+    maxAge: 3600000, 
   });
 
-  // Check if an existing refresh token exists for the user
+ 
   let refreshToken = await RefreshToken.findOne({ userId: user._id });
 
   if (!refreshToken) {
-    // If no valid refresh token exists, generate a new one
+    
     refreshToken = await generateRefreshToken(user._id);
   }
 
@@ -214,8 +213,6 @@ router.post('/logout', authenticateToken, async (req, res) => {
   }
 });
 
-
-//
 /**
  * Route to validate a user token
  *
@@ -232,14 +229,77 @@ router.get('/check_token', authenticateToken, (req, res) => {
   return res.status(200).json({ message: 'Token is valid' });
 });
 
-module.exports = router;
+/**
+ * Route to determine if an email is already taken
+ *
+ * This route is used to check if an email is already taken during registration
+ *
+ * @name POST /users/check_email
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.body.email - The email to check.
+ * @param {Object} res - The response object.
+ */
+router.post('/check_email', async (req, res) => {
+  const { email } = req.body;
 
+  try {
+    const isTaken = await isEmailTaken(email);
+    res.json({ taken: isTaken });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error checking email',
+      details: error.message,
+    });
+  }
+});
 
+/**
+ * Route to retrieve a user by ID
+ *
+ * This route is used to retrieve a user by their ID from the database.
+ *
+ * @name GET /users/:id
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.params.id - The user ID.
+ * @param {Object} res - The response object.
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
 
-// Route to retrieve all users if are an admin dude
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error fetching user details',
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * Route to retrieve all users
+ *
+ * This route is used to retrieve all users from the database
+ * The route is protected and only accessible by admin users
+ *
+ * @name GET /users/all
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} res - The response object.
+ */
 router.get('/all', async (req, res) => {
   try {
-     if (req.user?.role !== 'admin') {
+    if (req.user?.role !== 'admin') {
       return res.status(403).send('You are not authorised to view users');
     }
 
@@ -255,8 +315,18 @@ router.get('/all', async (req, res) => {
   }
 });
 
-
-// Route to delete a user by ID (Admin only)
+/**
+ * Route to delete a user by ID
+ *
+ * This route is used to delete a user by ID
+ * The route is protected and only accessible by admin users
+ *
+ * @name DELETE /users/delete/:id
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.params.id - The user ID.
+ * @param {Object} res - The response object.
+ */
 router.delete('/delete/:id', authenticateToken, async (req, res) => {
   try {
 
@@ -264,12 +334,10 @@ router.delete('/delete/:id', authenticateToken, async (req, res) => {
       return res.status(403).send('You are not authorised to delete users');
     }
 
-
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return res.status(404).send('User not found');
     }
-
 
     res.status(200).send('User deleted');
   } catch (error) {
@@ -280,7 +348,5 @@ router.delete('/delete/:id', authenticateToken, async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;
