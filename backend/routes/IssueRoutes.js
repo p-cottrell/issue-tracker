@@ -75,7 +75,7 @@ router.post('/', authenticateToken, async (req, res) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const issues = await Issue.find({ reporter_id: req.user.userID });
+    const issues = await Issue.find();
    
     if (issues.length === 0) {
       return res.status(404).send('No issues found');

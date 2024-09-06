@@ -6,6 +6,7 @@ const AddIssuePopup = ({ closeHandler }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [charm, setCharm] = useState('');
+  const [attachment, setAttachment] = useState('');
 
   function addHandler() {
     closeHandler(); // Close the add issue popup.
