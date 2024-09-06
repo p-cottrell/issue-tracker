@@ -112,30 +112,22 @@ router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => 
   try {
     const { issueId, occurrenceId } = req.params;
 
-    // Find the issue by ID
-    const issue = await Issue.findById(issueId);
-    if (!issue) {
+    // Find the issue and remove the occurrence
+    const updatedIssue = await Issue.findByIdAndUpdate(
+      issueId,
+      { $pull: { occurrences: { _id: occurrenceId } } },
+      { new: true } // This option returns the updated document
+    );
+
+    if (!updatedIssue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    // Find the occurrence within the issue's occurrences array
-    const occurrence = issue.occurrences.id(occurrenceId);
-    if (!occurrence) {
-      return res.status(404).json({ error: 'Occurrence not found' });
-    }
+    
 
-    // Ensure that the user requesting the deletion is the one who created the occurrence or is an admin
-    // until all data is actually accurate this is out and is stopping things
-
-    // if (occurrence.user_id.toString() !== req.user.id && req.user.role !== 'admin') {
-    //   return res.status(403).json({ error: 'You are not authorized to delete this occurrence' });
-    // }
-
-    // Remove the occurrence from the array and save the updated issue
-    await Issue.findByIdAndUpdate(issueId, { $pull: { occurrences: occurrenceId } });
-
-    res.status(200).json({ message: 'Occurrence deleted' });
+    res.status(200).json(updatedIssue);
   } catch (error) {
+    console.error('Error deleting occurrence:', error);
     res.status(500).json({ error: 'Error deleting occurrence', details: error.message });
   }
 });
