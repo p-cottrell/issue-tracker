@@ -33,7 +33,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, addHandler }) => {
 
   const menuItems = [
     { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
-    { name: 'Data', icon: ChartBarIcon, path: '/dataVisualization' },
+    { name: 'Data', icon: ChartBarIcon, path: '/dataVisualisation' },
     { name: 'Settings', icon: CogIcon, path: '/settings' },
     { name: 'Profile', icon: UserIcon, path: '/profile' },
     { name: 'Log Out', icon: ArrowLeftStartOnRectangleIcon, onClick: handleLogout }
