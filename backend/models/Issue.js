@@ -99,6 +99,7 @@ const issueSchema = new mongoose.Schema({
   status_id: {
     type: Number,
     ref: 'Status',
+    default: 2,
   },
   title: {
     type: String,

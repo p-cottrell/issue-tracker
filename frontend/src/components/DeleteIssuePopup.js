@@ -1,7 +1,23 @@
 import React, { useState } from 'react';
 import apiClient from '../api/apiClient';
 
-const DeleteIssuePopup = ({ closeHandler, issue, deleteHandler}) => {
+const DeleteIssuePopup = ({ closeHandler, issue}) => {
+
+    function deleteHandler(issue) {
+        closeHandler(); // Close the delete issue popup.
+        const id = issue._id;
+  
+        const deleteIssue = async () => {
+            try {
+                const response = await apiClient.delete(`api/issues/${id}`)
+                console.log('Issue deleted:', response);
+                window.location.reload();
+            } catch (error) {
+                console.log('There was an error deleting the issue:', error);
+            }
+          };
+          deleteIssue();
+      }
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
