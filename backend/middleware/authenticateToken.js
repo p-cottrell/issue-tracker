@@ -89,7 +89,7 @@ const authenticateToken = async (req, res, next) => {
       res.cookie('access_token', newAccessToken, {
         httpOnly: true, // Prevents client-side JavaScript from accessing the token
         secure: process.env.NODE_ENV === 'production', // Only secure in production, false during development.
-        sameSite: 'Strict', // mitigates CSRF attacks
+        sameSite: 'None', // mitigates CSRF attacks
         maxAge: 3600000, // 1 hour
       });
 
