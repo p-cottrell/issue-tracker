@@ -4,6 +4,7 @@ import ProtectedRoute from './api/ProtectedRoute';
 import { ModalProvider } from './context/ModalContext';
 import Dashboard from './pages/dashboard/Dashboard';
 import DataVisualisation from './pages/dataVisualisation/DataVisualisation';
+import Profile from './pages/profile/Profile';
 import Settings from './pages/settings/Settings';
 import Home from './pages/home/Home';
 import Login from './pages/login/Login';
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/dashboard" element={<ProtectedRoute element={Dashboard} />} />
           <Route path="/dataVisualisation" element={<ProtectedRoute element={DataVisualisation} />} />
           <Route path="/settings" element={<ProtectedRoute element={Settings} />} />
+          <Route path="/profile" element={<ProtectedRoute element={Profile} />} />
 
           {/* Catches all routes that arent defined and returns 404 page */}
           <Route path="*" element={<PageNotFound />} />

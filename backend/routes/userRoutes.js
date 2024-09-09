@@ -259,15 +259,15 @@ router.post('/check_email', async (req, res) => {
  *
  * This route is used to retrieve a user by their ID from the database.
  *
- * @name GET /users/:id
+ * @name GET /users/me
  * @function
  * @memberof module:routes/users
  * @param {Object} req.params.id - The user ID.
  * @param {Object} res - The response object.
  */
-router.get('/:id', async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
