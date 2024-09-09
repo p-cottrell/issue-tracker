@@ -79,14 +79,15 @@ const Home = () => {
                   className="mb-3 font-extrabold leading-none lg:text-xl md:text-base sm:text-sm text-secondary"
                   whileHover={{ scale: 1.06 }}
                 >
-                  Track your issues effortlessly.
+                  Track issues effortlessly.
                 </motion.h5>
                 <motion.p
                   className="mb-5 text-secondary"
                   whileHover={{ scale: 1.03 }}
                 >
-                  <span className="font-bold">Issue Tracker</span> simplifies how you log, track, and analyse issues, enhancing efficiency and productivity.
-                  Use our platform to clearly manage tasks, get insights into better decision-making, and achieve swift problem resolution.
+                  <span className="font-bold">IssueStream</span> simplifies how you log, track, and analyse issues of any kind, enhancing efficiency and productivity. 
+                  Use IssueStream to manage your tasks, get insights into better decision-making, and achieve swift, real-world problem resolution - for each and every issue.
+                  Swim against the tide with IssueStream.
                 </motion.p>
 
                 {/* Get Started sign-up form */}

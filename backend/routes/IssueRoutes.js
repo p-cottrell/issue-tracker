@@ -32,6 +32,7 @@ const router = express.Router();
  * @throws {500} - If an error occurs while creating the issue.
  */
 router.post('/', authenticateToken, async (req, res) => {
+
   try {
     const { title, description, status_id, charm, project_id } = req.body;
     const reporter_id = req.user.userID;
@@ -74,7 +75,7 @@ router.post('/', authenticateToken, async (req, res) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const issues = await Issue.find({ reporter_id: req.user.userID });
+    const issues = await Issue.find();
    
     if (issues.length === 0) {
       return res.status(404).send('No issues found');
@@ -195,12 +196,22 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     // Check if the user is authorized to delete the issue or if they are an admin
+<<<<<<< HEAD
     // if (
     //   issue.reporter_id.toString() !== req.user.id &&
     //   req.user.role !== 'admin'
     // ) {
     //   return res.status(403).json({ message: 'Not authorized' });
     // }
+=======
+    if (
+      issue.reporter_id.toString() !== req.user.userID &&
+      req.user.role !== 'admin'
+    ) {
+
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+>>>>>>> main
 
     await Issue.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Issue deleted' });

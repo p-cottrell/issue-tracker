@@ -7,7 +7,10 @@ import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
 import IssueView from '../../components/IssueView';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 
+import '../../styles/base.css';
+import '../../styles/loadingRing.css';
 
 // for status searching
 const getStatusText = (status_id) => {
@@ -26,8 +29,14 @@ const getStatusText = (status_id) => {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
+  
+  // For showing/hiding the add/delete issue popups.
+  const [ showAddIssue, setShowAddIssue ] = useState(false);
+  const [ showDeleteIssue, setShowDeleteIssue ] = useState(false);
+
   const [popupHandler, setPopupHandler] = useState(() => () => { });
   const [popupType, setPopupType] = useState(null);
+
   const [issues, setIssues] = useState([]);
   const [fetched, setFetched] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -135,7 +144,7 @@ const Dashboard = () => {
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         {/* Left: Logo and Hamburger */}
         <div>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 inline lg:hidden">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden">
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
@@ -156,7 +165,7 @@ const Dashboard = () => {
 
         {/* Right: New Issue Button */}
         <div>
-          <button onClick={openAddHandler} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+          <button onClick={() => setShowAddIssue(true)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
             <PlusIcon className="w-6 h-6" />
             <span className="hidden lg:inline">New Issue</span>
           </button>
@@ -176,7 +185,7 @@ const Dashboard = () => {
                 key={issue._id}
                 index={index}
                 data={issue}
-                deleteHandler={deleteHandler}
+                deleteHandler={() => deleteHandler(issue)}
                 openIssueModal={() => openIssueModal(issue)}
                 className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
               />
@@ -185,8 +194,12 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {showPopup && (
-        <AddIssuePopup closeHandler={() => setShowPopup(false)} type={popupType} clickHandler={popupHandler} />
+      {showAddIssue && (
+        <AddIssuePopup closeHandler={() => setShowAddIssue(false)} />
+      )}
+
+      {showDeleteIssue && (
+        <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue}/>
       )}
 
       {isIssueModalOpen && (
