@@ -261,7 +261,7 @@ router.get('/me', authenticateToken, async (req, res) => {
  * @param {Object} req.params.id - The user ID.
  * @param {Object} res - The response object.
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
