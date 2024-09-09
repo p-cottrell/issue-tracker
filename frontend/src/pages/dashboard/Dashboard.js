@@ -5,7 +5,6 @@ import IssueView from '../../components/IssueView';
 import AddIssuePopup from '../../components/AddIssuePopup';
 import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import apiClient from '../../api/apiClient';
-import LogoHeader from '../../components/LogoHeader';  // Import the new logo header
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bars3Icon, PlusIcon} from '@heroicons/react/24/outline';
@@ -74,7 +73,7 @@ const Dashboard = () => {
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         {/* Left: Logo and Hamburger */}
         <div>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 inline lg:hidden">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden">
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">

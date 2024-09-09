@@ -1,8 +1,8 @@
-import { ArrowLeftStartOnRectangleIcon, CogIcon, HomeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftStartOnRectangleIcon, CogIcon, HomeIcon, UserIcon, XMarkIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
-import LogoutConfirmation from './logoutConfirmation';
+import LogoutConfirmation from './LogoutConfirmation';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, addHandler }) => {
   const navigate = useNavigate();
@@ -33,6 +33,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, addHandler }) => {
 
   const menuItems = [
     { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
+    { name: 'Data', icon: ChartBarIcon, path: '/dataVisualization' },
     { name: 'Settings', icon: CogIcon, path: '/settings' },
     { name: 'Profile', icon: UserIcon, path: '/profile' },
     { name: 'Log Out', icon: ArrowLeftStartOnRectangleIcon, onClick: handleLogout }
