@@ -101,13 +101,13 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                 View More
             </button>
 
-            {/* Delete button */}
+            {/* Delete button 
             <button 
                 onClick={() => deleteHandler(data)}
                 className="mt-auto bg-primary text-white py-2 px-4 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                 Delete
-            </button>
+            </button>*/}
         </div>
     );
 }

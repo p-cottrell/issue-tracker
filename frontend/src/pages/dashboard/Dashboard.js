@@ -1,16 +1,30 @@
+import { Bars3Icon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
+import AddIssuePopup from '../../components/AddIssuePopup';
 import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
 import IssueView from '../../components/IssueView';
-import AddIssuePopup from '../../components/AddIssuePopup';
 import DeleteIssuePopup from '../../components/DeleteIssuePopup';
-import apiClient from '../../api/apiClient';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bars3Icon, PlusIcon} from '@heroicons/react/24/outline';
 
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
+
+// for status searching
+const getStatusText = (status_id) => {
+  switch (status_id) {
+      case 1:
+          return 'Complete';
+      case 2:
+          return 'In Progress';
+      case 3:
+          return 'Cancelled';
+      default:
+          return 'Pending';
+  }
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,30 +34,68 @@ const Dashboard = () => {
   const [ showAddIssue, setShowAddIssue ] = useState(false);
   const [ showDeleteIssue, setShowDeleteIssue ] = useState(false);
 
+  const [popupHandler, setPopupHandler] = useState(() => () => { });
+  const [popupType, setPopupType] = useState(null);
+
   const [issues, setIssues] = useState([]);
   const [fetched, setFetched] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [allIssues, setAllIssues] = useState([]);
+  const [filteredIssues, setFilteredIssues] = useState([]);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
+
+  const fetchIssues = async () => {
+    try {
+      const response = await apiClient.get('api/issues');
+      setAllIssues(response.data);
+      setFilteredIssues(response.data);
+      setFetched(true);
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+      setFetched(true);
+    }
+  };
 
   useEffect(() => {
-    const fetchIssues = async () => {
+    fetchIssues();
+  }, [updateTrigger]); // Add updateTrigger to the dependency array
+
+  const openAddHandler = () => {
+    setPopupHandler(() => addHandler);
+    setPopupType("add");
+    setShowPopup(true);
+  };
+
+  const addHandler = (data) => {
+    let { title, description } = data;
+    let charm = "🐞";
+
+    setShowPopup(false);
+
+    const addIssue = async () => {
       try {
-        const response = await apiClient.get('api/issues');
-        setIssues(response.data);
-        setFetched(true);
+        const response = await apiClient.post('api/issues', {
+          title,
+          description,
+          charm,
+        });
+
+        console.log('Issue added:', response.data);
+        window.location.reload();
       } catch (error) {
-        console.error('Error fetching issues:', error);
-        setFetched(true);
+        console.log('There was an error adding the issue:', error);
       }
     };
+    addIssue();
+  };
 
-    fetchIssues();
-  }, []);
-
-  const deleteHandler = (issue) => {
-    setSelectedIssue(issue) // Now the delete handler knows which issue to delete.
-    setShowDeleteIssue(true) // Show the delete issue popup.
+  function deleteHandler(data) {
+    setShowPopup(false);
+    console.log(data._id, " Deleted!");
   }
 
   const openIssueModal = (issue) => {
@@ -51,10 +103,29 @@ const Dashboard = () => {
     setIsIssueModalOpen(true);
   };
 
-  const closeIssueModal = () => {
+  const closeIssueModal = (updatedIssue) => {
     setSelectedIssue(null);
     setIsIssueModalOpen(false);
+    if (updatedIssue) {
+      // Increment updateTrigger to force a re-fetch
+      setUpdateTrigger(prev => prev + 1);
+    }
   };
+
+  const handleSearch = (event) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    const newFilteredIssues = allIssues.filter(issue => 
+      (issue.title && issue.title.toLowerCase().includes(term)) ||
+      (issue.description && issue.description.toLowerCase().includes(term)) ||
+      (issue._id && issue._id.toLowerCase().includes(term)) ||
+      (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
+    );
+    setFilteredIssues(newFilteredIssues);
+  };
+
+
 
   if (!fetched) {
     return (
@@ -81,12 +152,14 @@ const Dashboard = () => {
           </span>
         </div>
 
-        {/* Center: Search Bar */}
+        {/* Search Bar */}
         <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
           <input
             type="text"
-            placeholder="Search..."
-            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 text-center"
+            placeholder="Search issues..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
@@ -99,13 +172,15 @@ const Dashboard = () => {
         </div>
       </header>
 
+      
+
       <div className="flex flex-grow">
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main Content */}
         <main className="flex-grow p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-            {issues.map((issue, index) => (
+            {filteredIssues.map((issue, index) => (
               <Issue
                 key={issue._id}
                 index={index}
