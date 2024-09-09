@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import ScrollingBackground from '../../components/ScrollingBackground';
 import PasswordRules from './../../components/PasswordRules';
+import { useUser } from '../../context/UserContext';
 import './../../index.css';
 
 /**
@@ -27,6 +28,7 @@ const Register = () => {
     const [showPasswordRules, setShowPasswordRules] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [step, setStep] = useState(1);
+    const { setUser } = useUser();
 
     useEffect(() => {
         const handleFocus = passwordFocused;
@@ -160,6 +162,7 @@ const Register = () => {
                 });
 
                 if (response.data.success) {
+                    setUser(response.data.user);
                     navigate('/dashboard');
                 } else if (response.data.error) {
                     setError(response.data.error);

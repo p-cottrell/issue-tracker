@@ -2,6 +2,7 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
+  darkMode: 'class',
   content: [
     "./src/**/*.js", // This will include all .js files in src directory and its subdirectories
   ],

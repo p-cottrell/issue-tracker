@@ -67,7 +67,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             </div>
 
             {/* Description */}
-            <p className="text-gray-700 mb-4">{data.description}</p>
+            <p className="text-gray-700 mb-4 line-clamp-5 text-clip">{data.description}</p>
 
             {/* Reference */}
             <p className="text-sm text-gray-500 mb-4">

@@ -1,5 +1,5 @@
-import { Bars3Icon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useState } from 'react';
+import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssuePopup';
@@ -8,73 +8,104 @@ import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
 import IssueView from '../../components/IssueView';
 import DeleteIssuePopup from '../../components/DeleteIssuePopup';
+import { useUser } from '../../context/UserContext';
 
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
-// for status searching
+/**
+ * Helper function to convert status_id to readable status text.
+ * @param {number} status_id - The ID representing the status.
+ * @returns {string} - The text representation of the status.
+ */
 const getStatusText = (status_id) => {
   switch (status_id) {
-      case 1:
-          return 'Complete';
-      case 2:
-          return 'In Progress';
-      case 3:
-          return 'Cancelled';
-      default:
-          return 'Pending';
+    case 1:
+      return 'Complete';
+    case 2:
+      return 'In Progress';
+    case 3:
+      return 'Cancelled';
+    default:
+      return 'Pending';
   }
 };
 
+/**
+ * Dashboard component for displaying and managing issues.
+ * Includes functionalities such as adding, deleting, searching, and filtering issues.
+ * The component retrieves issues based on the authenticated user's context and filter preferences.
+ */
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [showPopup, setShowPopup] = useState(false);
-  
-  // For showing/hiding the add/delete issue popups.
-  const [ showAddIssue, setShowAddIssue ] = useState(false);
-  const [ showDeleteIssue, setShowDeleteIssue ] = useState(false);
+  const navigate = useNavigate(); // React Router hook for programmatic navigation
+  const [showAddIssue, setShowAddIssue] = useState(false); // State to control visibility of the 'Add Issue' popup
+  const [showDeleteIssue, setShowDeleteIssue] = useState(false); // State to control visibility of the 'Delete Issue' popup
+  const [popupHandler, setPopupHandler] = useState(() => () => { }); // Handler function for different popups
+  const [popupType, setPopupType] = useState(null); // Type of popup currently being displayed
+  const [issues, setIssues] = useState([]); // All issues fetched from the API
+  const [fetched, setFetched] = useState(false); // State to track if the issues have been fetched
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to control sidebar visibility
+  const [selectedIssue, setSelectedIssue] = useState(null); // The issue selected for viewing or editing
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false); // State to control visibility of the 'Issue View' modal
+  const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering issues
+  const [allIssues, setAllIssues] = useState([]); // All issues retrieved from the API
+  const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
+  const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
+  const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
+  const { user } = useUser(); // Fetch authenticated user data from the context
 
-  const [popupHandler, setPopupHandler] = useState(() => () => { });
-  const [popupType, setPopupType] = useState(null);
+  /**
+   * Fetches issues from the API based on the filter type and user context.
+   * Uses useCallback to memoize the function, preventing unnecessary re-fetching on re-renders.
+   */
+  const fetchIssues = useCallback(async () => {
+    if (!user || !user.id) {
+      console.error('User data is not available yet.');
+      return;
+    }
 
-  const [issues, setIssues] = useState([]);
-  const [fetched, setFetched] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState(null);
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [allIssues, setAllIssues] = useState([]);
-  const [filteredIssues, setFilteredIssues] = useState([]);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [updateTrigger, setUpdateTrigger] = useState(0);
-
-  const fetchIssues = async () => {
     try {
-      const response = await apiClient.get('api/issues');
+      let endpoint = 'api/issues'; // Default endpoint to fetch all issues
+      if (filterType === 'myIssues' && user.id) {
+        endpoint = `api/issues?userId=${user.id}`; // Fetch only issues reported by the current user
+      }
+      // More filter types can be added here if we like
+
+      const response = await apiClient.get(endpoint); // Fetch issues from API
       setAllIssues(response.data);
       setFilteredIssues(response.data);
       setFetched(true);
     } catch (error) {
       console.error('Error fetching issues:', error);
-      setFetched(true);
+      setFetched(true); // Ensure UI shows that fetching is complete, even on error
     }
-  };
+  }, [filterType, user]);
 
+  /**
+   * useEffect hook to fetch issues whenever the filter type, update trigger, or user context changes.
+   */
   useEffect(() => {
     fetchIssues();
-  }, [updateTrigger]); // Add updateTrigger to the dependency array
+  }, [fetchIssues, updateTrigger]);
 
+  /**
+   * Handler to open the 'Add Issue' popup and set the appropriate handler and type.
+   */
   const openAddHandler = () => {
     setPopupHandler(() => addHandler);
     setPopupType("add");
-    setShowPopup(true);
+    setShowAddIssue(true);
   };
 
+  /**
+   * Adds a new issue via API call, triggered from the 'Add Issue' popup.
+   * @param {Object} data - Contains title and description of the new issue.
+   */
   const addHandler = (data) => {
-    let { title, description } = data;
-    let charm = "🐞";
+    const { title, description } = data;
+    const charm = "🐞"; // Default charm for new issues
 
-    setShowPopup(false);
+    setShowAddIssue(false); // Close the 'Add Issue' popup
 
     const addIssue = async () => {
       try {
@@ -85,7 +116,7 @@ const Dashboard = () => {
         });
 
         console.log('Issue added:', response.data);
-        window.location.reload();
+        window.location.reload(); // Reload the page to reflect changes
       } catch (error) {
         console.log('There was an error adding the issue:', error);
       }
@@ -93,30 +124,46 @@ const Dashboard = () => {
     addIssue();
   };
 
-  function deleteHandler(data) {
-    setShowPopup(false);
+  /**
+   * Handler for deleting an issue.
+   * @param {Object} data - Issue data to be deleted.
+   */
+  const deleteHandler = (data) => {
+    setShowDeleteIssue(false);
     console.log(data._id, " Deleted!");
-  }
+  };
 
+  /**
+   * Opens the issue view modal to display details of the selected issue.
+   * @param {Object} issue - The issue object to be displayed.
+   */
   const openIssueModal = (issue) => {
     setSelectedIssue(issue);
     setIsIssueModalOpen(true);
   };
 
+  /**
+   * Closes the issue view modal and optionally triggers a re-fetch if the issue was updated.
+   * @param {Object} updatedIssue - The updated issue object, if any.
+   */
   const closeIssueModal = (updatedIssue) => {
     setSelectedIssue(null);
     setIsIssueModalOpen(false);
     if (updatedIssue) {
-      // Increment updateTrigger to force a re-fetch
-      setUpdateTrigger(prev => prev + 1);
+      setUpdateTrigger(prev => prev + 1); // Increment trigger to force re-fetch
     }
   };
 
+  /**
+   * Handles user input for searching issues.
+   * @param {Object} event - The event object from the search input.
+   */
   const handleSearch = (event) => {
     const term = event.target.value.toLowerCase();
     setSearchTerm(term);
 
-    const newFilteredIssues = allIssues.filter(issue => 
+    // Filter issues based on the search term
+    const newFilteredIssues = allIssues.filter(issue =>
       (issue.title && issue.title.toLowerCase().includes(term)) ||
       (issue.description && issue.description.toLowerCase().includes(term)) ||
       (issue._id && issue._id.toLowerCase().includes(term)) ||
@@ -125,8 +172,18 @@ const Dashboard = () => {
     setFilteredIssues(newFilteredIssues);
   };
 
+  /**
+   * Handles changes in the filter type dropdown.
+   * Saves the selected filter type to localStorage for persistence across sessions.
+   * @param {Object} event - The event object from the filter dropdown.
+   */
+  const handleFilterChange = (event) => {
+    const selectedFilter = event.target.value;
+    setFilterType(selectedFilter);
+    localStorage.setItem('filterType', selectedFilter); // Persist filter type to localStorage
+  };
 
-
+  // Return loading screen if issues have not been fetched yet
   if (!fetched) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -164,21 +221,29 @@ const Dashboard = () => {
         </div>
 
         {/* Right: New Issue Button */}
-        <div>
-          <button onClick={() => setShowAddIssue(true)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+        <div className="flex items-center">
+          <button onClick={openAddHandler} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
             <PlusIcon className="w-6 h-6" />
             <span className="hidden lg:inline">New Issue</span>
           </button>
         </div>
       </header>
 
-      
-
       <div className="flex flex-grow">
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main Content */}
         <main className="flex-grow p-6">
+          {/* Filter Dropdown */}
+          <select
+            onChange={handleFilterChange}
+            value={filterType}
+            className="ml-4 bg-white text-primary-600 px-2 py-4 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+          >
+            <option value="all">All Issues</option>
+            <option value="myIssues">My Issues</option>
+            {/* Additional filter options can be added here if we decide on that */}
+          </select>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
             {filteredIssues.map((issue, index) => (
               <Issue
@@ -199,7 +264,7 @@ const Dashboard = () => {
       )}
 
       {showDeleteIssue && (
-        <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue}/>
+        <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue} />
       )}
 
       {isIssueModalOpen && (

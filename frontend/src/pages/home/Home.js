@@ -85,7 +85,7 @@ const Home = () => {
                   className="mb-5 text-secondary"
                   whileHover={{ scale: 1.03 }}
                 >
-                  <span className="font-bold">IssueStream</span> simplifies how you log, track, and analyse issues of any kind, enhancing efficiency and productivity. 
+                  <span className="font-bold">IssueStream</span> simplifies how you log, track, and analyse issues of any kind, enhancing efficiency and productivity.
                   Use IssueStream to manage your tasks, get insights into better decision-making, and achieve swift, real-world problem resolution - for each and every issue.
                   Swim against the tide with IssueStream.
                 </motion.p>

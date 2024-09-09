@@ -34,7 +34,6 @@ const app = express();
 app.use(cookieParser()); // Use cookie-parser to extract tokens from cookies
 
 const authenticateToken = async (req, res, next) => {
-
   // Retrieve the access token from the cookies
   let accessToken = req.cookies.access_token;
 
@@ -44,7 +43,7 @@ const authenticateToken = async (req, res, next) => {
       const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
       // Attach the user ID to the request object for further use
-      req.user = { userID: decoded.id, isAdministrator: decoded.isAdministrator };
+      req.user = { id: decoded.id, isAdministrator: decoded.isAdministrator };
       return next(); // Proceed to the next middleware or route handler
     } else {
       throw new jwt.TokenExpiredError(); // Force the refresh token logic to be invoked
@@ -90,12 +89,12 @@ const authenticateToken = async (req, res, next) => {
       res.cookie('access_token', newAccessToken, {
         httpOnly: true, // Prevents client-side JavaScript from accessing the token
         secure: process.env.NODE_ENV === 'production', // Only secure in production, false during development.
-        sameSite: 'Strict', // mitigates CSRF attacks
+        sameSite: 'None', // mitigates CSRF attacks
         maxAge: 3600000, // 1 hour
       });
 
       // Attach the user ID to the request object for further use in the request lifecycle
-      req.user = { userID: user._id };
+      req.user = { id: user._id, role: user.role }; // Consistent key
 
       return next(); // Proceed to the next middleware or route handler with the refreshed token
     } else {
@@ -104,5 +103,6 @@ const authenticateToken = async (req, res, next) => {
     }
   }
 };
+
 
 module.exports = authenticateToken;

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import ScrollingBackground from '../../components/ScrollingBackground';
+import { useUser } from '../../context/UserContext';
 import './../../index.css';
 
 /**
@@ -15,6 +16,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const { setUser } = useUser();
 
     /**
      * Validates the email format using a regular expression.
@@ -55,6 +57,7 @@ const Login = () => {
             });
 
             if (response.data.success) {
+                setUser(response.data.user);
                 navigate('/dashboard'); // Navigate to the dashboard on successful login
             } else {
                 setError('Invalid login credentials'); // Show error on failed login

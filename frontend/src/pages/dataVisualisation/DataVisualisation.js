@@ -12,7 +12,7 @@ import { LineGraph } from '../../components/graphs/Line';
 import { BarGraph } from '../../components/graphs/Bar';
 import { PieChart } from '../../components/graphs/Pie';
 
-const DataVisualization = () => {
+const DataVisualisation = () => {
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [issues, setIssues] = useState([]);
@@ -186,4 +186,4 @@ const DataVisualization = () => {
       );
 }
 
-export default DataVisualization;
+export default DataVisualisation;

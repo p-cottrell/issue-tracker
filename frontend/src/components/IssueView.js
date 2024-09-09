@@ -49,6 +49,7 @@ export default function IssueView({ issue, onClose }) {
         // Fetch the reporter's username after getting issue details
         if (response.data.reporter_id) {
           fetchReporterName(response.data.reporter_id);
+          console.log(response.data.reporter_id);
         }
       } catch (error) {
         console.error('Error fetching issue details:', error);
@@ -85,9 +86,9 @@ export default function IssueView({ issue, onClose }) {
   };
 
   const handleSave = async () => {
-    
+
     try {
-      
+
       const response = await apiClient.put(`/api/issues/${issue._id}`, {
         ...editedIssue,
         charm: editedCharm,
