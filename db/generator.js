@@ -6,10 +6,10 @@ import mongoose from 'mongoose';
 // Constants for the number of each type of data
 const numProjects = 5;
 const numUsers = 10;
-const numIssues = 20;
-const numOccurrences = 3;
+const numIssues = 50;
+const numOccurrences = 10;
 const numAttachments = 2;
-const numComments = 3;
+const numComments = 5;
 
 // Define Mongoose schemas
 const projectSchema = new mongoose.Schema({
