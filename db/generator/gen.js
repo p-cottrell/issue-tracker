@@ -50,88 +50,72 @@ async function generateFakeData() {
     const users = [];
     const userCredentials = [];
     for (let i = 0; i < 10; i++) {
-        const username = faker.internet.userName();
-        const email = faker.internet.email();
         const password = faker.internet.password();
-        const role = faker.helpers.arrayElement(['Admin', 'User']);
-
-        // Hash the password using bcrypt
-        const saltRounds = 10;
-        const passwordHash = await bcrypt.hash(password, saltRounds);
-
+        const password_hash = await bcrypt.hash(password, 10);
         users.push({
-            username: username,
-            email: email,
-            password_hash: passwordHash,
-            role: role,
+            username: faker.internet.userName(),
+            email: faker.internet.email(),
+            password_hash,
+            role: faker.helpers.randomize(['admin', 'user'])
         });
-
-        userCredentials.push({
-            email: email,
-            username: username,
-            password: password,
-        });
+        userCredentials.push({ username: users[i].username, email: users[i].email, password, role: users[i].role });
     }
 
     // Generate fake issues
     const issues = [];
     for (let i = 0; i < 20; i++) {
-        const randomProject = projects[Math.floor(Math.random() * projects.length)];
-        const randomUser = users[Math.floor(Math.random() * users.length)];
-
-        // Generate multiple occurrences, attachments, and comments
-        const occurrences = [];
-        for (let j = 0; j < faker.datatype.number({ min: 1, max: 5 }); j++) {
-            occurrences.push({
-                description: faker.lorem.sentence(),
-                created_at: faker.date.recent(),
-                updated_at: faker.date.recent(),
-            });
-        }
-
-        const attachments = [];
-        for (let j = 0; j < faker.datatype.number({ min: 1, max: 3 }); j++) {
-            attachments.push({
-                file_path: faker.system.filePath(),
-                created_at: faker.date.recent(),
-            });
-        }
-
-        const comments = [];
-        for (let j = 0; j < faker.datatype.number({ min: 1, max: 5 }); j++) {
-            comments.push({
-                user_id: randomUser._id,
-                comment_text: faker.lorem.sentence(),
-                created_at: faker.date.recent(),
-            });
-        }
-
         issues.push({
-            project_id: randomProject._id,
-            reporter_id: randomUser._id,
-            status_id: faker.datatype.number({ min: 1, max: 3 }),
+            project_id: faker.datatype.uuid(),
+            reporter_id: faker.datatype.uuid(),
+            status_id: faker.helpers.randomize([1, 2, 3]),
             title: faker.lorem.sentence(),
             description: faker.lorem.paragraph(),
-            charm: faker.helpers.arrayElement(['🐞', '⚠️', '🚀']),
-            created_at: faker.date.recent(),
+            charm: faker.helpers.randomize(['⚠️', '🚀', '🐞']),
+            created_at: faker.date.past(),
             updated_at: faker.date.recent(),
-            occurrences: occurrences,
-            attachments: attachments,
-            comments: comments,
+            occurrences: Array.from({ length: 3 }, () => ({
+                description: faker.lorem.sentence(),
+                created_at: faker.date.past(),
+                updated_at: faker.date.recent()
+            })),
+            attachments: Array.from({ length: 2 }, () => ({
+                file_path: faker.system.filePath(),
+                created_at: faker.date.past()
+            })),
+            comments: Array.from({ length: 3 }, () => ({
+                comment_text: faker.lorem.sentence(),
+                created_at: faker.date.past()
+            }))
         });
     }
 
-    // Write data to JSON files
-    const data = {
-        projects: projects,
-        users: users,
-        issues: issues
-    };
-
-    fs.writeFileSync('fakeData.json', JSON.stringify(data, null, 2));
+    // Write data to files
+    fs.writeFileSync('projects.json', JSON.stringify(projects, null, 2));
+    fs.writeFileSync('users.json', JSON.stringify(users, null, 2));
     fs.writeFileSync('userCredentials.json', JSON.stringify(userCredentials, null, 2));
-    console.log('Fake data generated successfully!');
+    fs.writeFileSync('issues.json', JSON.stringify(issues, null, 2));
 }
 
-// Run the script
-generateFakeData();
+// Convert the collections to MongoDB insert statements
+function generateInsertStatements(collectionName, documents) {
+    return documents.map(doc => `db.${collectionName}.insert(${JSON.stringify(doc)});`).join('\n');
+}
+
+// Generate and save the insert scripts
+async function generateInsertScripts() {
+    await generateFakeData();
+
+    const projects = JSON.parse(fs.readFileSync('projects.json'));
+    const users = JSON.parse(fs.readFileSync('users.json'));
+    const issues = JSON.parse(fs.readFileSync('issues.json'));
+
+    const projectInserts = generateInsertStatements('projects', projects);
+    const userInserts = generateInsertStatements('users', users);
+    const issueInserts = generateInsertStatements('issues', issues);
+
+    fs.writeFileSync('projectInserts.js', projectInserts);
+    fs.writeFileSync('userInserts.js', userInserts);
+    fs.writeFileSync('issueInserts.js', issueInserts);
+}
+
+generateInsertScripts();
