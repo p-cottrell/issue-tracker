@@ -84,11 +84,11 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                         </div>
                     )}
                     <img
-                        src={`https://picsum.photos/seed/${data._id}/250/150`}
+                        src={`https://loremflickr.com/250/150/kitten`}
                         alt="Attachment"
                         className="rounded-md object-cover cursor-pointer"
                         onLoad={() => setIsLoading(false)}
-                        onClick={() => handleImageClick(`https://picsum.photos/seed/${data._id}/250/150`)}
+                        onClick={() => handleImageClick(`https://loremflickr.com/250/150/kitten`)}
                     />
                 </div>
             </div>
