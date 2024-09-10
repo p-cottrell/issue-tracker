@@ -84,11 +84,11 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                         </div>
                     )}
                     <img
-                        src={`https://loremflickr.com/250/150/kitten`}
+                        src={`https://loremflickr.com/250/150/kitten?lock=${data._id}`}
                         alt="Attachment"
                         className="rounded-md object-cover cursor-pointer"
                         onLoad={() => setIsLoading(false)}
-                        onClick={() => handleImageClick(`https://loremflickr.com/250/150/kitten`)}
+                        onClick={() => handleImageClick(`https://loremflickr.com/250/150/kitten?lock=${data._id}`)}
                     />
                 </div>
             </div>
