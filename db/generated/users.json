@@ -1,0 +1,72 @@
+[
+  {
+    "username": "Fletcher_Huels",
+    "email": "Hunter.Harvey@gmail.com",
+    "password_hash": "$2b$10$B9o6pErY40U4um60zlymQeu0MBNJd/Y3m2E1qMkjqSzg.HDO7RP.C",
+    "role": "admin",
+    "_id": "66e008b98e4bc41d5b70bb97"
+  },
+  {
+    "username": "Fiona_Botsford",
+    "email": "Moshe4@gmail.com",
+    "password_hash": "$2b$10$lEG/ghqqqwIcvyQIiZ//zu6AlXquwVsYnUAwocB6VE8X//PRiK1ni",
+    "role": "user",
+    "_id": "66e008b98e4bc41d5b70bb98"
+  },
+  {
+    "username": "Jocelyn.Kassulke",
+    "email": "Frances_Conn@yahoo.com",
+    "password_hash": "$2b$10$EqwaRTSmkgTQxO6mV8Vb2OfjZ9GcQaGwo6j4DamSxitDac90DSorq",
+    "role": "user",
+    "_id": "66e008b98e4bc41d5b70bb99"
+  },
+  {
+    "username": "Mervin_Runolfsson41",
+    "email": "Joanie.Raynor92@gmail.com",
+    "password_hash": "$2b$10$fPnmiOfJeqGmlnUSEzAIWeXd4sQH26Hq6BY9/4Bg/j2zu7EbtTkiC",
+    "role": "user",
+    "_id": "66e008ba8e4bc41d5b70bb9a"
+  },
+  {
+    "username": "Yessenia_Brekke57",
+    "email": "Bo_Waelchi@gmail.com",
+    "password_hash": "$2b$10$tzqRMSs9AEQzGQehOdrbD.dVvQIIc1GY5..tmthy5/2O31DSIbeaG",
+    "role": "user",
+    "_id": "66e008ba8e4bc41d5b70bb9b"
+  },
+  {
+    "username": "Nasir70",
+    "email": "Rodger_Nolan69@hotmail.com",
+    "password_hash": "$2b$10$plQdpH8/eV4kiFP4fklLLu8D5w3BGP.zqU5hzc5gFRW17DHBWwVCG",
+    "role": "admin",
+    "_id": "66e008ba8e4bc41d5b70bb9c"
+  },
+  {
+    "username": "Tod33",
+    "email": "Nigel_Dooley@hotmail.com",
+    "password_hash": "$2b$10$6U/9vZMqIyvcEPnlgcV8IeXXTWPrKv2rT3Oy6bVfRgVbp1togSyci",
+    "role": "user",
+    "_id": "66e008ba8e4bc41d5b70bb9d"
+  },
+  {
+    "username": "Odie96",
+    "email": "Margret48@hotmail.com",
+    "password_hash": "$2b$10$d1dbavaTp19AuLLY7IoCjeZZjFpS39se9HnYGc93UM0MAgQF93rQ6",
+    "role": "user",
+    "_id": "66e008ba8e4bc41d5b70bb9e"
+  },
+  {
+    "username": "Efrain13",
+    "email": "Lavonne_Gleichner91@yahoo.com",
+    "password_hash": "$2b$10$CIrR7GcoVp0aqAl6mvZdleXWV1i67yzk7bCpbw1XDGzdFx17u8ulW",
+    "role": "user",
+    "_id": "66e008ba8e4bc41d5b70bb9f"
+  },
+  {
+    "username": "Brooke.Harris97",
+    "email": "Rowan.Becker@yahoo.com",
+    "password_hash": "$2b$10$mQwKjIBxBmbt889bNhvrf.AYFP5rfiJMx2sYZLEV6BWLAH3tNd67a",
+    "role": "user",
+    "_id": "66e008ba8e4bc41d5b70bba0"
+  }
+]

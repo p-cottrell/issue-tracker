@@ -46,23 +46,8 @@ const Issue = mongoose.model('Issue', issueSchema);
 
 // Function to generate fake data
 async function generateFakeData() {
-    // Generate fake projects
-    const projects = [];
-    for (let i = 0; i < numProjects; i++) {
-        projects.push(new Project({
-            project_name: faker.company.name(),
-            description: faker.lorem.sentence(),
-            status_types: [
-                { status_id: 1, status_name: 'To Do' },
-                { status_id: 2, status_name: 'In Progress' },
-                { status_id: 3, status_name: 'Done' }
-            ]
-        }));
-    }
-
     // Generate fake users
     const users = [];
-    const userCredentials = [];
     for (let i = 0; i < numUsers; i++) {
         const password = faker.internet.password();
         const password_hash = await bcrypt.hash(password, 10);
@@ -70,48 +55,68 @@ async function generateFakeData() {
             username: faker.internet.userName(),
             email: faker.internet.email(),
             password_hash,
-            role: faker.helpers.randomize(['admin', 'user'])
+            role: faker.helpers.arrayElement(['admin', 'user'])
         }));
-        userCredentials.push({ username: users[i].username, email: users[i].email, password, role: users[i].role });
     }
 
-    // Generate fake issues
+    // Generate fake projects and related data
+    const projects = [];
     const issues = [];
-    for (let i = 0; i < numIssues; i++) {
-        issues.push(new Issue({
-            project_id: faker.string.uuid(),
-            reporter_id: faker.string.uuid(),
-            status_id: faker.helpers.randomize([1, 2, 3]),
-            title: faker.lorem.sentence(),
-            description: faker.lorem.paragraph(),
-            charm: faker.helpers.randomize(['⚠️', '🚀', '🐞']),
-            created_at: faker.date.past(),
-            updated_at: faker.date.recent(),
-            occurrences: Array.from({ length: numOccurrences }, () => ({
-                description: faker.lorem.sentence(),
+    for (let i = 0; i < numProjects; i++) {
+        const project = new Project({
+            project_name: faker.company.name(),
+            description: faker.company.catchPhrase(),
+            status_types: [
+                { status_id: 1, status_name: 'Open' },
+                { status_id: 2, status_name: 'In Progress' },
+                { status_id: 3, status_name: 'Closed' },
+                { status_id: 4, status_name: 'Cancelled' }
+            ]
+        });
+        projects.push(project);
+
+        // Generate issues for each project
+        for (let j = 0; j < numIssues; j++) {
+            const issue = new Issue({
+                project_id: project._id.toString(),
+                reporter_id: faker.helpers.arrayElement(users)._id.toString(),
+                status_id: faker.helpers.arrayElement([1, 2, 3, 4]),
+                title: faker.commerce.productName(),
+                description: faker.commerce.productDescription(),
+                charm: Math.random() < 0.7
+                    ? faker.internet.emoji()
+                    : faker.random.alphaNumeric(1).toLowerCase(),
                 created_at: faker.date.past(),
-                updated_at: faker.date.recent()
-            })),
-            attachments: Array.from({ length: numAttachments }, () => ({
-                file_path: faker.system.filePath(),
-                created_at: faker.date.past()
-            })),
-            comments: Array.from({ length: numComments }, () => ({
-                comment_text: faker.lorem.sentence(),
-                created_at: faker.date.past()
-            }))
-        }));
+                updated_at: faker.date.recent(),
+                occurrences: Array.from({ length: numOccurrences }, () => ({
+                    description: faker.company.bs(),
+                    created_at: faker.date.past(),
+                    updated_at: faker.date.recent()
+                })),
+                attachments: Array.from({ length: numAttachments }, () => ({
+                    file_path: faker.system.filePath(),
+                    created_at: faker.date.past()
+                })),
+                comments: Array.from({ length: numComments }, () => ({
+                    comment_text: faker.music.songName(),
+                    created_at: faker.date.past()
+                }))
+            });
+            issues.push(issue);
+        }
     }
 
     // Ensure the generated folder exists
     if (!fs.existsSync('generated')) {
         fs.mkdirSync('generated');
     }
+    if (!fs.existsSync('generated/scripts')) {
+        fs.mkdirSync('generated/scripts');
+    }
 
     // Write data to files in the generated folder
     fs.writeFileSync('generated/projects.json', JSON.stringify(projects, null, 2));
     fs.writeFileSync('generated/users.json', JSON.stringify(users, null, 2));
-    fs.writeFileSync('generated/userCredentials.json', JSON.stringify(userCredentials, null, 2));
     fs.writeFileSync('generated/issues.json', JSON.stringify(issues, null, 2));
 }
 
@@ -132,11 +137,11 @@ async function generateInsertScripts() {
     const userInserts = generateInsertStatements('users', users);
     const issueInserts = generateInsertStatements('issues', issues);
 
-    fs.writeFileSync('generated/projectInserts.js', projectInserts);
-    fs.writeFileSync('generated/userInserts.js', userInserts);
-    fs.writeFileSync('generated/issueInserts.js', issueInserts);
+    fs.writeFileSync('generated/scripts/projectInserts.js', projectInserts);
+    fs.writeFileSync('generated/scripts/userInserts.js', userInserts);
+    fs.writeFileSync('generated/scripts/issueInserts.js', issueInserts);
 }
 
 generateInsertScripts();
 
-console.log('Insert scripts generated successfully! Run the scripts located in the "generated\\" folder within a MongoDB shell to insert the data.');
+console.log('Insert scripts generated successfully! Run the scripts located in the "generated/scripts/" folder within a MongoDB shell to insert the data.');
