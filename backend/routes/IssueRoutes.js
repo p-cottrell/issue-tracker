@@ -85,13 +85,24 @@ router.get('/', authenticateToken, async (req, res) => {
     const issues = await Issue.find(query);
 
     if (issues.length === 0) {
-      return res.status(404).send('No issues found');
+      return res.status(200).json({
+        success: false,
+        message: 'No issues found.',
+      });
     }
 
-    res.status(200).json(issues);
+    res.status(200).json({
+      success: true,
+      message: 'Issues retrieved successfully.',
+      data: issues,
+    });
   } catch (error) {
     console.error('Error fetching issues:', error);
-    res.status(500).send('Error fetching issues');
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching issues.',
+      details: error.message,
+    });
   }
 });
 
@@ -126,7 +137,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 
     // Check if the authenticated user is the reporter or an admin
-    if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (issue.reporter_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).send('Not authorized');
     }
 

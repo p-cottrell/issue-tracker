@@ -63,7 +63,7 @@ router.post('/register', async (req, res) => {
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Only secure in production
-      sameSite: 'None', // Allows cookies to be sent in all contexts
+      sameSite: 'Strict', // Allows cookies to be sent in all contexts
       maxAge: 3600000, // 1 hour
     });
 
@@ -71,7 +71,7 @@ router.post('/register', async (req, res) => {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Only secure in production
-      sameSite: 'None', // Allows cookies to be sent in all contexts
+      sameSite: 'Strict', // Allows cookies to be sent in all contexts
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -120,7 +120,7 @@ router.post('/login', async (req, res) => {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'None',
+      sameSite: 'Strict',
       maxAge: 3600000,
     });
 
@@ -133,7 +133,7 @@ router.post('/login', async (req, res) => {
     res.cookie('refresh_token', refreshToken.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'None',
+      sameSite: 'Strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
