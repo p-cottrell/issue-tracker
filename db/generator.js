@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import mongoose from 'mongoose';
+import readline from 'readline';
 
 // Constants for the number of each type of data
 const numProjects = 5;
@@ -51,19 +52,19 @@ async function generateFakeData() {
     for (let i = 0; i < numUsers; i++) {
         const password = faker.internet.password();
         const password_hash = await bcrypt.hash(password, 10);
-        users.push(new User({
+        users.push({
             username: faker.internet.userName(),
             email: faker.internet.email(),
             password_hash,
             role: faker.helpers.arrayElement(['admin', 'user'])
-        }));
+        });
     }
 
     // Generate fake projects and related data
     const projects = [];
     const issues = [];
     for (let i = 0; i < numProjects; i++) {
-        const project = new Project({
+        const project = {
             project_name: faker.company.name(),
             description: faker.company.catchPhrase(),
             status_types: [
@@ -72,14 +73,14 @@ async function generateFakeData() {
                 { status_id: 3, status_name: 'Closed' },
                 { status_id: 4, status_name: 'Cancelled' }
             ]
-        });
+        };
         projects.push(project);
 
         // Generate issues for each project
         for (let j = 0; j < numIssues; j++) {
-            const issue = new Issue({
-                project_id: project._id.toString(),
-                reporter_id: faker.helpers.arrayElement(users)._id.toString(),
+            const issue = {
+                project_id: project._id?.toString() || faker.datatype.uuid(),
+                reporter_id: faker.helpers.arrayElement(users)._id?.toString() || faker.datatype.uuid(),
                 status_id: faker.helpers.arrayElement([1, 2, 3, 4]),
                 title: faker.commerce.productName(),
                 description: faker.commerce.productDescription(),
@@ -101,7 +102,7 @@ async function generateFakeData() {
                     comment_text: faker.music.songName(),
                     created_at: faker.date.past()
                 }))
-            });
+            };
             issues.push(issue);
         }
     }
@@ -120,9 +121,9 @@ async function generateFakeData() {
     fs.writeFileSync('generated/issues.json', JSON.stringify(issues, null, 2));
 }
 
-// Convert the collections to MongoDB insert statements
-function generateInsertStatements(collectionName, documents) {
-    return documents.map(doc => `db.${collectionName}.insert(${JSON.stringify(doc)});`).join('\n');
+// Convert the collections to MongoDB insertMany statements
+function generateInsertManyStatements(collectionName, documents) {
+    return `db.${collectionName}.insertMany(${JSON.stringify(documents, null, 2)});`;
 }
 
 // Generate and save the insert scripts
@@ -133,15 +134,61 @@ async function generateInsertScripts() {
     const users = JSON.parse(fs.readFileSync('generated/users.json'));
     const issues = JSON.parse(fs.readFileSync('generated/issues.json'));
 
-    const projectInserts = generateInsertStatements('projects', projects);
-    const userInserts = generateInsertStatements('users', users);
-    const issueInserts = generateInsertStatements('issues', issues);
+    const projectInserts = generateInsertManyStatements('projects', projects);
+    const userInserts = generateInsertManyStatements('users', users);
+    const issueInserts = generateInsertManyStatements('issues', issues);
 
     fs.writeFileSync('generated/scripts/projectInserts.js', projectInserts);
     fs.writeFileSync('generated/scripts/userInserts.js', userInserts);
     fs.writeFileSync('generated/scripts/issueInserts.js', issueInserts);
 }
 
-generateInsertScripts();
+async function runScripts() {
+    await generateInsertScripts();
 
-console.log('Insert scripts generated successfully! Run the scripts located in the "generated/scripts/" folder within a MongoDB shell to insert the data.');
+    console.log('Insert scripts generated successfully!');
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    rl.question('Do you want to connect to MongoDB and run the scripts now? This will nuke the current data! [y]es/[N]o: ', async (answer) => {
+        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+            try {
+                await mongoose.connect('mongodb+srv://iit:LfdTdr1hEKkSNIoF@intermittentissuetracke.7oyxe.mongodb.net/?retryWrites=true&w=majority&appName=IntermittentIssueTracker', { useNewUrlParser: true, useUnifiedTopology: true });
+                console.log('MongoDB Connected...');
+
+                console.log('Dropping all collections...');
+                const collections = await mongoose.connection.db.collections();
+                for (let collection of collections) {
+                    await collection.drop();
+                    console.log(`\tDropped collection: ${collection.collectionName}`);
+                }
+
+                const projects = JSON.parse(fs.readFileSync('generated/projects.json'));
+                const users = JSON.parse(fs.readFileSync('generated/users.json'));
+                const issues = JSON.parse(fs.readFileSync('generated/issues.json'));
+
+                console.log('Inserting data...');
+                console.log(`\tInserting ${numProjects} projects...`);
+                await Project.insertMany(projects);
+                console.log(`\tInserting ${numUsers} users...`);
+                await User.insertMany(users);
+                console.log(`\tInserting ${numIssues} issues...`);
+                await Issue.insertMany(issues);
+
+                console.log('Data inserted successfully!');
+            } catch (err) {
+                console.error('Error connecting to MongoDB or inserting data:', err.message);
+            } finally {
+                mongoose.connection.close();
+            }
+        } else {
+            console.log('You can run the scripts manually later.');
+        }
+        rl.close();
+    });
+}
+
+runScripts();

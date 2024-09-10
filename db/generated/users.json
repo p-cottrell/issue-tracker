@@ -1,72 +1,62 @@
 [
   {
-    "username": "Danyka.Torphy42",
-    "email": "Brayan.Marvin@hotmail.com",
-    "password_hash": "$2b$10$brc/T8YZWFD2SXM3Ai4taufT4fn8M5pTOTLtF8a7lgX6f34kDtUGm",
-    "role": "admin",
-    "_id": "66e01027a9162ac91b47164c"
+    "username": "Wilfredo_Torp",
+    "email": "Ezra87@hotmail.com",
+    "password_hash": "$2b$10$MqGMCTz5dasbDT.XYJt70OSKLa.loT4uS4Idd.rTPFmQmn4m7UzCG",
+    "role": "admin"
   },
   {
-    "username": "Jaren63",
-    "email": "Joseph.Windler77@gmail.com",
-    "password_hash": "$2b$10$NWLiwIzNaY1qjWood3/0lepTdNjdh7W8cWZ7f6LobrXV4gPqn1oIa",
-    "role": "admin",
-    "_id": "66e01027a9162ac91b47164d"
+    "username": "Amani86",
+    "email": "Aniya.Muller@hotmail.com",
+    "password_hash": "$2b$10$GJpBh9phV/uGpnZlJviyFOK9ozLwE6YvUuEOKZOqA.2S.UqNHZ4aq",
+    "role": "admin"
   },
   {
-    "username": "Alvina.Ferry",
-    "email": "Major66@gmail.com",
-    "password_hash": "$2b$10$4nMzYJ.5clgqXQrJn8l7GO0Dla79ptnoTO1NEwWGi5F/tg/Nk7l/a",
-    "role": "admin",
-    "_id": "66e01027a9162ac91b47164e"
+    "username": "Aniya94",
+    "email": "Lavern.Hermann@yahoo.com",
+    "password_hash": "$2b$10$MPsGuryw8XPtFdFcCZr0Z.0uw4aNcQ05OY3BLqPJcGKITngrr/rGq",
+    "role": "admin"
   },
   {
-    "username": "Lennie.Crona",
-    "email": "Mohammad73@hotmail.com",
-    "password_hash": "$2b$10$YzeH6ftRrrsviD.xv1uRse8zJBQWNcPhQnhGJEQaFYpluGnUrMlde",
-    "role": "user",
-    "_id": "66e01027a9162ac91b47164f"
+    "username": "Glennie.Hauck49",
+    "email": "Clementine91@gmail.com",
+    "password_hash": "$2b$10$e66biWVN86AEQjo5mhG.nOj57XotJUX075dZlB4vz1DC.bGkUJtPu",
+    "role": "user"
   },
   {
-    "username": "Rosalia.Gutkowski",
-    "email": "Eulah.McGlynn@gmail.com",
-    "password_hash": "$2b$10$Pxzdgpq.w58Uadl7D2/LxeHwvnSYU0dWScD7uAMOHSgjHUo30ktYW",
-    "role": "user",
-    "_id": "66e01028a9162ac91b471650"
+    "username": "Callie_Aufderhar",
+    "email": "Gerry.Sawayn@yahoo.com",
+    "password_hash": "$2b$10$6G5Nwu6/sVQOCMDZVYjXxunkH3PRm6j.9JeUSsVExqUArYpU7kx7e",
+    "role": "user"
   },
   {
-    "username": "Faye_Schulist",
-    "email": "Raheem67@yahoo.com",
-    "password_hash": "$2b$10$vrsyQVC6kum8FhIrsO21o.1a8T3x4mvbGxrICdN.7qU06dm.yIJFC",
-    "role": "user",
-    "_id": "66e01028a9162ac91b471651"
+    "username": "Retta5",
+    "email": "Annie_Schaden49@gmail.com",
+    "password_hash": "$2b$10$h.p/kRb91ynktofXMosSFuQDJcXkeupjkz0DcAHZyfVc.eWf/OEbW",
+    "role": "user"
   },
   {
-    "username": "Lizzie_Shields22",
-    "email": "Delfina_Koch91@hotmail.com",
-    "password_hash": "$2b$10$GE/FHDHYQcj86krp/2KzKeKA/dNHEE682tXfHZHdugcAh5RGHnMXm",
-    "role": "admin",
-    "_id": "66e01028a9162ac91b471652"
+    "username": "Haven_OConnell",
+    "email": "Celine46@gmail.com",
+    "password_hash": "$2b$10$MJpu9Kdva.kxeL6CsDlKP.EudtNWeuo3O9HNXf1rup/rwtn2jI/uG",
+    "role": "admin"
   },
   {
-    "username": "Brent.Mertz",
-    "email": "Audrey51@hotmail.com",
-    "password_hash": "$2b$10$3o76ucrTGcfuMujrriFGQeGes2Qlc8EkZea7wOeeLU82TdTtCerr2",
-    "role": "admin",
-    "_id": "66e01028a9162ac91b471653"
+    "username": "Hassan39",
+    "email": "Rupert.Bailey@yahoo.com",
+    "password_hash": "$2b$10$cMe25zZVfi7MXlwgv0/XNubqh0opwebmhpj/Ng21XTrXJRIe5a/FS",
+    "role": "user"
   },
   {
-    "username": "Chad_Runolfsson",
-    "email": "Nova_Ziemann@gmail.com",
-    "password_hash": "$2b$10$Yz1BAhnxeVfKuv7rjrIl.OKLDa5Nyul8PEWlXP66urYds4R.CMKBO",
-    "role": "user",
-    "_id": "66e01028a9162ac91b471654"
+    "username": "Meredith31",
+    "email": "Edward.Keebler97@yahoo.com",
+    "password_hash": "$2b$10$qlrgqPjrdxnEJmECNSsMy.whuBrbU4h.W73/oT41fUiPcBunej736",
+    "role": "user"
   },
   {
-    "username": "Mitchel_Tremblay65",
-    "email": "Stefanie.Ankunding@hotmail.com",
-    "password_hash": "$2b$10$oS6NpPZXJFUIk16HFcIUvezSz69vmfAAoBSn5iJe3l43zmIabojIu",
-    "role": "admin",
-    "_id": "66e01028a9162ac91b471655"
+    "username": "Julianne.Kozey",
+    "email": "Delmer_Heidenreich3@gmail.com",
+    "password_hash": "$2b$10$VuR2mBFA1UjOiu2qTSB/veyH0KlIwxnGnr5AMAaquDNvD1rHDflvy",
+    "role": "admin"
   }
 ]
