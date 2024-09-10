@@ -1,7 +1,7 @@
 db.projects.insertMany([
   {
-    "project_name": "Lueilwitz LLC",
-    "description": "Realigned explicit standardization",
+    "project_name": "Fadel - Lehner",
+    "description": "Future-proofed dedicated support",
     "status_types": [
       {
         "status_id": 1,
@@ -22,8 +22,8 @@ db.projects.insertMany([
     ]
   },
   {
-    "project_name": "Considine LLC",
-    "description": "Monitored tangible solution",
+    "project_name": "Donnelly and Sons",
+    "description": "Optional methodical conglomeration",
     "status_types": [
       {
         "status_id": 1,
@@ -44,8 +44,8 @@ db.projects.insertMany([
     ]
   },
   {
-    "project_name": "Kreiger Inc",
-    "description": "Right-sized uniform help-desk",
+    "project_name": "Hegmann - Braun",
+    "description": "Progressive fault-tolerant moratorium",
     "status_types": [
       {
         "status_id": 1,
@@ -66,8 +66,8 @@ db.projects.insertMany([
     ]
   },
   {
-    "project_name": "Kessler Inc",
-    "description": "Pre-emptive full-range hub",
+    "project_name": "Bergstrom - Lemke",
+    "description": "Pre-emptive transitional website",
     "status_types": [
       {
         "status_id": 1,
@@ -88,8 +88,8 @@ db.projects.insertMany([
     ]
   },
   {
-    "project_name": "Hackett - Schimmel",
-    "description": "Realigned secondary approach",
+    "project_name": "Kuvalis and Sons",
+    "description": "Balanced optimizing open system",
     "status_types": [
       {
         "status_id": 1,

@@ -49,15 +49,18 @@ const Issue = mongoose.model('Issue', issueSchema);
 async function generateFakeData() {
     // Generate fake users
     const users = [];
+    const userPasswords = {}; // Lookup dictionary for user passwords
     for (let i = 0; i < numUsers; i++) {
         const password = faker.internet.password();
         const password_hash = await bcrypt.hash(password, 10);
-        users.push({
+        const user = {
             username: faker.internet.userName(),
             email: faker.internet.email(),
             password_hash,
             role: faker.helpers.arrayElement(['admin', 'user'])
-        });
+        };
+        users.push(user);
+        userPasswords[user.username] = password;
     }
 
     // Generate fake projects and related data
@@ -119,6 +122,13 @@ async function generateFakeData() {
     fs.writeFileSync('generated/projects.json', JSON.stringify(projects, null, 2));
     fs.writeFileSync('generated/users.json', JSON.stringify(users, null, 2));
     fs.writeFileSync('generated/issues.json', JSON.stringify(issues, null, 2));
+
+    // Create a modified user collection with passwords
+    const usersWithPasswords = users.map(user => ({
+        ...user,
+        password: userPasswords[user.username]
+    }));
+    fs.writeFileSync('generated/users_with_passwords.json', JSON.stringify(usersWithPasswords, null, 2));
 }
 
 // Convert the collections to MongoDB insertMany statements

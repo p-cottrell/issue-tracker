@@ -1,62 +1,62 @@
 db.users.insertMany([
   {
-    "username": "Wilfredo_Torp",
-    "email": "Ezra87@hotmail.com",
-    "password_hash": "$2b$10$MqGMCTz5dasbDT.XYJt70OSKLa.loT4uS4Idd.rTPFmQmn4m7UzCG",
+    "username": "Reed.Luettgen",
+    "email": "Jaren_Ullrich@yahoo.com",
+    "password_hash": "$2b$10$X86wy//XYjCe5L9MPsSSWul0hYful4m3dC0z9TuyaAZKMmk7b7Khu",
+    "role": "user"
+  },
+  {
+    "username": "Davin_Berge",
+    "email": "Darrel.Gleason8@yahoo.com",
+    "password_hash": "$2b$10$oqve5YLW5Ls/4sA1A1/Z9eaB/xuQZqZVQ2PcE327GZm8Yu9Z/MVcW",
+    "role": "user"
+  },
+  {
+    "username": "Cathrine_Baumbach",
+    "email": "Tavares_Cole99@yahoo.com",
+    "password_hash": "$2b$10$die3TRRk.WU0iEi4bZ0XLO5DwjUfm5nuxCb9lZpFCTX16ge83Djbu",
     "role": "admin"
   },
   {
-    "username": "Amani86",
-    "email": "Aniya.Muller@hotmail.com",
-    "password_hash": "$2b$10$GJpBh9phV/uGpnZlJviyFOK9ozLwE6YvUuEOKZOqA.2S.UqNHZ4aq",
+    "username": "Evan59",
+    "email": "Austin_Becker@hotmail.com",
+    "password_hash": "$2b$10$P3iyKtH458jsIbxnocwrmu9hVnnio3SM2qiKUIPiwsS1fXpjCWfx6",
+    "role": "user"
+  },
+  {
+    "username": "Alphonso81",
+    "email": "Dudley.Osinski4@hotmail.com",
+    "password_hash": "$2b$10$eoxRmW1.InOSxm7J2fvPMucDVCg6q6z/nRfZ5lJnBg9JV7hg1udE.",
+    "role": "user"
+  },
+  {
+    "username": "Davonte28",
+    "email": "Wilburn85@gmail.com",
+    "password_hash": "$2b$10$6EDfdUkKS4vV6PysPFDineZQpnPmXS6nGnRe7C9SHP0Sjy5HM2tSC",
     "role": "admin"
   },
   {
-    "username": "Aniya94",
-    "email": "Lavern.Hermann@yahoo.com",
-    "password_hash": "$2b$10$MPsGuryw8XPtFdFcCZr0Z.0uw4aNcQ05OY3BLqPJcGKITngrr/rGq",
+    "username": "Raoul.Monahan17",
+    "email": "Amira56@hotmail.com",
+    "password_hash": "$2b$10$Te4hsMx2sIF7LPsEFjSb/ulti4qnMKlJ9g0naSBsPJaZ2OKylPwGm",
     "role": "admin"
   },
   {
-    "username": "Glennie.Hauck49",
-    "email": "Clementine91@gmail.com",
-    "password_hash": "$2b$10$e66biWVN86AEQjo5mhG.nOj57XotJUX075dZlB4vz1DC.bGkUJtPu",
+    "username": "Art.Gorczany",
+    "email": "Aurelia19@gmail.com",
+    "password_hash": "$2b$10$dKINE1T1ZzPnMWkGkSgUG.DQUhwtjyp4adZ0HIZImq4Z/UdcWguz6",
     "role": "user"
   },
   {
-    "username": "Callie_Aufderhar",
-    "email": "Gerry.Sawayn@yahoo.com",
-    "password_hash": "$2b$10$6G5Nwu6/sVQOCMDZVYjXxunkH3PRm6j.9JeUSsVExqUArYpU7kx7e",
+    "username": "Jane_Pfeffer10",
+    "email": "Fabiola.Kautzer6@yahoo.com",
+    "password_hash": "$2b$10$WP9k06Nzj3VC7oEcHwoQOuW.gDnZpovL5/TfUB3QF/WKLcwdfQxHy",
     "role": "user"
   },
   {
-    "username": "Retta5",
-    "email": "Annie_Schaden49@gmail.com",
-    "password_hash": "$2b$10$h.p/kRb91ynktofXMosSFuQDJcXkeupjkz0DcAHZyfVc.eWf/OEbW",
-    "role": "user"
-  },
-  {
-    "username": "Haven_OConnell",
-    "email": "Celine46@gmail.com",
-    "password_hash": "$2b$10$MJpu9Kdva.kxeL6CsDlKP.EudtNWeuo3O9HNXf1rup/rwtn2jI/uG",
-    "role": "admin"
-  },
-  {
-    "username": "Hassan39",
-    "email": "Rupert.Bailey@yahoo.com",
-    "password_hash": "$2b$10$cMe25zZVfi7MXlwgv0/XNubqh0opwebmhpj/Ng21XTrXJRIe5a/FS",
-    "role": "user"
-  },
-  {
-    "username": "Meredith31",
-    "email": "Edward.Keebler97@yahoo.com",
-    "password_hash": "$2b$10$qlrgqPjrdxnEJmECNSsMy.whuBrbU4h.W73/oT41fUiPcBunej736",
-    "role": "user"
-  },
-  {
-    "username": "Julianne.Kozey",
-    "email": "Delmer_Heidenreich3@gmail.com",
-    "password_hash": "$2b$10$VuR2mBFA1UjOiu2qTSB/veyH0KlIwxnGnr5AMAaquDNvD1rHDflvy",
+    "username": "Nellie_Mitchell86",
+    "email": "Mustafa_Renner90@hotmail.com",
+    "password_hash": "$2b$10$FSvsxChSh1MA1dzOv1Glx.fZ3YKRJmj.9jlAnmbzN7v.18amo1G6u",
     "role": "admin"
   }
 ]);
