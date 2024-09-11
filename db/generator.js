@@ -27,8 +27,8 @@ const userSchema = new mongoose.Schema({
 });
 
 const issueSchema = new mongoose.Schema({
-    project_id: String,
-    reporter_id: String,
+    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+    reporter_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     status_id: Number,
     title: String,
     description: String,
@@ -53,12 +53,12 @@ async function generateFakeData() {
     for (let i = 0; i < numUsers; i++) {
         const password = faker.internet.password();
         const password_hash = await bcrypt.hash(password, 10);
-        const user = {
+        const user = new User({
             username: faker.internet.userName(),
             email: faker.internet.email(),
             password_hash,
             role: faker.helpers.arrayElement(['admin', 'user'])
-        };
+        });
         users.push(user);
         userPasswords[user.username] = password;
     }
@@ -67,7 +67,7 @@ async function generateFakeData() {
     const projects = [];
     const issues = [];
     for (let i = 0; i < numProjects; i++) {
-        const project = {
+        const project = new Project({
             project_name: faker.company.name(),
             description: faker.company.catchPhrase(),
             status_types: [
@@ -76,14 +76,14 @@ async function generateFakeData() {
                 { status_id: 3, status_name: 'Closed' },
                 { status_id: 4, status_name: 'Cancelled' }
             ]
-        };
+        });
         projects.push(project);
 
         // Generate issues for each project
         for (let j = 0; j < numIssues; j++) {
-            const issue = {
-                project_id: project._id?.toString() || faker.datatype.uuid(),
-                reporter_id: faker.helpers.arrayElement(users)._id?.toString() || faker.datatype.uuid(),
+            const issue = new Issue({
+                project_id: project._id,
+                reporter_id: faker.helpers.arrayElement(users)._id,
                 status_id: faker.helpers.arrayElement([1, 2, 3, 4]),
                 title: faker.commerce.productName(),
                 description: faker.commerce.productDescription(),
@@ -105,7 +105,7 @@ async function generateFakeData() {
                     comment_text: faker.music.songName(),
                     created_at: faker.date.past()
                 }))
-            };
+            });
             issues.push(issue);
         }
     }
@@ -125,7 +125,7 @@ async function generateFakeData() {
 
     // Create a modified user collection with passwords
     const usersWithPasswords = users.map(user => ({
-        ...user,
+        ...user.toObject(),
         password: userPasswords[user.username]
     }));
     fs.writeFileSync('generated/users_with_passwords.json', JSON.stringify(usersWithPasswords, null, 2));

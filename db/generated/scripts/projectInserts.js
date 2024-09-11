@@ -1,7 +1,7 @@
 db.projects.insertMany([
   {
-    "project_name": "Fadel - Lehner",
-    "description": "Future-proofed dedicated support",
+    "project_name": "Shanahan - Kiehn",
+    "description": "Devolved holistic Graphic Interface",
     "status_types": [
       {
         "status_id": 1,
@@ -19,11 +19,12 @@ db.projects.insertMany([
         "status_id": 4,
         "status_name": "Cancelled"
       }
-    ]
+    ],
+    "_id": "66e19f5e874661ce7efc08fb"
   },
   {
-    "project_name": "Donnelly and Sons",
-    "description": "Optional methodical conglomeration",
+    "project_name": "Wolff - Torphy",
+    "description": "Triple-buffered foreground service-desk",
     "status_types": [
       {
         "status_id": 1,
@@ -41,11 +42,12 @@ db.projects.insertMany([
         "status_id": 4,
         "status_name": "Cancelled"
       }
-    ]
+    ],
+    "_id": "66e19f5e874661ce7efc092e"
   },
   {
-    "project_name": "Hegmann - Braun",
-    "description": "Progressive fault-tolerant moratorium",
+    "project_name": "Kirlin - Grant",
+    "description": "Object-based multi-state productivity",
     "status_types": [
       {
         "status_id": 1,
@@ -63,11 +65,12 @@ db.projects.insertMany([
         "status_id": 4,
         "status_name": "Cancelled"
       }
-    ]
+    ],
+    "_id": "66e19f5e874661ce7efc0961"
   },
   {
-    "project_name": "Bergstrom - Lemke",
-    "description": "Pre-emptive transitional website",
+    "project_name": "Hodkiewicz Group",
+    "description": "Automated next generation moderator",
     "status_types": [
       {
         "status_id": 1,
@@ -85,11 +88,12 @@ db.projects.insertMany([
         "status_id": 4,
         "status_name": "Cancelled"
       }
-    ]
+    ],
+    "_id": "66e19f5e874661ce7efc0994"
   },
   {
-    "project_name": "Kuvalis and Sons",
-    "description": "Balanced optimizing open system",
+    "project_name": "Thompson, Haag and Breitenberg",
+    "description": "Networked local circuit",
     "status_types": [
       {
         "status_id": 1,
@@ -107,6 +111,7 @@ db.projects.insertMany([
         "status_id": 4,
         "status_name": "Cancelled"
       }
-    ]
+    ],
+    "_id": "66e19f5e874661ce7efc09c7"
   }
 ]);
