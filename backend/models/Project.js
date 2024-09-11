@@ -16,13 +16,7 @@ const projectSchema = new mongoose.Schema({
   },
   status_types: [
     {
-      project_ID: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Project',
-        required: true,
-      },
-
-        status_name: {
+      status_name: {
         type: String,
         required: true,
         maxlength: 50,
