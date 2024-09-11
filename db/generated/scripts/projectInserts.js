@@ -1,122 +1,117 @@
 db.projects.insertMany([
   {
-    "project_name": "Kunde - Turcotte",
-    "description": "Customizable attitude-oriented projection",
+    "project_name": "Swaniawski Group",
+    "description": "Cross-group discrete adapter",
     "status_types": [
       {
-        "status_name": "Open",
-        "_id": "66e1a69f02b02c685e34c09f"
+        "status_id": 1,
+        "status_name": "Open"
       },
       {
-        "status_name": "In Progress",
-        "_id": "66e1a69f02b02c685e34c0a0"
+        "status_id": 2,
+        "status_name": "In Progress"
       },
       {
-        "status_name": "Closed",
-        "_id": "66e1a69f02b02c685e34c0a1"
+        "status_id": 3,
+        "status_name": "Closed"
       },
       {
-        "status_name": "Cancelled",
-        "_id": "66e1a69f02b02c685e34c0a2"
+        "status_id": 4,
+        "status_name": "Cancelled"
       }
     ],
-    "_id": "66e1a69f02b02c685e34c09e",
-    "created_at": "2024-09-11T14:18:07.812Z"
+    "_id": "66e1a89745a36aba910416e8"
   },
   {
-    "project_name": "Feest - Hayes",
-    "description": "Configurable bandwidth-monitored middleware",
+    "project_name": "Runolfsson Inc",
+    "description": "Horizontal scalable projection",
     "status_types": [
       {
-        "status_name": "Open",
-        "_id": "66e1a69f02b02c685e34c428"
+        "status_id": 1,
+        "status_name": "Open"
       },
       {
-        "status_name": "In Progress",
-        "_id": "66e1a69f02b02c685e34c429"
+        "status_id": 2,
+        "status_name": "In Progress"
       },
       {
-        "status_name": "Closed",
-        "_id": "66e1a69f02b02c685e34c42a"
+        "status_id": 3,
+        "status_name": "Closed"
       },
       {
-        "status_name": "Cancelled",
-        "_id": "66e1a69f02b02c685e34c42b"
+        "status_id": 4,
+        "status_name": "Cancelled"
       }
     ],
-    "_id": "66e1a69f02b02c685e34c427",
-    "created_at": "2024-09-11T14:18:07.880Z"
+    "_id": "66e1a89745a36aba9104171b"
   },
   {
-    "project_name": "Maggio and Sons",
-    "description": "Reverse-engineered foreground parallelism",
+    "project_name": "Lynch - Hane",
+    "description": "Right-sized attitude-oriented interface",
     "status_types": [
       {
-        "status_name": "Open",
-        "_id": "66e1a69f02b02c685e34c7b1"
+        "status_id": 1,
+        "status_name": "Open"
       },
       {
-        "status_name": "In Progress",
-        "_id": "66e1a69f02b02c685e34c7b2"
+        "status_id": 2,
+        "status_name": "In Progress"
       },
       {
-        "status_name": "Closed",
-        "_id": "66e1a69f02b02c685e34c7b3"
+        "status_id": 3,
+        "status_name": "Closed"
       },
       {
-        "status_name": "Cancelled",
-        "_id": "66e1a69f02b02c685e34c7b4"
+        "status_id": 4,
+        "status_name": "Cancelled"
       }
     ],
-    "_id": "66e1a69f02b02c685e34c7b0",
-    "created_at": "2024-09-11T14:18:07.937Z"
+    "_id": "66e1a89745a36aba9104174e"
   },
   {
-    "project_name": "Braun - Watsica",
-    "description": "Operative exuding structure",
+    "project_name": "Bradtke - Jenkins",
+    "description": "Organized multimedia moderator",
     "status_types": [
       {
-        "status_name": "Open",
-        "_id": "66e1a69f02b02c685e34cb3a"
+        "status_id": 1,
+        "status_name": "Open"
       },
       {
-        "status_name": "In Progress",
-        "_id": "66e1a69f02b02c685e34cb3b"
+        "status_id": 2,
+        "status_name": "In Progress"
       },
       {
-        "status_name": "Closed",
-        "_id": "66e1a69f02b02c685e34cb3c"
+        "status_id": 3,
+        "status_name": "Closed"
       },
       {
-        "status_name": "Cancelled",
-        "_id": "66e1a69f02b02c685e34cb3d"
+        "status_id": 4,
+        "status_name": "Cancelled"
       }
     ],
-    "_id": "66e1a69f02b02c685e34cb39",
-    "created_at": "2024-09-11T14:18:07.988Z"
+    "_id": "66e1a89745a36aba91041781"
   },
   {
-    "project_name": "Dooley Inc",
-    "description": "Extended zero administration array",
+    "project_name": "Russel LLC",
+    "description": "Fully-configurable bottom-line website",
     "status_types": [
       {
-        "status_name": "Open",
-        "_id": "66e1a6a002b02c685e34cec3"
+        "status_id": 1,
+        "status_name": "Open"
       },
       {
-        "status_name": "In Progress",
-        "_id": "66e1a6a002b02c685e34cec4"
+        "status_id": 2,
+        "status_name": "In Progress"
       },
       {
-        "status_name": "Closed",
-        "_id": "66e1a6a002b02c685e34cec5"
+        "status_id": 3,
+        "status_name": "Closed"
       },
       {
-        "status_name": "Cancelled",
-        "_id": "66e1a6a002b02c685e34cec6"
+        "status_id": 4,
+        "status_name": "Cancelled"
       }
     ],
-    "_id": "66e1a6a002b02c685e34cec2",
-    "created_at": "2024-09-11T14:18:08.035Z"
+    "_id": "66e1a89745a36aba910417b4"
   }
 ]);

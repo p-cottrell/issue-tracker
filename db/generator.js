@@ -4,9 +4,38 @@ import fs from 'fs';
 import mongoose from 'mongoose';
 import readline from 'readline';
 
-import User from '../backend/models/User.js';
-import Issue from './../backend/models/Issue.js';
-import Project from './../backend/models/Project.js';
+const projectSchema = new mongoose.Schema({
+    project_name: String,
+    description: String,
+    status_types: Array,
+});
+
+const userSchema = new mongoose.Schema({
+    username: String,
+    email: String,
+    password_hash: String,
+    role: String,
+});
+
+const issueSchema = new mongoose.Schema({
+    project_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project'
+    },
+    reporter_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    status_id: Number,
+    title: String,
+    description: String,
+    charm: String,
+    created_at: Date,
+    updated_at: Date,
+    occurrences: Array,
+    attachments: Array,
+    comments: Array,
+});
 
 // Constants for the number of each type of data
 const numProjects = 5;
@@ -15,6 +44,10 @@ const numIssues = 50;
 const numOccurrences = 10;
 const numAttachments = 2;
 const numComments = 5;
+
+const Project = mongoose.model('Project', projectSchema);
+const User = mongoose.model('User', userSchema);
+const Issue = mongoose.model('Issue', issueSchema);
 
 // Custom replacer function to handle ObjectId instances
 function objectIdReplacer(_, value) {
