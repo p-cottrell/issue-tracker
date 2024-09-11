@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links: []
+issue_templates:
+  - name: "Bug Report"
+    description: "Report a bug you're experiencing"
+    title: "Bug: [Short description of the issue]"
+    labels: ["bug"]
+    assignees: []
+    body: .github/ISSUE_TEMPLATE/bug_report.md
