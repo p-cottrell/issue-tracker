@@ -40,7 +40,7 @@ const Dashboard = () => {
   const navigate = useNavigate(); // React Router hook for programmatic navigation
   const [showAddIssue, setShowAddIssue] = useState(false); // State to control visibility of the 'Add Issue' popup
   const [showDeleteIssue, setShowDeleteIssue] = useState(false); // State to control visibility of the 'Delete Issue' popup
-  const [popupHandler, setPopupHandler] = useState(() => () => { }); // Handler function for different popups
+  const [popupHandler, setPopupHandler] = useState(() => () => {}); // Handler function for different popups
   const [popupType, setPopupType] = useState(null); // Type of popup currently being displayed
   const [issues, setIssues] = useState([]); // All issues fetched from the API
   const [fetched, setFetched] = useState(false); // State to track if the issues have been fetched
@@ -48,6 +48,7 @@ const Dashboard = () => {
   const [selectedIssue, setSelectedIssue] = useState(null); // The issue selected for viewing or editing
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false); // State to control visibility of the 'Issue View' modal
   const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering issues
+  const [noIssuesMessage, setNoIssuesMessage] = useState(''); // Holds message to display when no issues are found
   const [allIssues, setAllIssues] = useState([]); // All issues retrieved from the API
   const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
   const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
@@ -64,20 +65,35 @@ const Dashboard = () => {
       return;
     }
 
+    setFetched(false); // Ensure UI shows lloading wheel when fetching begins
+  
     try {
+      // Clear previous issues state
+      setAllIssues([]);
+      setFilteredIssues([]);
+      setNoIssuesMessage(''); // Clear any existing messages
+  
       let endpoint = 'api/issues'; // Default endpoint to fetch all issues
       if (filterType === 'myIssues' && user.id) {
         endpoint = `api/issues?userId=${user.id}`; // Fetch only issues reported by the current user
       }
-      // More filter types can be added here if we like
-
+  
       const response = await apiClient.get(endpoint); // Fetch issues from API
-      setAllIssues(response.data);
-      setFilteredIssues(response.data);
-      setFetched(true);
+  
+      if (response.data.success) {
+        // Issues found
+        setNoIssuesMessage(''); // Clear any existing message
+        setAllIssues(response.data.data); // Set the issues data
+        setFilteredIssues(response.data.data);
+      } else {
+        // No issues found or an error occurred
+        setNoIssuesMessage(response.data.message); // Display the message from the backend
+      }
     } catch (error) {
       console.error('Error fetching issues:', error);
-      setFetched(true); // Ensure UI shows that fetching is complete, even on error
+      setNoIssuesMessage('Error fetching issues. Please try again later.');
+    } finally {
+      setFetched(true); // Ensure UI shows that fetching is complete
     }
   }, [filterType, user]);
 
@@ -93,7 +109,7 @@ const Dashboard = () => {
    */
   const openAddHandler = () => {
     setPopupHandler(() => addHandler);
-    setPopupType("add");
+    setPopupType('add');
     setShowAddIssue(true);
   };
 
@@ -103,7 +119,7 @@ const Dashboard = () => {
    */
   const addHandler = (data) => {
     const { title, description } = data;
-    const charm = "🐞"; // Default charm for new issues
+    const charm = '🐞'; // Default charm for new issues
 
     setShowAddIssue(false); // Close the 'Add Issue' popup
 
@@ -130,7 +146,7 @@ const Dashboard = () => {
    */
   const deleteHandler = (data) => {
     setShowDeleteIssue(false);
-    console.log(data._id, " Deleted!");
+    console.log(data._id, ' Deleted!');
   };
 
   /**
@@ -150,7 +166,7 @@ const Dashboard = () => {
     setSelectedIssue(null);
     setIsIssueModalOpen(false);
     if (updatedIssue) {
-      setUpdateTrigger(prev => prev + 1); // Increment trigger to force re-fetch
+      setUpdateTrigger((prev) => prev + 1); // Increment trigger to force re-fetch
     }
   };
 
@@ -163,11 +179,12 @@ const Dashboard = () => {
     setSearchTerm(term);
 
     // Filter issues based on the search term
-    const newFilteredIssues = allIssues.filter(issue =>
-      (issue.title && issue.title.toLowerCase().includes(term)) ||
-      (issue.description && issue.description.toLowerCase().includes(term)) ||
-      (issue._id && issue._id.toLowerCase().includes(term)) ||
-      (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
+    const newFilteredIssues = allIssues.filter(
+      (issue) =>
+        (issue.title && issue.title.toLowerCase().includes(term)) ||
+        (issue.description && issue.description.toLowerCase().includes(term)) ||
+        (issue._id && issue._id.toLowerCase().includes(term)) ||
+        (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
     );
     setFilteredIssues(newFilteredIssues);
   };
@@ -201,7 +218,10 @@ const Dashboard = () => {
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         {/* Left: Logo and Hamburger */}
         <div>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden"
+          >
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
@@ -222,7 +242,10 @@ const Dashboard = () => {
 
         {/* Right: New Issue Button */}
         <div className="flex items-center">
-          <button onClick={openAddHandler} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+          <button
+            onClick={openAddHandler}
+            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
+          >
             <PlusIcon className="w-6 h-6" />
             <span className="hidden lg:inline">New Issue</span>
           </button>
@@ -244,6 +267,10 @@ const Dashboard = () => {
             <option value="myIssues">My Issues</option>
             {/* Additional filter options can be added here if we decide on that */}
           </select>
+          {/* Display message if no issues found */}
+          {noIssuesMessage && (
+            <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
             {filteredIssues.map((issue, index) => (
               <Issue
@@ -259,20 +286,13 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {showAddIssue && (
-        <AddIssuePopup closeHandler={() => setShowAddIssue(false)} />
-      )}
+      {showAddIssue && <AddIssuePopup closeHandler={() => setShowAddIssue(false)} />}
 
       {showDeleteIssue && (
         <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue} />
       )}
 
-      {isIssueModalOpen && (
-        <IssueView
-          issue={selectedIssue}
-          onClose={closeIssueModal}
-        />
-      )}
+      {isIssueModalOpen && <IssueView issue={selectedIssue} onClose={closeIssueModal} />}
     </div>
   );
 };
