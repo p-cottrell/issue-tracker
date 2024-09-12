@@ -48,10 +48,10 @@ const issueSchema = new mongoose.Schema({
 });
 
 // Constants for the number of each type of data
-const numProjects = 5;
+const numProjects = 2;
 const numUsers = 10;
-const numIssues = 50;
-const numOccurrences = 10;
+const numIssues = 25;
+const numOccurrences = 5;
 const numAttachments = 2;
 const numComments = 5;
 const numStatusChanges = 3;
