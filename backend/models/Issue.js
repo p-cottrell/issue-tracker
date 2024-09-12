@@ -96,10 +96,22 @@ const issueSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  status_id: {
-    type: Number,
-    ref: 'Status',
-    default: 2,
+  status_history: {
+    type: [{
+      status_id: {
+        type: Number,
+        ref: 'Status',
+        required: true,
+      },
+      date: {
+        type: Date,
+        default: Date.now,
+      }
+    }],
+    default: [{
+      status_id: 2,
+      date: Date.now,
+    }]
   },
   title: {
     type: String,
@@ -125,6 +137,14 @@ const issueSchema = new mongoose.Schema({
   occurrences: [occurrenceSchema], // Embedded occurrences subdocuments
   attachments: [attachmentSchema], // Embedded attachments subdocuments
   comments: [commentSchema], // Embedded comments subdocuments
+});
+
+// Virtual property to get the current status of the issue (last status in history)
+issueSchema.virtual('status_id').get(function () { // current_status is likely a better name, but I'm deciding to keep it as status_id for compatibility (i.e. I'm lazy)
+  if (this.status_history.length > 0) {
+    return this.status_history[this.status_history.length - 1];
+  }
+  return null;
 });
 
 const Issue = mongoose.model('Issue', issueSchema);

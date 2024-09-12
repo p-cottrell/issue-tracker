@@ -26,7 +26,17 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    status_id: Number,
+    status_history: [{
+        status_id: {
+            type: Number,
+            ref: 'Status',
+            required: true,
+        },
+        date: {
+            type: Date,
+            default: Date.now,
+        }
+    }],
     title: String,
     description: String,
     charm: String,
@@ -38,12 +48,13 @@ const issueSchema = new mongoose.Schema({
 });
 
 // Constants for the number of each type of data
-const numProjects = 5;
+const numProjects = 2;
 const numUsers = 10;
-const numIssues = 50;
-const numOccurrences = 10;
+const numIssues = 25;
+const numOccurrences = 5;
 const numAttachments = 2;
 const numComments = 5;
+const numStatusChanges = 3;
 
 const Project = mongoose.model('Project', projectSchema);
 const User = mongoose.model('User', userSchema);
@@ -93,10 +104,15 @@ async function generateFakeData() {
 
         // Generate issues for each project
         for (let j = 0; j < numIssues; j++) {
+            const status_history = Array.from({ length: numStatusChanges }, () => ({
+                status_id: faker.helpers.arrayElement([1, 2, 3, 4]),
+                date: faker.date.past()
+            })).sort((a, b) => a.date - b.date);
+
             const issue = new Issue({
                 project_id: project._id,
                 reporter_id: faker.helpers.arrayElement(users)._id,
-                status_id: faker.helpers.arrayElement([1, 2, 3, 4]),
+                status_history,
                 title: faker.commerce.productName(),
                 description: faker.commerce.productDescription(),
                 charm: Math.random() < 0.7
