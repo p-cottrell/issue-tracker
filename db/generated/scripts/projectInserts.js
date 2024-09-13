@@ -1,7 +1,7 @@
 db.projects.insertMany([
   {
-    "project_name": "Nienow, Kilback and Berge",
-    "description": "Distributed analyzing orchestration",
+    "project_name": "Lakin, Abshire and Fahey",
+    "description": "Profit-focused even-keeled architecture",
     "status_types": [
       {
         "status_id": 1,
@@ -20,11 +20,11 @@ db.projects.insertMany([
         "status_name": "Cancelled"
       }
     ],
-    "_id": "66e2f01a71474c4f37cb2ad1"
+    "_id": "66e4271296be5783cecfb817"
   },
   {
-    "project_name": "Kessler Inc",
-    "description": "Devolved actuating structure",
+    "project_name": "Gulgowski Group",
+    "description": "Reactive clear-thinking frame",
     "status_types": [
       {
         "status_id": 1,
@@ -43,6 +43,6 @@ db.projects.insertMany([
         "status_name": "Cancelled"
       }
     ],
-    "_id": "66e2f01a71474c4f37cb2b36"
+    "_id": "66e4271296be5783cecfb8f9"
   }
 ]);

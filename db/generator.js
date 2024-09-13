@@ -121,15 +121,18 @@ async function generateFakeData() {
                 created_at: faker.date.past(),
                 updated_at: faker.date.recent(),
                 occurrences: Array.from({ length: numOccurrences }, () => ({
+                    _id: new mongoose.Types.ObjectId(),
                     description: faker.company.bs(),
                     created_at: faker.date.past(),
                     updated_at: faker.date.recent()
                 })),
                 attachments: Array.from({ length: numAttachments }, () => ({
+                    user_id: faker.helpers.arrayElement(users)._id,
                     file_path: faker.system.filePath(),
                     created_at: faker.date.past()
                 })),
                 comments: Array.from({ length: numComments }, () => ({
+                    user_id: faker.helpers.arrayElement(users)._id,
                     comment_text: faker.music.songName(),
                     created_at: faker.date.past()
                 }))
