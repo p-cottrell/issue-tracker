@@ -43,18 +43,20 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
       created_at: Date.now(),
       updated_at: Date.now(),
     };
-    // used to push the new occurrence to the issue without requiring all the other fields to exist
+
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,
       { $push: { occurrences: newOccurrence } },
-      { new: true, runValidators: false }
+      { new: true, runValidators: true }
     );
 
     if (!updatedIssue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    res.status(201).json({ message: 'Occurrence added', occurrence: newOccurrence });
+    const addedOccurrence = updatedIssue.occurrences[updatedIssue.occurrences.length - 1];
+
+    res.status(201).json({ message: 'Occurrence added', occurrence: addedOccurrence });
   } catch (error) {
     console.error('Error adding occurrence:', error);
     res.status(500).json({ error: 'Error adding occurrence', details: error.message });

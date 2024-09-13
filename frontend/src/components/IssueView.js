@@ -158,7 +158,7 @@ export default function IssueView({ issue, onClose }) {
       );
 
       const updatedOccurrences = detailedIssue.occurrences.map((occ) =>
-        occ._id === selectedOccurrence._id ? response.data.occurrence : occ
+        occ._id === selectedOccurrence._id ? { ...response.data.occurrence, _id: occ._id } : occ
       );
 
       setDetailedIssue({
@@ -322,6 +322,9 @@ export default function IssueView({ issue, onClose }) {
                     Status: {getStatusText(issue.status_id)}
                   </p>
                   <p className="text-2xl ml-2">{issue.charm}</p>
+                  <p className="text-sm text-gray-600">
+                    <strong>Issue ID:</strong> {issue._id}
+                  </p>
                 </>
               )}
             </div>
@@ -355,6 +358,9 @@ export default function IssueView({ issue, onClose }) {
                       }`}
                       onClick={() => handleSelectOccurrence(occurrence)}
                     >
+                      <p>
+                        <strong>ID:</strong> {occurrence._id}
+                      </p>
                       <p>
                         <strong>Date:</strong>{' '}
                         {new Date(occurrence.created_at).toLocaleString()}
