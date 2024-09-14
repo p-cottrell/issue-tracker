@@ -17,15 +17,16 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     // Function to determine the appropriate CSS class based on the latest status.
     // This function returns different classes for different status IDs.
     const getStatusClass = () => {
+        const baseClass = 'whitespace-nowrap px-3 py-1 rounded-full text-sm font-semibold'; // Add `whitespace-nowrap` to prevent wrapping
         switch (latestStatus) {
-            case 1: // Status: Complete
-                return 'bg-green-500 text-white';
-            case 2: // Status: In Progress
-                return 'bg-yellow-500 text-white';
-            case 3: // Status: Cancelled
-                return 'bg-red-500 text-white';
-            default: // Default status: Pending
-                return 'bg-gray-500 text-white';
+            case 1:
+                return `${baseClass} bg-green-500 text-white`; // Complete
+            case 2:
+                return `${baseClass} bg-yellow-500 text-white`; // In Progress
+            case 3:
+                return `${baseClass} bg-red-500 text-white`; // Cancelled
+            default:
+                return `${baseClass} bg-gray-500 text-white`; // Pending
         }
     };
 
@@ -66,16 +67,16 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
                     {/* Charm Icon */}
-                    <div className={`flex-shrink-0 w-10 h-10 ${isLetter(data.charm) ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
+                    <div className={`flex-shrink-0 w-8 h-8 ${isLetter(data.charm) ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
                         {data.charm}
                     </div>
                     {/* Issue Title */}
-                    <h3 className="ml-4 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
+                    <h3 className="ml-2 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
                         {data.title}
                     </h3>
                 </div>
                 {/* Status Indicator */}
-                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusClass()}`}>
+                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass()}`}>
                     {getStatusText()}
                 </div>
             </div>
