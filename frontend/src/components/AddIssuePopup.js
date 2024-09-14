@@ -8,9 +8,10 @@ const AddIssuePopup = ({ closeHandler }) => {
   const [charm, setCharm] = useState('');
   const [attachment, setAttachment] = useState('');
 
-  function addHandler() {
+  function addHandler(event) {
+    event.preventDefault(); // Prevent the default form submission behavior
     closeHandler(); // Close the add issue popup.
-
+  
     const addIssue = async () => {
       try {
         const response = await apiClient.post('api/issues', {
@@ -18,7 +19,7 @@ const AddIssuePopup = ({ closeHandler }) => {
           description,
           charm,
         });
-
+  
         console.log('Issue added:', response.data);
         window.location.reload();
       } catch (error) {
@@ -26,7 +27,7 @@ const AddIssuePopup = ({ closeHandler }) => {
       }
     };
     addIssue();
-  };
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -68,7 +69,7 @@ const AddIssuePopup = ({ closeHandler }) => {
               onChange={(e) => setCharm(e.target.value)}
               required
             >
-              <option value="" disabled selected>
+              <option value="" disabled>
                 Select a charm
               </option>
               <option value="🚀">🚀</option>

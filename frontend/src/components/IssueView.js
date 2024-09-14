@@ -49,7 +49,6 @@ export default function IssueView({ issue, onClose }) {
         // Fetch the reporter's username after getting issue details
         if (response.data.reporter_id) {
           fetchReporterName(response.data.reporter_id);
-          console.log(response.data.reporter_id);
         }
       } catch (error) {
         console.error('Error fetching issue details:', error);
@@ -85,18 +84,30 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
+  /**
+  * Save the updated issue details to the backend.
+  */
   const handleSave = async () => {
-
     try {
-
-      const response = await apiClient.put(`/api/issues/${issue._id}`, {
-        ...editedIssue,
+      // Prepare the data to be sent to the backend
+      const dataToSend = {
+        title: editedIssue.title,
+        description: editedIssue.description,
+        status_id: editedIssue.status_id,
         charm: editedCharm,
-      });
-      setDetailedIssue(response.data);
-      setEditMode(false);
+      };
+  
+      // Make the PUT request to update the issue
+      console.log('Sending data to update issue:', dataToSend);
+      const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
+  
+      // Update the detailed issue with the returned data
+      setDetailedIssue(response.data.updatedIssue);
+      setEditMode(false); // Exit edit mode
       showToast('Issue updated successfully', 'success', 5000);
-      onClose(response.data); // Pass the updated issue data to the onClose function
+  
+      // Pass the updated issue data to the onClose function
+      onClose(response.data.updatedIssue);
     } catch (error) {
       console.error('Error updating issue:', error);
       showToast('Error updating issue', 'error');
