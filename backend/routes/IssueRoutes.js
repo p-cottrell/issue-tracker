@@ -73,6 +73,7 @@ router.post('/', authenticateToken, async (req, res) => {
  * This route allows an authenticated user to retrieve all issues.
  * If a `userId` is provided as a query parameter, it filters the issues
  * to only those reported by that specific user.
+ * Sort by 'updated_at' in descending order
  *
  * @name GET /issues
  * @function
@@ -85,11 +86,10 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.query.userId; // Get userId from query parameters
-
-    // If userId is provided, ensure it is converted to an ObjectId for MongoDB queries
     const query = userId ? { reporter_id: new mongoose.Types.ObjectId(userId) } : {};
 
-    const issues = await Issue.find(query);
+    // Fetch the issues and sort by 'updated_at' in descending order
+    const issues = await Issue.find(query).sort({ updated_at: -1 });
 
     if (issues.length === 0) {
       return res.status(200).json({
@@ -112,7 +112,6 @@ router.get('/', authenticateToken, async (req, res) => {
     });
   }
 });
-
 
 /**
  * Route to retrieve a single issue by its ID

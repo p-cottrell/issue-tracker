@@ -16,7 +16,9 @@ const AddIssuePopup = ({ closeHandler }) => {
     '🏍️', '🚍', '🎓', '📚'
   ];
 
-  function addHandler() {
+  // Function to handle adding the issue
+  const addHandler = (e) => {
+    e.preventDefault(); // Prevent the default form submission
     closeHandler(); // Close the add issue popup.
 
     const addIssue = async () => {
@@ -24,14 +26,14 @@ const AddIssuePopup = ({ closeHandler }) => {
       formData.append('title', title);
       formData.append('description', description);
       formData.append('charm', charm);
-      if (image) {
-        formData.append('image', image); // Append image file if exists
-      }
+      //if (image) {
+      // formData.append('image', image); // Append image file if exists
+      //}
 
       try {
         const response = await apiClient.post('api/issues', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data', // Set header for multipart form data
+             'Content-Type': 'application/json', // Use JSON content type
           },
         });
 
@@ -42,7 +44,7 @@ const AddIssuePopup = ({ closeHandler }) => {
       }
     };
     addIssue();
-  }
+  };
 
   // Handle drag and drop
   const handleDragOver = (e) => {
@@ -148,7 +150,7 @@ const AddIssuePopup = ({ closeHandler }) => {
             accept="image/*"
             onChange={(e) => setImage(e.target.files[0])}
             className="hidden" // Use hidden class to hide the input
-/>
+          />
 
           {/* Buttons */}
           <div className="flex justify-center">
