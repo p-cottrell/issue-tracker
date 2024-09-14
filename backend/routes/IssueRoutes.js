@@ -14,10 +14,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue');
-
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); // Configurable destination
-
 const router = express.Router();
 
 /**
