@@ -183,11 +183,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
+      console.log('Issue not found:', req.params.id);
       return res.status(404).json({ message: 'Issue not found' });
     }
 
     // Check if the authenticated user is the reporter or an admin
     if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
+      console.log('User not authorized to update this issue:', req.user.id);
       return res.status(403).send('Not authorized to update this issue');
     }
 
