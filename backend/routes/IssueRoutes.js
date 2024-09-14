@@ -15,6 +15,9 @@ const mongoose = require('mongoose');
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue');
 
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' }); // Configurable destination
+
 const router = express.Router();
 
 /**
@@ -35,21 +38,29 @@ const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { title, description, status_id, charm, project_id } = req.body;
-    const reporter_id = req.user.id; // Ensure this matches your `authenticateToken` middleware
+    console.log('Received data:', req.body);
+
+    const reporter_id = req.user.id;
 
     // Validate required fields
     if (!title || !description) {
       return res.status(400).send({ error: 'Title and description are required.' });
     }
 
-    // Create a new issue instance
+    // Create a new issue instance with initial status history
+    const initialStatusId = status_id || 2; // Default to '2' if no status_id is provided
     const issue = new Issue({
       reporter_id,
       title,
       description,
       charm,
-      status_id: status_id || undefined, // Optional field
       project_id: project_id || undefined, // Optional field
+      status_history: [
+        {
+          status_id: initialStatusId,
+          date: new Date(),
+        },
+      ],
     });
 
     await issue.save();
@@ -168,15 +179,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   const { title, description, status_id, charm } = req.body;
 
   try {
-    const updateFields = {
-      updated_at: Date.now()
-    };
-
-    if (title !== undefined) updateFields.title = title;
-    if (description !== undefined) updateFields.description = description;
-    if (status_id !== undefined) updateFields.status_id = status_id;
-    if (charm !== undefined) updateFields.charm = charm;
-
+    // Find the issue by ID
     const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
@@ -184,8 +187,23 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 
     // Check if the authenticated user is the reporter or an admin
-    if (issue.reporter_id.toString() !== req.user.userID && req.user.role !== 'admin') {
+    if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).send('Not authorized to update this issue');
+    }
+
+    // Prepare fields to update
+    const updateFields = { updated_at: Date.now() };
+
+    if (title !== undefined) updateFields.title = title;
+    if (description !== undefined) updateFields.description = description;
+    if (charm !== undefined) updateFields.charm = charm;
+
+    // If status_id is provided, add a new entry to the status history
+    if (status_id !== undefined) {
+      issue.status_history.push({
+        status_id: status_id,
+        date: new Date(),
+      });
     }
 
     // Update the issue fields
