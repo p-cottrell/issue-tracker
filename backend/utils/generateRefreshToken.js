@@ -15,9 +15,11 @@ const RefreshToken = require('../models/refreshToken');
  */
 function generateRefreshToken(userId) {
   const refreshToken = crypto.randomBytes(40).toString('hex');
+
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
   const token = new RefreshToken({ token: refreshToken, userId, expiresAt });
+  console.log("New Token: ", token);
   return token.save();
 }
 
