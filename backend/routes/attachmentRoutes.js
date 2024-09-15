@@ -14,18 +14,18 @@ AWS.config.update({
   region: process.env.AWS_REGION
 });
 
-const s3 = new AWS.S3();
+
 
 // Configure multer for S3 upload
 const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: process.env.S3_BUCKET_NAME,
-    key: function (req, file, cb) {
-      cb(null, 'attachments/' + Date.now().toString() + '-' + file.originalname)
-    }
-  })
-});
+    storage: multerS3({
+      s3: (req) => req.s3Client, // Use the S3 client from the request object
+      bucket: process.env.S3_BUCKET_NAME,
+      key: function (req, file, cb) {
+        cb(null, 'attachments/' + Date.now().toString() + '-' + file.originalname)
+      }
+    })
+  });
 
 router.get("/api/attachments/:issueId", authenticateToken, async (req, res) => {
     try {
