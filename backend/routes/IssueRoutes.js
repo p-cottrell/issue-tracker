@@ -14,7 +14,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue');
-
 const router = express.Router();
 
 /**
@@ -35,21 +34,29 @@ const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { title, description, status_id, charm, project_id } = req.body;
-    const reporter_id = req.user.id; // Ensure this matches your `authenticateToken` middleware
+    console.log('Received data:', req.body);
+
+    const reporter_id = req.user.id;
 
     // Validate required fields
     if (!title || !description) {
       return res.status(400).send({ error: 'Title and description are required.' });
     }
 
-    // Create a new issue instance
+    // Create a new issue instance with initial status history
+    const initialStatusId = status_id || 2; // Default to '2' if no status_id is provided
     const issue = new Issue({
       reporter_id,
       title,
       description,
       charm,
-      status_id: status_id || undefined, // Optional field
       project_id: project_id || undefined, // Optional field
+      status_history: [
+        {
+          status_id: initialStatusId,
+          date: new Date(),
+        },
+      ],
     });
 
     await issue.save();
@@ -66,6 +73,7 @@ router.post('/', authenticateToken, async (req, res) => {
  * This route allows an authenticated user to retrieve all issues.
  * If a `userId` is provided as a query parameter, it filters the issues
  * to only those reported by that specific user.
+ * Sort by 'updated_at' in descending order
  *
  * @name GET /issues
  * @function
@@ -78,11 +86,10 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.query.userId; // Get userId from query parameters
-
-    // If userId is provided, ensure it is converted to an ObjectId for MongoDB queries
     const query = userId ? { reporter_id: new mongoose.Types.ObjectId(userId) } : {};
 
-    const issues = await Issue.find(query);
+    // Fetch the issues and sort by 'updated_at' in descending order
+    const issues = await Issue.find(query).sort({ updated_at: -1 });
 
     if (issues.length === 0) {
       return res.status(200).json({
@@ -105,7 +112,6 @@ router.get('/', authenticateToken, async (req, res) => {
     });
   }
 });
-
 
 /**
  * Route to retrieve a single issue by its ID
@@ -168,24 +174,33 @@ router.put('/:id', authenticateToken, async (req, res) => {
   const { title, description, status_id, charm } = req.body;
 
   try {
-    const updateFields = {
-      updated_at: Date.now()
-    };
-
-    if (title !== undefined) updateFields.title = title;
-    if (description !== undefined) updateFields.description = description;
-    if (status_id !== undefined) updateFields.status_id = status_id;
-    if (charm !== undefined) updateFields.charm = charm;
-
+    // Find the issue by ID
     const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
+      console.log('Issue not found:', req.params.id);
       return res.status(404).json({ message: 'Issue not found' });
     }
 
     // Check if the authenticated user is the reporter or an admin
-    if (issue.reporter_id.toString() !== req.user.userID && req.user.role !== 'admin') {
+    if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
+      console.log('User not authorized to update this issue:', req.user.id);
       return res.status(403).send('Not authorized to update this issue');
+    }
+
+    // Prepare fields to update
+    const updateFields = { updated_at: Date.now() };
+
+    if (title !== undefined) updateFields.title = title;
+    if (description !== undefined) updateFields.description = description;
+    if (charm !== undefined) updateFields.charm = charm;
+
+    // If status_id is provided, add a new entry to the status history
+    if (status_id !== undefined) {
+      issue.status_history.push({
+        status_id: status_id,
+        date: new Date(),
+      });
     }
 
     // Update the issue fields

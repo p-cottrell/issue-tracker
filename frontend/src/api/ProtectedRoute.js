@@ -28,12 +28,15 @@ const ProtectedRoute = ({ element: Component }) => {
   // useEffect to check authentication status when the component mounts
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("Trying to Authenticate")
       try {
         // Make an API call to check if the user is authenticated
         await apiClient.get('api/users/check_token');
         setIsAuthenticated(true); // If the request is successful, set isAuthenticated to true
+        console.log("Authenticated")
       } catch (error) {
         setIsAuthenticated(false); // If the request fails, set isAuthenticated to false
+        console.log(" Not Authenticated")
       }
     };
 

@@ -184,7 +184,7 @@ router.post('/logout', authenticateToken, async (req, res) => {
  * This route is used to validate users so they can't access protected routes,
  * Used in protectedRoutes.js
  *
- * @name POST /users/check_token
+ * @name GET /users/check_token
  * @function
  * @memberof module:routes/users
  * @param {Object} res - The response object.
