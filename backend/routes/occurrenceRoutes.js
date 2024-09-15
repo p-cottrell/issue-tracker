@@ -33,16 +33,28 @@ const Issue = require('../models/Issue');
  * @throws {500} - If an error occurs while creating the occurrence.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
+  console.log('Request body:', req.body);
+  console.log('Request user:', req.user);
+  
   const { description } = req.body;
   const issueId = req.params.issueId;
+  const userId = req.user ? req.user.id : null;
+
+  console.log('IssueId:', issueId);
+  console.log('UserId:', userId);
+  console.log('Description:', description);
+
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
 
   try {
     const newOccurrence = {
-      user_id: req.user.id,
+      user_id: userId,
       description,
-      created_at: Date.now(),
-      updated_at: Date.now(),
     };
+
+    console.log('New occurrence:', newOccurrence);
 
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,

@@ -49,8 +49,8 @@ const authenticateToken = async (req, res, next) => {
     const verified = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     console.log('Access token verified successfully');
 
-    // Attach the user ID to the request object for further use
-    req.user = { userID: verified.id, isAdministrator: verified.isAdministrator };
+    // Attach the user ID and role to the request object for further use
+    req.user = { id: verified.id, role: verified.role };
     return next(); // Proceed to the next middleware or route handler
   } catch (error) {
     console.error('Error verifying access token:', error.message);
@@ -113,7 +113,7 @@ const handleRefreshToken = async (req, res, next) => {
       maxAge: 3600000, // 1 hour
     });
 
-    req.user = { userID: user._id, role: user.role };
+    req.user = { id: user._id, role: user.role };
     console.log('User authenticated with new access token:', req.user);
 
     return next(); // Proceed to the next middleware or route handler with the refreshed token

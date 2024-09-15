@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const IssueRoutes = require('./routes/IssueRoutes');
 const UserRoutes = require('./routes/userRoutes');
 const OccurrenceRoutes = require('./routes/occurrenceRoutes');
+const CommentRoutes = require('./routes/commentsRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -54,6 +55,7 @@ app.use(cookieParser());
 app.use('/api/issues', IssueRoutes);
 app.use('/api/users', UserRoutes);
 app.use('/api/occurrences', OccurrenceRoutes);
+app.use('/api/comments', CommentRoutes);    
 
 // Handle 404 errors for undefined routes
 app.use((req, res) => {
