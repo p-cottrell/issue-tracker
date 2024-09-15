@@ -11,33 +11,6 @@ require('dotenv').config();
 const app = express();
 
 
-
-// AWS S3 Configuration
-// const AWS = require('aws-sdk');
-// const multer = require('multer');
-// const multerS3 = require('multer-s3');
-
-// // Configure AWS with your access and secret keys
-// AWS.config.update({
-//   accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Store in environment variables
-//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-//   region: process.env.AWS_REGION// e.g., 'us-west-1'
-// });
-
-// const s3 = new AWS.S3();
-
-// // Configure multer-s3 to upload files to S3
-// const upload = multer({
-//   storage: multerS3({
-//     s3: s3,
-//     bucket: process.env.AWS_BUCKET_NAME, // Bucket name
-//     acl: 'public-read', // Or private, depending on your needs
-//     key: function (req, file, cb) {
-//       cb(null, `uploads/${Date.now().toString()}_${file.originalname}`); // Define path for uploaded file
-//     }
-//   })
-// });
-
 // Connect Database
 connectDB();
 
