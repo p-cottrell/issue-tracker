@@ -52,7 +52,7 @@ const authenticateToken = async (req, res, next) => {
 
   // Decode the token without verifying to check for expiry
   const decoded = jwt.decode(accessToken);
-  console.log('Decoded access token:', decoded);
+  console.log('Decoded access token');
 
   if (decoded && decoded.exp < Date.now() / 1000) {
     console.log('Access token is expired. Checking for refresh token.');
