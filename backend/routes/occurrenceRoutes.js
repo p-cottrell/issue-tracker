@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
-const Issue = require('../models/Issue'); 
+const Issue = require('../models/Issue');
+const mongoose = require('mongoose');
 
 /**
  * Occurrence Management Routes
@@ -36,16 +37,26 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
   const { description } = req.body;
   const issueId = req.params.issueId;
 
+  // Validate if description is provided
+  if (!description) {
+    return res.status(400).json({ error: 'Description is required' });
+  }
+
   try {
+    const now = new Date();
     const newOccurrence = {
-      user_id: req.user.id,
+      _id: new mongoose.Types.ObjectId(), // Explicitly create a new ObjectId
+      user_id: req.user.userID,
       description,
-      created_at: Date.now(),
-      updated_at: Date.now(),
+      created_at: now,
+      updated_at: now,
     };
 
+    // Ensure issueId is a valid ObjectId
+    const issueObjectId = new mongoose.Types.ObjectId(issueId);
+
     const updatedIssue = await Issue.findByIdAndUpdate(
-      issueId,
+      issueObjectId,
       { $push: { occurrences: newOccurrence } },
       { new: true, runValidators: true }
     );
