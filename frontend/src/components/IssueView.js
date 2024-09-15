@@ -464,49 +464,32 @@ export default function IssueView({ issue, onClose }) {
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h2 className="text-xl font-bold">Occurrences</h2>
+                   
                   </div>
                   <ul className="occurrences-list">
                     {(detailedIssue.occurrences || []).map((occurrence) => (
                       <li
                         key={occurrence._id}
-                        className={`occurrence-item mb-2 p-2 border rounded cursor-pointer transition-colors duration-200 ${
+                        className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
                           isAdmin || user.id === occurrence.user_id
-                            ? "bg-white hover:bg-gray-100"
-                            : "bg-gray-100"
+                            ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
+                            : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
                         }`}
                         onClick={() => handleSelectOccurrence(occurrence)}
                       >
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {new Date(occurrence.created_at).toLocaleString()}
-                        </p>
-                        <p>
-                          <strong>Description:</strong> {occurrence.description}
-                        </p>
-                        {selectedOccurrence &&
-                          selectedOccurrence._id === occurrence._id &&
-                          (isAdmin || user.id === occurrence.user_id) && (
-                            <div className="mt-2 space-x-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditedOccurrence(occurrence.description);
-                                }}
-                                className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteOccurrence(occurrence);
-                                }}
-                                className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              <strong>Date:</strong>{" "}
+                              {new Date(occurrence.created_at).toLocaleString()}
+                            </p>
+                            <p className="mt-1">
+                              <strong>Description:</strong> {occurrence.description}
+                            </p>
+                          </div>
+                          
+                        </div>
+                       
                       </li>
                     ))}
                   </ul>
@@ -535,6 +518,12 @@ export default function IssueView({ issue, onClose }) {
                           className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
                         >
                           Cancel
+                        </button>
+                        <button
+                          onClick={() => handleDeleteOccurrence(selectedOccurrence)}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Delete Occurrence
                         </button>
                       </div>
                     </div>
@@ -581,52 +570,37 @@ export default function IssueView({ issue, onClose }) {
 
                 {/* Comments section */}
                 <div className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">Comments</h2>
-                  <ul className="comments-list">
-                    {(detailedIssue.comments || []).map((comment) => (
-                      <li
-                        key={comment._id}
-                        className={`comment-item mb-2 p-2 border rounded cursor-pointer transition-colors duration-200 ${
-                          isAdmin || user.id === comment.user_id
-                            ? "bg-white hover:bg-gray-100"
-                            : "bg-gray-100"
-                        }`}
+                <h2 className="text-xl font-bold mb-2">Comments</h2>
+                <ul className="comments-list">
+                  {(detailedIssue.comments || []).map((comment) => (
+                    <li 
+                      key={comment._id} 
+                      className={`comment-item mb-4 ${
+                        isAdmin || user.id === comment.user_id 
+                          ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100' 
+                          : 'bg-gray-50 border-l-4 border-gray-300'
+                      }`}
+                    >
+                      <div 
+                        className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
                         onClick={() => handleSelectComment(comment)}
                       >
-                        <p>
-                          <strong>Date:</strong>{" "}
-                          {new Date(comment.created_at).toLocaleString()}
-                        </p>
-                        <p>
-                          <strong>Comment:</strong> {comment.comment_text}
-                        </p>
-                        {selectedComment &&
-                          selectedComment._id === comment._id &&
-                          (isAdmin || user.id === comment.user_id) && (
-                            <div className="mt-2 space-x-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditedComment(comment.comment_text);
-                                }}
-                                className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteComment(comment);
-                                }}
-                                className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                      </li>
-                    ))}
-                  </ul>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              <strong>Date:</strong> {new Date(comment.created_at).toLocaleString()}
+                            </p>
+                            <p className="mt-1">
+                              <strong>Comment:</strong> {comment.comment_text}
+                            </p>
+                          </div>
+                          
+                        </div>
+                      </div>
+                      
+                    </li>
+                  ))}
+                </ul>
                 </div>
 
                 {/* Comment edit section */}
@@ -650,6 +624,12 @@ export default function IssueView({ issue, onClose }) {
                           className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
                         >
                           Cancel
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(selectedComment)}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Delete Comment
                         </button>
                       </div>
                     </div>
