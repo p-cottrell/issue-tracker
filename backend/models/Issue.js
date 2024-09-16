@@ -50,7 +50,10 @@ const attachmentSchema = new mongoose.Schema({
   file_path: {
     type: String,
     required: true,
-    maxlength: 255,
+  },
+  title: {
+    type: String,
+    default: 'Untitled',
   },
   created_at: {
     type: Date,

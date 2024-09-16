@@ -48,47 +48,91 @@ export default function IssueView({ issue, onClose }) {
   const [newComment, setNewComment] = useState("");
   const [selectedComment, setSelectedComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
+  const[selectedFile, setSelectedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentError, setAttachmentError] = useState(null);
+  const [uploadConfirmation, setUploadConfirmation] = useState(null);
+  const [attachmentTitle, setAttachmentTitle] = useState('');
+
+  
 
   useEffect(() => {
-    const fetchIssueDetails = async () => {
-      try {
-        // Fetch full issue details
-        const response = await apiClient.get(`/api/issues/${issue._id}`);
-        setDetailedIssue(response.data);
-        setEditedIssue(response.data);
-
-        // Check if the current user can edit the issue
-        setCanEdit(
-          user.role === "admin" || user.id === response.data.reporter_id
-        );
-
-        setIsAdmin(user.role === "admin");
-
-        // Fetch the reporter's username after getting issue details
-        if (response.data.reporter_id) {
-          fetchReporterName(response.data.reporter_id);
-        }
-      } catch (error) {
-        console.error("Error fetching issue details:", error);
-      }
-    };
-
-    // Function to fetch reporter's username
-    const fetchReporterName = async (reporterId) => {
-      try {
-        const response = await apiClient.get(`/api/users/${reporterId}`);
-        if (response.data && response.data.username) {
-          setReporterName(response.data.username); // Set the username from fetched user data
-        } else {
-          console.error("Reporter data not found or invalid format");
-        }
-      } catch (error) {
-        console.error("Error fetching reporter name:", error);
-      }
-    };
-
     fetchIssueDetails();
-  }, [issue._id, user]);
+  }, [issue._id]);
+
+  const fetchIssueDetails = async () => {
+    try {
+      const response = await apiClient.get(`/api/issues/${issue._id}`);
+      setDetailedIssue(response.data);
+      fetchAttachments();
+    } catch (error) {
+      console.error('Error fetching issue details:', error);
+      showToast('Error fetching issue details', 'error');
+    }
+  };
+
+  const fetchAttachments = async () => {
+    try {
+      const response = await apiClient.get(`/api/attachments/${issue._id}`);
+      setAttachments(response.data);
+      setAttachmentError(null);
+    } catch (error) {
+      console.error('Error fetching attachments:', error);
+      setAttachmentError('Failed to load attachments. Please try again later.');
+    }
+  };
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+    // Set a default title based on the file name, removing the extension
+    setAttachmentTitle(event.target.files[0].name.split('.').slice(0, -1).join('.'));
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      showToast('Please select a file to upload', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('title', attachmentTitle || 'Untitled');
+
+    try {
+      const response = await apiClient.post(`/api/attachments/${issue._id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        },
+      });
+
+      setUploadConfirmation(`File "${attachmentTitle || selectedFile.name}" uploaded successfully`);
+      setSelectedFile(null);
+      setAttachmentTitle('');
+      setUploadProgress(0);
+      fetchIssueDetails(); // Refresh the issue view
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      showToast('Error uploading file', 'error');
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (window.confirm('Are you sure you want to delete this attachment?')) {
+      try {
+        await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
+        showToast('Attachment deleted successfully', 'success');
+        fetchIssueDetails(); // Refresh the issue view
+      } catch (error) {
+        console.error('Error deleting attachment:', error);
+        showToast('Error deleting attachment', 'error');
+      }
+    }
+  };
 
   const handleEdit = () => {
     setEditMode(true);
@@ -548,25 +592,80 @@ export default function IssueView({ issue, onClose }) {
                 }
 
                 {/* Attachments section */}
-                <h2>Attachments</h2>
-                <ul className="attachments-list">
-                  {(detailedIssue.attachments || []).map((attachment) => (
-                    <li key={attachment._id} className="attachment-item">
-                      <a
-                        href={attachment.file_path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="attachment-link"
-                      >
-                        {attachment.file_path.split("/").pop()}
-                      </a>
-                      <p>
-                        <strong>Attached at:</strong>{" "}
-                        {new Date(attachment.created_at).toLocaleString()}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                  {attachmentError && <p className="text-red-500">{attachmentError}</p>}
+                  {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {attachments.map((attachment, index) => (
+                      <div key={index} className="relative group">
+                        <img 
+                          src={attachment.signedUrl} 
+                          alt={attachment.title} 
+                          className="w-full h-40 object-cover rounded-lg"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
+                          <p className="text-white text-sm mb-2">{attachment.title}</p>
+                          <div>
+                            <a 
+                              href={attachment.signedUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded mr-2"
+                            >
+                              View
+                            </a>
+                            {(user.role === 'admin' || user.id === attachment.user_id) && (
+                              <button
+                                onClick={() => handleDeleteAttachment(attachment._id)}
+                                className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* File upload input */}
+                  <div className="mt-4">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="mb-2"
+                    />
+                    <input
+                      type="text"
+                      value={attachmentTitle}
+                      onChange={(e) => setAttachmentTitle(e.target.value)}
+                      placeholder="Enter attachment title"
+                      className="mb-2 px-2 py-1 border rounded"
+                    />
+                    <button
+                      onClick={handleFileUpload}
+                      disabled={!selectedFile}
+                      className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-400"
+                    >
+                      Upload File
+                    </button>
+                    {uploadProgress > 0 && uploadProgress < 100 && (
+                      <div className="mt-2">
+                        <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                          <div 
+                            className="bg-blue-600 h-2.5 rounded-full" 
+                            style={{width: `${uploadProgress}%`}}
+                          ></div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">{uploadProgress}% uploaded</p>
+                      </div>
+                    )}
+                    {uploadConfirmation && (
+                      <p className="text-green-500 mt-2">{uploadConfirmation}</p>
+                    )}
+                  </div>
+                </div>
 
                 {/* Comments section */}
                 <div className="mt-4">
