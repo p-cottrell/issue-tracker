@@ -7,6 +7,7 @@ const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue');
 const { getSignedUrl } =require('@aws-sdk/s3-request-presigner');
+const path = require('path');
 
 // Configure AWS S3
 const s3Client = new S3Client({
@@ -113,7 +114,7 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
         // Delete the file from S3
         const deleteCommand = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: new URL(attachment.file_path).pathname.slice(1), // Remove leading '/'
+            Key: attachment.file_path, // Use the file_path directly as the Key
         });
 
         await s3Client.send(deleteCommand);
@@ -125,7 +126,7 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
         res.json({ message: 'Attachment deleted successfully' });
     } catch (error) {
         console.error('Error deleting attachment:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 

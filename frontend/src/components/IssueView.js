@@ -35,7 +35,6 @@ export default function IssueView({ issue, onClose }) {
 
   const [editedOccurrence, setEditedOccurrence] = useState("");
 
-  const [reporterName, setReporterName] = useState(""); // Reporter name
 
   const [editedCharm, setEditedCharm] = useState(issue.charm);
 
@@ -53,7 +52,6 @@ export default function IssueView({ issue, onClose }) {
   const [attachments, setAttachments] = useState([]);
   const [attachmentError, setAttachmentError] = useState(null);
   const [uploadConfirmation, setUploadConfirmation] = useState(null);
-  const [attachmentTitle, setAttachmentTitle] = useState('');
 
   
 
@@ -89,8 +87,6 @@ export default function IssueView({ issue, onClose }) {
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
-    // Set a default title based on the file name, removing the extension
-    setAttachmentTitle(event.target.files[0].name.split('.').slice(0, -1).join('.'));
   };
 
   const handleFileUpload = async () => {
@@ -101,7 +97,6 @@ export default function IssueView({ issue, onClose }) {
 
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('title', attachmentTitle || 'Untitled');
 
     try {
        await apiClient.post(`/api/attachments/${issue._id}`, formData, {
@@ -114,9 +109,8 @@ export default function IssueView({ issue, onClose }) {
         },
       });
 
-      setUploadConfirmation(`File "${attachmentTitle || selectedFile.name}" uploaded successfully`);
+      setUploadConfirmation(`File "${selectedFile.name}" uploaded successfully`);
       setSelectedFile(null);
-      setAttachmentTitle('');
       setUploadProgress(0);
       fetchIssueDetails(); // Refresh the issue view
     } catch (error) {
@@ -129,12 +123,16 @@ export default function IssueView({ issue, onClose }) {
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
-        await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
-        showToast('Attachment deleted successfully', 'success');
-        fetchIssueDetails(); 
+        const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
+        if (response.status === 200) {
+          showToast('Attachment deleted successfully', 'success');
+          setAttachments(attachments.filter(attachment => attachment._id !== attachmentId));
+        } else {
+          throw new Error(response.data.message || 'Error deleting attachment');
+        }
       } catch (error) {
         console.error('Error deleting attachment:', error);
-        showToast('Error deleting attachment', 'error');
+        showToast(`Error deleting attachment: ${error.message}`, 'error');
       }
     }
   };
@@ -272,6 +270,7 @@ function formatSmartDate(dateString) {
         `/api/occurrences/${issue._id}/${occurrence._id}`,
         {
           description: editedOccurrence,
+          
         }
       );
 
@@ -290,7 +289,7 @@ function formatSmartDate(dateString) {
   };
 
   const handleDeleteOccurrence = async (occurrence) => {
-    if (!isAdmin && user.id !== occurrence.user_id) {
+    if (user.id !== occurrence.user_id) {
       showToast(
         "You do not have permission to delete this occurrence",
         "error"
@@ -311,24 +310,6 @@ function formatSmartDate(dateString) {
       console.error("Error deleting occurrence:", error);
       showToast("Error deleting occurrence", "error");
     }
-  };
-
-  const handleDelete = () => {
-    showToast(
-      "Are you sure you want to delete this issue?",
-      "warning",
-      0,
-      async () => {
-        try {
-          await apiClient.delete(`/api/issues/${issue._id}`);
-          showToast("Issue deleted successfully", "success");
-          onClose("deleted");
-        } catch (error) {
-          console.error("Error deleting issue:", error);
-          showToast("Error deleting issue", "error");
-        }
-      }
-    );
   };
 
   const getStatusText = (statusId) => {
@@ -374,7 +355,10 @@ function formatSmartDate(dateString) {
     try {
       const response = await apiClient.put(
         `/api/comments/${issue._id}/${comment._id}`,
-        { comment_text: editedComment }
+        { 
+          comment_text: editedComment,
+          edited_by: user.id,
+        }
       );
 
       setDetailedIssue(prevState => ({
@@ -393,7 +377,7 @@ function formatSmartDate(dateString) {
   };
 
   const handleDeleteComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (user.id !== comment.user_id) {
       showToast("You do not have permission to delete this comment", "error");
       return;
     }
@@ -535,7 +519,6 @@ function formatSmartDate(dateString) {
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h2 className="text-xl font-bold">Occurrences</h2>
-                   
                   </div>
                   <ul className="occurrences-list">
                     {(detailedIssue.occurrences || []).map((occurrence) => (
@@ -558,67 +541,60 @@ function formatSmartDate(dateString) {
                               <strong>Description:</strong> {occurrence.description}
                             </p>
                           </div>
-                          
                         </div>
-                       
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Occurrence edit section */}
-                {selectedOccurrence &&
-                  (isAdmin || user.id === selectedOccurrence.user_id) && (
-                    <div className="occurrence-edit mt-4">
-                      <textarea
-                        value={editedOccurrence}
-                        onChange={(e) => setEditedOccurrence(e.target.value)}
-                        className="w-full p-2 border rounded mb-2"
-                      />
-                      <div className="flex justify-end space-x-2">
+                {selectedOccurrence && (isAdmin || user.id === selectedOccurrence.user_id) && (
+                  <div className="occurrence-edit mt-4">
+                    <textarea
+                      value={editedOccurrence}
+                      onChange={(e) => setEditedOccurrence(e.target.value)}
+                      className="w-full p-2 border rounded mb-2"
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEditOccurrence(selectedOccurrence)}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      >
+                        Save Occurrence
+                      </button>
+                      <button
+                        onClick={() => setSelectedOccurrence(null)}
+                        className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      {user.id === selectedOccurrence.user_id && (
                         <button
-                          onClick={() =>
-                            handleEditOccurrence(selectedOccurrence)
-                          }
-                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          onClick={() => handleDeleteOccurrence(selectedOccurrence)}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
-                          Save Occurrence
+                          Delete Occurrence
                         </button>
-                        <button
-                          onClick={() => setSelectedOccurrence(null)}
-                          className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                          Cancel
-                        </button>
-                        {user.id === selectedOccurrence.user_id && (
-                          <button
-                            onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                            className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                          >
-                            Delete Occurrence
-                          </button>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* New occurrence input */}
-                {
-                  <>
-                    <textarea
-                      placeholder="Add new occurrence"
-                      value={newOccurrence}
-                      onChange={(e) => setNewOccurrence(e.target.value)}
-                      className="new-occurrence-input"
-                    />
-                    <button
-                      onClick={handleAddOccurrence}
-                      className="add-occurrence-button"
-                    >
-                      Add Occurrence
-                    </button>
-                  </>
-                }
+                <>
+                  <textarea
+                    placeholder="Add new occurrence"
+                    value={newOccurrence}
+                    onChange={(e) => setNewOccurrence(e.target.value)}
+                    className="new-occurrence-input"
+                  />
+                  <button
+                    onClick={handleAddOccurrence}
+                    className="add-occurrence-button"
+                  >
+                    Add Occurrence
+                  </button>
+                </>
 
                 {/* Attachments section */}
                 <div className="mt-4">
@@ -626,8 +602,8 @@ function formatSmartDate(dateString) {
                   {attachmentError && <p className="text-red-500">{attachmentError}</p>}
                   {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {attachments.map((attachment, index) => (
-                      <div key={index} className="relative group">
+                    {attachments.map((attachment) => (
+                      <div key={attachment._id} className="relative group">
                         <img 
                           src={attachment.signedUrl} 
                           alt={attachment.title} 
@@ -644,7 +620,7 @@ function formatSmartDate(dateString) {
                             >
                               View
                             </a>
-                            {(user.role === 'admin' || user.id === attachment.user_id) && (
+                            {(isAdmin || user.id === attachment.user_id) && (
                               <button
                                 onClick={() => handleDeleteAttachment(attachment._id)}
                                 className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
@@ -664,13 +640,6 @@ function formatSmartDate(dateString) {
                       type="file"
                       onChange={handleFileChange}
                       className="mb-2"
-                    />
-                    <input
-                      type="text"
-                      value={attachmentTitle}
-                      onChange={(e) => setAttachmentTitle(e.target.value)}
-                      placeholder="Enter attachment title"
-                      className="mb-2 px-2 py-1 border rounded"
                     />
                     <button
                       onClick={handleFileUpload}
@@ -722,48 +691,45 @@ function formatSmartDate(dateString) {
                               <strong>Comment:</strong> {comment.comment_text}
                             </p>
                           </div>
-                          
                         </div>
                       </div>
-                      
                     </li>
                   ))}
                 </ul>
                 </div>
 
                 {/* Comment edit section */}
-                {selectedComment &&
-                  (isAdmin || user.id === selectedComment.user_id) && (
-                    <div className="comment-edit mt-4">
-                      <textarea
-                        value={editedComment}
-                        onChange={(e) => setEditedComment(e.target.value)}
-                        className="w-full p-2 border rounded mb-2"
-                      />
-                      <div className="flex justify-end space-x-2">
+                {selectedComment && (isAdmin || user.id === selectedComment.user_id) && (
+                  <div className="comment-edit mt-4">
+                    <textarea
+                      value={editedComment}
+                      onChange={(e) => setEditedComment(e.target.value)}
+                      className="w-full p-2 border rounded mb-2"
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEditComment(selectedComment)}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      >
+                        Save Comment
+                      </button>
+                      <button
+                        onClick={() => setSelectedComment(null)}
+                        className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      {user.id === selectedComment.user_id && (
                         <button
-                          onClick={() => handleEditComment(selectedComment)}
-                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          onClick={() => handleDeleteComment(selectedComment)}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
-                          Save Comment
+                          Delete Comment
                         </button>
-                        <button
-                          onClick={() => setSelectedComment(null)}
-                          className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                          Cancel
-                        </button>
-                        {user.id === selectedComment.user_id && (
-                          <button
-                            onClick={() => handleDeleteComment(selectedComment)}
-                            className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                          >
-                            Delete Comment
-                          </button>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* Add new comment section */}
                 <div className="mt-4">
@@ -786,7 +752,7 @@ function formatSmartDate(dateString) {
                 <div className="issue-meta">
                   <p>
                     <strong>Reported by:</strong>{" "}
-                    {reporterName || detailedIssue.reporter_id}
+                    {detailedIssue.reporter_id}
                   </p>
                   {editMode ? (
                     <>
