@@ -36,7 +36,6 @@ router.post('/', authenticateToken, async (req, res) => {
     const { title, description, status_id, charm, project_id } = req.body;
     console.log('Received data:', req.body);
 
-    // Use req.user.userID instead of req.user.id to get the authenticated user's ID
     const reporter_id = req.user.userID;
 
     // Validate required fields
@@ -63,7 +62,7 @@ router.post('/', authenticateToken, async (req, res) => {
     await issue.save();
     res.status(201).send({ message: 'Issue created', issueID: issue._id });
   } catch (error) {
-    console.error('Error creating issue:', error);
+    console.error('Error creating issue:', error); // Add console logging for error debugging
     res.status(500).send({ error: 'Error creating issue', details: error.message });
   }
 });
@@ -74,6 +73,7 @@ router.post('/', authenticateToken, async (req, res) => {
  * This route allows an authenticated user to retrieve all issues.
  * If a `userId` is provided as a query parameter, it filters the issues
  * to only those reported by that specific user.
+ * Sort by 'updated_at' in descending order
  *
  * @name GET /issues
  * @function
@@ -83,7 +83,6 @@ router.post('/', authenticateToken, async (req, res) => {
  * @throws {404} - If no issues are found.
  * @throws {500} - If an error occurs while retrieving the issues.
  */
-
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.query.userId; // Get userId from query parameters
@@ -132,22 +131,14 @@ router.get('/', authenticateToken, async (req, res) => {
  */
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    // Convert the ID from the request parameters to a MongoDB ObjectId
-    const issueId = new mongoose.Types.ObjectId(req.params.id);
-
-    // Find the issue by ID and populate its occurrences
-    const issue = await Issue.findById(issueId).populate('occurrences');
-
-    // Check if the issue exists
+    const issue = await Issue.findById(req.params.id);
     if (!issue) {
-      return res.status(404).send('Issue not found');
+      return res.status(404).json({ message: 'Issue not found' });
     }
-
-    // Return the issue if all checks pass
-    res.status(200).json(issue);
+    res.json(issue);
   } catch (error) {
     console.error('Error fetching issue:', error);
-    res.status(500).send('Error fetching issue');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -178,11 +169,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    // Check if the authenticated user is the reporter or an admin
-    if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
-      console.log('User not authorized to update this issue:', req.user.id);
-      return res.status(403).send('Not authorized to update this issue');
-    }
 
     // Prepare fields to update
     const updateFields = { updated_at: Date.now() };

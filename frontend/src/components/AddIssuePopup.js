@@ -26,21 +26,25 @@ const AddIssuePopup = ({ closeHandler }) => {
       formData.append('title', title);
       formData.append('description', description);
       formData.append('charm', charm);
-      //if (image) {
-      // formData.append('image', image); // Append image file if exists
-      //}
+
+      // Append image file if exists
+      if (image) {
+        formData.append('file', image);
+        formData.append('attachmentTitle', image.name.split('.').slice(0, -1).join('.'));
+      }
 
       try {
-        const response = await apiClient.post('api/issues', formData, {
+        const response = await apiClient.post('/api/attachments/', formData, {
+          withCredentials: true, // Ensure cookies are sent for authentication
           headers: {
-             'Content-Type': 'application/json', // Use JSON content type
+            'Content-Type': 'multipart/form-data', // Correct content type for FormData
           },
         });
 
         console.log('Issue added:', response.data);
         window.location.reload();
       } catch (error) {
-        console.log('There was an error adding the issue:', error);
+        console.error('There was an error adding the issue:', error);
       }
     };
     addIssue();
