@@ -122,12 +122,9 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
         }
 
         // Delete the file from S3
-        const url = new URL(attachment.file_path);
-        const key = url.pathname.slice(1); // Remove leading '/'
-
         const deleteCommand = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: key,
+            Key: new URL(attachment.file_path).pathname.slice(1), // Remove leading '/'
         });
 
         await s3Client.send(deleteCommand);
@@ -143,5 +140,27 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
     }
 });
 
+router.get("/:issueId/signedUrls", authenticateToken, async (req, res) => {
+    try {
+        const issue = await Issue.findById(req.params.issueId);
+        if (!issue) {
+            return res.status(404).json({ message: 'Issue not found' });
+        }
+
+        const attachmentsWithSignedUrls = await Promise.all(issue.attachments.map(async (attachment) => {
+            const command = new GetObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: attachment.file_path.split('/').pop(), // Assuming file_path contains the full S3 URL
+            });
+            const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+            return { ...attachment.toObject(), signedUrl };
+        }));
+
+        res.json(attachmentsWithSignedUrls);
+    } catch (error) {
+        console.error('Error fetching signed URLs:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 module.exports = router;
