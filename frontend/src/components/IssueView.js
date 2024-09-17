@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./IssueView.css";
 import apiClient from "../api/apiClient";
 import { useUser } from "../context/UserContext";
@@ -57,16 +57,7 @@ export default function IssueView({ issue, onClose }) {
 
   
 
-  useEffect(() => {
-    fetchIssueDetails();
-    
-    // Check if the current user is an admin or the creator of the issue
-    const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
-    setCanEdit(userCanEdit);
-    setIsAdmin(user.role === 'admin');
-  }, [issue._id, user]);
-
-  const fetchIssueDetails = async () => {
+  const fetchIssueDetails = useCallback(async () => {
     try {
       const response = await apiClient.get(`/api/issues/${issue._id}`);
       setDetailedIssue(response.data);
@@ -75,7 +66,15 @@ export default function IssueView({ issue, onClose }) {
       console.error('Error fetching issue details:', error);
       showToast('Error fetching issue details', 'error');
     }
-  };
+  }, [issue._id]);
+
+  useEffect(() => {
+    fetchIssueDetails();
+    
+    const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
+    setCanEdit(userCanEdit);
+    setIsAdmin(user.role === 'admin');
+  }, [issue._id, user, fetchIssueDetails, issue.reporter_id]);
 
   const fetchAttachments = async () => {
     try {
@@ -186,7 +185,11 @@ function formatSmartDate(dateString) {
         const dataToSend = {
           ...editedIssue,
           created_at: detailedIssue.created_at,
-          updated_at: new Date().toISOString(), // Update the 'updated_at' field
+          updated_at: new Date().toISOString(),
+          occurrences: editedIssue.occurrences.map(occurrence => ({
+            ...occurrence,
+            user_id: occurrence.user_id || user.id // Use the existing user_id or fallback to the current user's id
+          }))
         };
 
         console.log("Sending data to update issue:", dataToSend);

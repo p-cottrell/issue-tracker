@@ -142,7 +142,7 @@ const issueSchema = new mongoose.Schema({
   charm: {
     type: String,
     required: true,
-    maxlength: 3,
+    maxlength: 15,
   },
   created_at: {
     type: Date,
