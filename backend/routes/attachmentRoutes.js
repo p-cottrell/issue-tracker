@@ -8,7 +8,6 @@ const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue');
 const { getSignedUrl } =require('@aws-sdk/s3-request-presigner');
 
-
 // Configure AWS S3
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -33,33 +32,48 @@ const upload = multer({
 
 router.get("/:issueId", authenticateToken, async (req, res) => {
     try {
-        const issue = await Issue.findById(req.params.issueId);
-        if (!issue) {
-            return res.status(404).json({ message: 'Issue not found' });
+      const issue = await Issue.findById(req.params.issueId);
+      if (!issue) {
+        return res.status(404).json({ message: 'Issue not found' });
+      }
+      const attachments = issue.attachments;
+
+      const attachmentsWithSignedUrls = await Promise.all(attachments.map(async (attachment) => {
+        try {
+          if (!attachment.file_path || typeof attachment.file_path !== 'string' || !attachment.file_path.startsWith('s3://')) {
+            console.error(`Invalid file_path for attachment ${attachment._id}: ${attachment.file_path}`);
+            return null; // Skip this attachment
+          }
+  
+          const bucketName = process.env.S3_BUCKET_NAME;
+          const objectKey = attachment.file_path.replace('s3://', '');
+  
+          const command = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: objectKey,
+          });
+  
+          const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  
+          return {
+            ...attachment.toObject(),
+            signedUrl,
+          };
+        } catch (error) {
+          console.error(`Error processing attachment ${attachment._id}:`, error);
+          return null; // Skip this attachment
         }
-
-        // Generate signed URLs for each attachment
-            const attachmentsWithSignedUrls = await Promise.all(issue.attachments.map(async (attachment) => {
-            const fullUrl = new URL(attachment.file_path);
-            const key = fullUrl.pathname.slice(1); // Remove leading '/'
-          
-            const command = new GetObjectCommand({
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: key,
-            });
-            const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-            return {
-                ...attachment.toObject(),
-                signedUrl,
-            };
-        }));
-
-        res.json(attachmentsWithSignedUrls);
+      }));
+  
+      // Filter out any null values (skipped attachments)
+      const validAttachments = attachmentsWithSignedUrls.filter(attachment => attachment !== null);
+  
+      res.json(validAttachments);
     } catch (error) {
-        console.error('Error fetching attachments:', error);
-        res.status(500).json({ message: 'Server error' });
+      console.error('Error fetching attachments:', error);
+      res.status(500).json({ message: 'Error fetching attachments', error: error.message });
     }
-});
+  });
 
 router.post("/:issueId", authenticateToken, upload.single('file'), async (req, res) => {
     try {

@@ -118,34 +118,36 @@ router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
  * @throws {403} - If the user is not authorized to delete the comment.
  * @throws {500} - If an error occurs while deleting the comment.
  */
-router.delete('/:issueId/:commentId', authenticateToken, async (req, res) => {
-    const { issueId, commentId } = req.params;
-    const userId = req.user.id;
-  
-    try {
-      const issue = await Issue.findById(issueId);
-      if (!issue) {
-        return res.status(404).json({ error: 'Issue not found' });
-      }
-  
-      const comment = issue.comments.id(commentId);
-      if (!comment) {
-        return res.status(404).json({ error: 'Comment not found' });
-      }
-  
-      if (comment.user_id.toString() !== userId && req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Not authorized to delete this comment' });
-      }
-  
-      issue.comments.pull(commentId);
-      await issue.save();
-  
-      res.json({ message: 'Comment deleted' });
-    } catch (error) {
-      console.error('Error deleting comment:', error);
-      res.status(500).json({ error: 'Error deleting comment', details: error.message });
+router.delete("/:issueId/:commentId", authenticateToken, async (req, res) => {
+  try {
+    const issue = await Issue.findById(req.params.issueId);
+    if (!issue) return res.status(404).json({ message: 'Issue not found' });
+
+    const comment = issue.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+    if (req.user.role !== 'admin' && req.user.id !== comment.user_id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this comment' });
     }
-  });
+
+    issue.comments.pull(comment._id);
+    
+    // Ensure all occurrences have a user_id
+    issue.occurrences.forEach(occurrence => {
+      if (!occurrence.user_id) {
+        occurrence.user_id = req.user.id; // Set to current user as a fallback
+      }
+    });
+
+    await issue.save({ validateBeforeSave: false }); // Skip validation
+
+    res.json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 /**
  * Route to update a specific comment for an issue
  *

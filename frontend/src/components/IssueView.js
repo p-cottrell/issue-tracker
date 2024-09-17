@@ -371,16 +371,15 @@ function formatSmartDate(dateString) {
     try {
       const response = await apiClient.put(
         `/api/comments/${issue._id}/${comment._id}`,
-        {
-          comment_text: editedComment,
-        }
+        { comment_text: editedComment }
       );
 
-      const updatedComments = detailedIssue.comments.map((c) =>
-        c._id === comment._id ? response.data.comment : c
-      );
-
-      setDetailedIssue({ ...detailedIssue, comments: updatedComments });
+      setDetailedIssue(prevState => ({
+        ...prevState,
+        comments: prevState.comments.map(c => 
+          c._id === comment._id ? response.data.comment : c
+        )
+      }));
       setSelectedComment(null);
       setEditedComment("");
       showToast("Comment updated successfully", "success");
@@ -398,11 +397,10 @@ function formatSmartDate(dateString) {
     try {
       await apiClient.delete(`/api/comments/${issue._id}/${comment._id}`);
 
-      const updatedComments = detailedIssue.comments.filter(
-        (c) => c._id !== comment._id
-      );
-
-      setDetailedIssue({ ...detailedIssue, comments: updatedComments });
+      setDetailedIssue(prevState => ({
+        ...prevState,
+        comments: prevState.comments.filter(c => c._id !== comment._id)
+      }));
       setSelectedComment(null);
       showToast("Comment deleted successfully", "success");
     } catch (error) {
