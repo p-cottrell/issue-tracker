@@ -29,10 +29,9 @@ app.use(cookieParser()); // Use cookie-parser to extract tokens from cookies
 const authenticateToken = async (req, res, next) => {
   // Retrieve the access token from the cookies
   let accessToken = req.cookies.access_token;
-  console.log('Received access token');
-
+ 
   if (!accessToken) {
-    console.log('Access token is missing. Checking for refresh token.');
+ 
     return handleRefreshToken(req, res, next);
   }
 
@@ -44,10 +43,10 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    console.log('Attempting to verify access token...');
+   
     // Verify and decode the access token
     const verified = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-    console.log('Access token verified successfully');
+  
 
     // Attach the user ID and role to the request object for further use
     req.user = { id: verified.id, role: verified.role };

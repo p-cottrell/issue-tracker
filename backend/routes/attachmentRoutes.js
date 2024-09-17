@@ -38,21 +38,12 @@ router.get("/:issueId", authenticateToken, async (req, res) => {
       }
 
       const attachmentsWithSignedUrls = await Promise.all(issue.attachments.map(async (attachment) => {
-        // Extract the key from the full URL
-        const url = new URL(attachment.file_path);
-        const key = url.pathname.slice(1); // Remove leading '/'
-
         const command = new GetObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: key,
+          Key: attachment.file_path, // Use the stored file_path directly
         });
-
         const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-
-        return {
-          ...attachment.toObject(),
-          signedUrl,
-        };
+        return { ...attachment.toObject(), signedUrl };
       }));
 
       res.json(attachmentsWithSignedUrls);
@@ -73,11 +64,9 @@ router.post("/:issueId", authenticateToken, upload.single('file'), async (req, r
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-       
-
         const newAttachment = {
             user_id: req.user.id,
-            file_path: req.file.location, // Store the full S3 URL
+            file_path: req.file.key, // Store the file key as provided by multer-s3
             title: req.body.title || 'Untitled', // Use the provided title or default to 'Untitled'
             created_at: new Date()
         };
