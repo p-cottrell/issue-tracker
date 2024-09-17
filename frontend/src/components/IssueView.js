@@ -437,7 +437,7 @@ function formatSmartDate(dateString) {
               )}
               {isAdmin && (
                 <button
-                  onClick={handleDelete}
+                  //onClick={handleDelete}
                   className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                 >
                   Delete
