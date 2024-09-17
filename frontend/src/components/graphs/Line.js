@@ -21,33 +21,28 @@ ChartJS.register(
 );
 
 
-export const LineGraph = () => {
-
-    const fakeData = {
-        labels: [
-            "Label 1",
-            "Label 2",
-            "Label 3",
-            "Label 4",
-        ],
-        datasets: [
-            {
-                label: "Steps",
-                data: [0, 9, 2, 3],
-                borderColor: "rgb(75, 192, 192)",
+export const LineGraph = ({graphData}) => {
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false,
             },
-            {
-                label: "Times Cried",
-                data: [4, 5, 9, 12],
-                borderColor: "red",
+            title: {
+                display: true,
+                text: "# completed issues per month"
             }
-        ]
-    }
-
-    const options = {};
-    const data = fakeData;
-
+        },
+        scales: {
+            y: {
+                ticks: {
+                    stepSize: 1,
+                }
+            }
+        }
+    };
+    
     return (
-        <Line options={options} data={data}/>
+        <Line options={options} data={graphData}/>
     )
 }
