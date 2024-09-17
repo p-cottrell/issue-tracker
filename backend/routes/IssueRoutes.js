@@ -132,22 +132,14 @@ router.get('/', authenticateToken, async (req, res) => {
  */
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    // Convert the ID from the request parameters to a MongoDB ObjectId
-    const issueId = new mongoose.Types.ObjectId(req.params.id);
-
-    // Find the issue by ID and populate its occurrences
-    const issue = await Issue.findById(issueId).populate('occurrences');
-
-    // Check if the issue exists
+    const issue = await Issue.findById(req.params.id);
     if (!issue) {
-      return res.status(404).send('Issue not found');
+      return res.status(404).json({ message: 'Issue not found' });
     }
-
-    // Return the issue if all checks pass
-    res.status(200).json(issue);
+    res.json(issue);
   } catch (error) {
     console.error('Error fetching issue:', error);
-    res.status(500).send('Error fetching issue');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -167,10 +159,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
  * @throws {500} - If an error occurs while updating the issue.
  */
 router.put('/:id', authenticateToken, async (req, res) => {
-  const { title, description, status_id, charm } = req.body;
+  const { title, description, status_id, charm, occurrences } = req.body;
 
   try {
-    // Find the issue by ID
     const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
@@ -178,20 +169,17 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    // Check if the authenticated user is the reporter or an admin
     if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
       console.log('User not authorized to update this issue:', req.user.id);
       return res.status(403).send('Not authorized to update this issue');
     }
 
-    // Prepare fields to update
     const updateFields = { updated_at: Date.now() };
 
     if (title !== undefined) updateFields.title = title;
     if (description !== undefined) updateFields.description = description;
     if (charm !== undefined) updateFields.charm = charm;
 
-    // If status_id is provided, add a new entry to the status history
     if (status_id !== undefined) {
       issue.status_history.push({
         status_id: status_id,
@@ -199,7 +187,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Update the issue fields
+    if (occurrences !== undefined) {
+      updateFields.occurrences = occurrences.map(occurrence => ({
+        ...occurrence,
+        user_id: occurrence.user_id || req.user.id
+      }));
+    }
+
     Object.assign(issue, updateFields);
     await issue.save();
 
@@ -209,8 +203,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Error updating issue', details: error.message });
   }
 });
-
-
 
 /**
  * Route to delete an issue

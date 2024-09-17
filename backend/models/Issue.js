@@ -11,7 +11,7 @@ const mongoose = require('mongoose');
 const occurrenceSchema = new mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
     required: true
   },
   user_id: {
@@ -42,6 +42,11 @@ const occurrenceSchema = new mongoose.Schema({
  * file path and a creation timestamp.
  */
 const attachmentSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
+    required: true,
+  },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -50,7 +55,10 @@ const attachmentSchema = new mongoose.Schema({
   file_path: {
     type: String,
     required: true,
-    maxlength: 255,
+  },
+  title: {
+    type: String,
+    default: 'Untitled',
   },
   created_at: {
     type: Date,
@@ -67,6 +75,11 @@ const attachmentSchema = new mongoose.Schema({
  * a creation timestamp.
  */
 const commentSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
+    required: true,
+  }, 
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -129,7 +142,7 @@ const issueSchema = new mongoose.Schema({
   charm: {
     type: String,
     required: true,
-    maxlength: 3,
+    maxlength: 15,
   },
   created_at: {
     type: Date,

@@ -50,7 +50,7 @@ const issueSchema = new mongoose.Schema({
 // Constants for the number of each type of data
 const numProjects = 2;
 const numUsers = 10;
-const numIssues = 25;
+const numIssues = 20;
 const numOccurrences = 5;
 const numAttachments = 2;
 const numComments = 5;
@@ -127,11 +127,13 @@ async function generateFakeData() {
                     updated_at: faker.date.recent()
                 })),
                 attachments: Array.from({ length: numAttachments }, () => ({
+                    _id: new mongoose.Types.ObjectId(),
                     user_id: faker.helpers.arrayElement(users)._id,
                     file_path: faker.system.filePath(),
                     created_at: faker.date.past()
                 })),
                 comments: Array.from({ length: numComments }, () => ({
+                    _id: new mongoose.Types.ObjectId(),
                     user_id: faker.helpers.arrayElement(users)._id,
                     comment_text: faker.music.songName(),
                     created_at: faker.date.past()

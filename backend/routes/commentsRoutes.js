@@ -33,32 +33,28 @@ const Issue = require('../models/Issue');
  * @throws {500} - If an error occurs while creating the occurrence.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
-  console.log('Request body:', req.body);
-  console.log('Request user:', req.user);
+ 
   
-  const { description } = req.body;
+  const { comment_text } = req.body;
   const issueId = req.params.issueId;
   const userId = req.user ? req.user.id : null;
 
-  console.log('IssueId:', issueId);
-  console.log('UserId:', userId);
-  console.log('Description:', description);
 
   if (!userId) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
 
   try {
-    const newOccurrence = {
+    const newComment = {
       user_id: userId,
-      description,
+      comment_text,
     };
 
-    console.log('New occurrence:', newOccurrence);
+    
 
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,
-      { $push: { occurrences: newOccurrence } },
+      { $push: { comments: newComment } },
       { new: true, runValidators: true }
     );
 
@@ -66,31 +62,31 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    const addedOccurrence = updatedIssue.occurrences[updatedIssue.occurrences.length - 1];
+    const addedComment = updatedIssue.comments[updatedIssue.comments.length - 1];
 
-    res.status(201).json({ message: 'Occurrence added', occurrence: addedOccurrence });
+    res.status(201).json({ message: 'Comment added', comment: addedComment });
   } catch (error) {
-    console.error('Error adding occurrence:', error);
-    res.status(500).json({ error: 'Error adding occurrence', details: error.message });
+    console.error('Error adding comment:', error);
+    res.status(500).json({ error: 'Error adding comment', details: error.message });
   }
 });
 
 /**
- * Route to retrieve all occurrences for a specific issue
+ * Route to retrieve all comments for a specific issue
  *
- * This route allows an authenticated user to retrieve all occurrences associated 
- * with a specific issue. The issue is identified by `issueId`, and the occurrences 
+ * This route allows an authenticated user to retrieve all comments associated 
+ * with a specific issue. The issue is identified by `issueId`, and the comments 
  * are returned in the response.
  *
- * @name GET /issues/:id/occurrences
+ * @name GET /issues/:id/comments
  * @function
- * @memberof module:routes/occurrences
+ * @memberof module:routes/comments
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @throws {404} - If the issue is not found.
  * @throws {500} - If an error occurs while fetching the occurrences.
  */
-router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
+router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
   try {
     const issueID = req.params.id;
     const issue = await Issue.findById(issueID);
@@ -99,37 +95,37 @@ router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    // Return the occurrences array directly, since it's an embedded subdocument
-    res.status(200).json(issue.occurrences);
+   
+    res.status(200).json(issue.comments);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching occurrences', details: error.message });
+    res.status(500).json({ error: 'Error fetching comments', details: error.message });
   }
 });
 
 /**
- * Route to delete a specific occurrence from an issue
+ * Route to delete a specific comment from an issue
  *
- * This route allows an authenticated user to delete a specific occurrence from an 
- * issue. The issue is identified by `issueId` and the occurrence by `occurrenceId`.
- * Only the user who created the occurrence or an admin can delete it.
+ * This route allows an authenticated user to delete a specific comment from an 
+ * issue. The issue is identified by `issueId` and the comment by `commentId`.
+ * Only the user who created the comment or an admin can delete it.
  *
- * @name DELETE /:issueId/:occurrenceId
+ * @name DELETE /:issueId/:commentId
  * @function
- * @memberof module:routes/occurrences
+ * @memberof module:routes/comments
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @throws {404} - If the issue or occurrence is not found.
- * @throws {403} - If the user is not authorized to delete the occurrence.
- * @throws {500} - If an error occurs while deleting the occurrence.
+ * @throws {403} - If the user is not authorized to delete the comment.
+ * @throws {500} - If an error occurs while deleting the comment.
  */
-router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => {
+router.delete("/:issueId/:commentId", authenticateToken, async (req, res) => {
   try {
-    const { issueId, occurrenceId } = req.params;
+    const { issueId, commentId } = req.params;
 
     // Find the issue and remove the occurrence
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,
-      { $pull: { occurrences: { _id: occurrenceId } } },
+      { $pull: { comments: { _id: commentId } } },
       { new: true } // This option returns the updated document
     );
 
@@ -146,53 +142,54 @@ router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => 
   }
 });
 
+
 /**
- * Route to update a specific occurrence for an issue
+ * Route to update a specific comment for an issue
  *
- * This route allows an authenticated user to update the description of a specific occurrence
- * within an issue. The issue is identified by `issueId` and the occurrence by `occurrenceId`.
+ * This route allows an authenticated user to update the description of a specific comment
+ * within an issue. The issue is identified by `issueId` and the comment by `commentId`.
  * The updated description is provided in the request body.
  *
- * @name PUT /:issueId/:occurrenceId
+ * @name PUT /:issueId/:commentId
  * @function
- * @memberof module:routes/occurrences
- * @param {Object} req.body - The updated occurrence data (description).
+ * @memberof module:routes/comments
+ * @param {Object} req.body - The updated comment data (description).
  * @param {Object} res - The response object.
- * @throws {404} - If the issue or occurrence is not found.
- * @throws {500} - If an error occurs while updating the occurrence.
+ * @throws {404} - If the issue or comment is not found.
+ * @throws {500} - If an error occurs while updating the comment.
  */
 
-router.put('/:issueId/:occurrenceId', authenticateToken, async (req, res) => {
+router.put('/:issueId/:commentId', authenticateToken, async (req, res) => {
   try {
-    const { issueId, occurrenceId } = req.params;
-    const { description } = req.body;
+    const { issueId, commentId } = req.params;
+    const { comment_text } = req.body;
 
-    // Update the specific occurrence using $set operator
+    // Update the specific comment using $set operator
     const updatedIssue = await Issue.findOneAndUpdate(
-      { _id: issueId, 'occurrences._id': occurrenceId },
+      { _id: issueId, 'comments._id': commentId },
       { 
         $set: { 
-          'occurrences.$.description': description,
-          'occurrences.$.updated_at': Date.now()
+          'comments.$.comment_text': comment_text,
+          'comments.$.updated_at': Date.now()
         } 
       },
       { new: true, runValidators: false }
     );
 
     if (!updatedIssue) {
-      return res.status(404).json({ message: 'Issue or occurrence not found' });
+      return res.status(404).json({ message: 'Issue or comment not found' });
     }
 
-    const updatedOccurrence = updatedIssue.occurrences.find(
-      occ => occ._id.toString() === occurrenceId
+    const updatedComment = updatedIssue.comments.find(
+      comment => comment._id.toString() === commentId
     );
 
     res.json({ 
-      message: 'Occurrence updated successfully', 
-      occurrence: updatedOccurrence 
+      message: 'Comment updated successfully', 
+      comment: updatedComment 
     });
   } catch (error) {
-    console.error('Error updating occurrence:', error);
+    console.error('Error updating comment:', error);
     res.status(500).json({ message: 'Server error', details: error.message });
   }
 });
