@@ -59,7 +59,12 @@ export default function IssueView({ issue, onClose }) {
 
   useEffect(() => {
     fetchIssueDetails();
-  }, [issue._id]);
+    
+    // Check if the current user is an admin or the creator of the issue
+    const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
+    setCanEdit(userCanEdit);
+    setIsAdmin(user.role === 'admin');
+  }, [issue._id, user]);
 
   const fetchIssueDetails = async () => {
     try {
@@ -100,7 +105,7 @@ export default function IssueView({ issue, onClose }) {
     formData.append('title', attachmentTitle || 'Untitled');
 
     try {
-      const response = await apiClient.post(`/api/attachments/${issue._id}`, formData, {
+       await apiClient.post(`/api/attachments/${issue._id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -121,12 +126,13 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
+
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
       try {
         await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
         showToast('Attachment deleted successfully', 'success');
-        fetchIssueDetails(); // Refresh the issue view
+        fetchIssueDetails(); 
       } catch (error) {
         console.error('Error deleting attachment:', error);
         showToast('Error deleting attachment', 'error');
@@ -135,8 +141,10 @@ export default function IssueView({ issue, onClose }) {
   };
 
   const handleEdit = () => {
-    setEditMode(true);
-    setEditedIssue({ ...detailedIssue }); // Ensure we're working with a fresh copy
+    if (canEdit) {
+      setEditMode(true);
+      setEditedIssue({ ...detailedIssue });
+    }
   };
 
   const showToast = (message, type, duration, onConfirm = null) => {
@@ -146,43 +154,61 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  /**
-   * Save the updated issue details to the backend.
-   */
+
+
+function formatSmartDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInMinutes < 60) {
+    return diffInMinutes === 1 ? '1 min ago' : `${diffInMinutes} mins ago`;
+  } else if (diffInHours < 24) {
+    return diffInHours === 1 ? '1 hr ago' : `${diffInHours} hrs ago`;
+  } else if (diffInDays === 1) {
+    return 'yesterday';
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`;
+  } else {
+    return formatDate(dateString);
+  }
+}
+  
+
   const handleSave = async () => {
-    try {
-      // Prepare the data to be sent to the backend
-      const dataToSend = {
-        title: editedIssue.title,
-        description: editedIssue.description,
-        status_id: editedIssue.status_id,
-        charm: editedCharm,
-      };
+    if (canEdit) {
+      try {
+        const dataToSend = {
+          ...editedIssue,
+          created_at: detailedIssue.created_at,
+          updated_at: new Date().toISOString(), // Update the 'updated_at' field
+        };
 
-      // Make the PUT request to update the issue
-      console.log("Sending data to update issue:", dataToSend);
-      const response = await apiClient.put(
-        `/api/issues/${issue._id}`,
-        dataToSend
-      );
+        console.log("Sending data to update issue:", dataToSend);
+        const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
 
-      // Update the detailed issue with the returned data
-      setDetailedIssue(response.data.updatedIssue);
-      setEditMode(false); // Exit edit mode
-      showToast("Issue updated successfully", "success", 5000);
+        setDetailedIssue(response.data.updatedIssue);
+        setEditMode(false);
+        showToast("Issue updated successfully", "success", 5000);
 
-      // Pass the updated issue data to the onClose function
-      onClose(response.data.updatedIssue);
-    } catch (error) {
-      console.error("Error updating issue:", error);
-      showToast("Error updating issue", "error");
+        onClose(response.data.updatedIssue);
+      } catch (error) {
+        console.error("Error updating issue:", error);
+        showToast("Error updating issue", "error");
+      }
     }
   };
 
   const handleCancel = () => {
-    // Reset edited issue to original state and exit edit mode
-    setEditMode(false);
-    setEditedIssue(detailedIssue);
+    if (canEdit) {
+      setEditMode(false);
+      setEditedIssue(detailedIssue);
+    }
   };
 
   const handleAddOccurrence = async () => {
@@ -424,7 +450,7 @@ export default function IssueView({ issue, onClose }) {
                   </button>
                 </>
               )}
-              {canEdit && (
+              {isAdmin && (
                 <button
                   onClick={handleDelete}
                   className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
@@ -757,14 +783,45 @@ export default function IssueView({ issue, onClose }) {
                     <strong>Reported by:</strong>{" "}
                     {reporterName || detailedIssue.reporter_id}
                   </p>
-                  <p>
-                    <strong>Created at:</strong>{" "}
-                    {formatDate(detailedIssue.created_at)}
-                  </p>
-                  <p>
-                    <strong>Updated at:</strong>{" "}
-                    {formatDate(detailedIssue.updated_at)}
-                  </p>
+                  {editMode ? (
+                    <>
+                      <div>
+                        <strong>Created at:</strong>{" "}
+                        <input
+                          type="datetime-local"
+                          value={detailedIssue.created_at ? detailedIssue.created_at.slice(0, 16) : ''}
+                          onChange={(e) => setDetailedIssue({...detailedIssue, created_at: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <strong>Updated at:</strong>{" "}
+                        <input
+                          type="datetime-local"
+                          value={detailedIssue.updated_at ? detailedIssue.updated_at.slice(0, 16) : ''}
+                          onChange={(e) => setDetailedIssue({...detailedIssue, updated_at: e.target.value})}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        <strong>Created at:</strong>{" "}
+                        <span 
+                          title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
+                        >
+                          {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Updated at:</strong>{" "}
+                        <span 
+                          title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
+                        >
+                          {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}
+                        </span>
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
