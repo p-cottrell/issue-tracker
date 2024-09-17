@@ -36,42 +36,29 @@ router.get("/:issueId", authenticateToken, async (req, res) => {
       if (!issue) {
         return res.status(404).json({ message: 'Issue not found' });
       }
-      const attachments = issue.attachments;
 
-      const attachmentsWithSignedUrls = await Promise.all(attachments.map(async (attachment) => {
-        try {
-          if (!attachment.file_path || typeof attachment.file_path !== 'string' || !attachment.file_path.startsWith('s3://')) {
-            console.error(`Invalid file_path for attachment ${attachment._id}: ${attachment.file_path}`);
-            return null; // Skip this attachment
-          }
-  
-          const bucketName = process.env.S3_BUCKET_NAME;
-          const objectKey = attachment.file_path.replace('s3://', '');
-  
-          const command = new GetObjectCommand({
-            Bucket: bucketName,
-            Key: objectKey,
-          });
-  
-          const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-  
-          return {
-            ...attachment.toObject(),
-            signedUrl,
-          };
-        } catch (error) {
-          console.error(`Error processing attachment ${attachment._id}:`, error);
-          return null; // Skip this attachment
-        }
+      const attachmentsWithSignedUrls = await Promise.all(issue.attachments.map(async (attachment) => {
+        // Extract the key from the full URL
+        const url = new URL(attachment.file_path);
+        const key = url.pathname.slice(1); // Remove leading '/'
+
+        const command = new GetObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: key,
+        });
+
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+        return {
+          ...attachment.toObject(),
+          signedUrl,
+        };
       }));
-  
-      // Filter out any null values (skipped attachments)
-      const validAttachments = attachmentsWithSignedUrls.filter(attachment => attachment !== null);
-  
-      res.json(validAttachments);
+
+      res.json(attachmentsWithSignedUrls);
     } catch (error) {
       console.error('Error fetching attachments:', error);
-      res.status(500).json({ message: 'Error fetching attachments', error: error.message });
+      res.status(500).json({ message: 'Server error' });
     }
   });
 
@@ -135,9 +122,12 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
         }
 
         // Delete the file from S3
+        const url = new URL(attachment.file_path);
+        const key = url.pathname.slice(1); // Remove leading '/'
+
         const deleteCommand = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: new URL(attachment.file_path).pathname.slice(1), // Remove leading '/'
+            Key: key,
         });
 
         await s3Client.send(deleteCommand);

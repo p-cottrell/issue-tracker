@@ -95,7 +95,7 @@ router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    // Return the occurrences array directly, since it's an embedded subdocument
+   
     res.status(200).json(issue.comments);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching comments', details: error.message });
@@ -120,33 +120,28 @@ router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
  */
 router.delete("/:issueId/:commentId", authenticateToken, async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.issueId);
-    if (!issue) return res.status(404).json({ message: 'Issue not found' });
+    const { issueId, commentId } = req.params;
 
-    const comment = issue.comments.id(req.params.commentId);
-    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    // Find the issue and remove the occurrence
+    const updatedIssue = await Issue.findByIdAndUpdate(
+      issueId,
+      { $pull: { comments: { _id: commentId } } },
+      { new: true } // This option returns the updated document
+    );
 
-    if (req.user.role !== 'admin' && req.user.id !== comment.user_id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this comment' });
+    if (!updatedIssue) {
+      return res.status(404).json({ error: 'Issue not found' });
     }
 
-    issue.comments.pull(comment._id);
     
-    // Ensure all occurrences have a user_id
-    issue.occurrences.forEach(occurrence => {
-      if (!occurrence.user_id) {
-        occurrence.user_id = req.user.id; // Set to current user as a fallback
-      }
-    });
 
-    await issue.save({ validateBeforeSave: false }); // Skip validation
-
-    res.json({ message: 'Comment deleted successfully' });
+    res.status(200).json(updatedIssue);
   } catch (error) {
-    console.error('Error deleting comment:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error deleting occurrence:', error);
+    res.status(500).json({ error: 'Error deleting occurrence', details: error.message });
   }
 });
+
 
 /**
  * Route to update a specific comment for an issue

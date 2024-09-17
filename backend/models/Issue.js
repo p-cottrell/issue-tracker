@@ -42,6 +42,11 @@ const occurrenceSchema = new mongoose.Schema({
  * file path and a creation timestamp.
  */
 const attachmentSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
+    required: true,
+  },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -70,6 +75,11 @@ const attachmentSchema = new mongoose.Schema({
  * a creation timestamp.
  */
 const commentSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(),
+    required: true,
+  }, 
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
