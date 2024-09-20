@@ -21,33 +21,58 @@ const AddIssuePopup = ({ closeHandler }) => {
     e.preventDefault(); // Prevent the default form submission
     closeHandler(); // Close the add issue popup.
 
-    const addIssue = async () => {
-      const formData = new FormData(); // Using FormData to handle file upload
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('charm', charm);
-
-      // Append image file if exists
-      if (image) {
-        formData.append('file', image);
-        formData.append('attachmentTitle', image.name.split('.').slice(0, -1).join('.'));
-      }
+    const createIssue = async () => {
+      const issueData = {
+        title,
+        description,
+        charm,
+      };
 
       try {
-        const response = await apiClient.post('/api/attachments/', formData, {
+        // Step 1: Create the issue
+        const response = await apiClient.post('/api/issues', issueData, {
           withCredentials: true, // Ensure cookies are sent for authentication
           headers: {
-            'Content-Type': 'multipart/form-data', // Correct content type for FormData
+            'Content-Type': 'application/json', // Send JSON data for issue creation
           },
         });
 
-        console.log('Issue added:', response.data);
-        window.location.reload();
+        const { issueID } = response.data; // Get the created issueId
+
+        // If an image is selected, upload it as an attachment
+        if (image) {
+          await uploadAttachment(issueID); 
+        } else {
+          window.location.reload(); // Reload the page if no attachment
+        }
+
       } catch (error) {
-        console.error('There was an error adding the issue:', error);
+        console.error('Error creating issue:', error);
       }
     };
-    addIssue();
+
+    const uploadAttachment = async (issueId) => {
+      const formData = new FormData();
+      formData.append('file', image); // Append the image file
+      formData.append('title', image.name.split('.').slice(0, -1).join('.')); // Use the file name as the title
+
+      try {
+        // Step 2: Upload the attachment using the newly created issueId
+        const response = await apiClient.post(`/api/attachments/${issueId}`, formData, {
+          withCredentials: true, // Ensure cookies are sent for authentication
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('Attachment uploaded:', response.data);
+        window.location.reload(); // Reload the page after successful upload
+      } catch (error) {
+        console.error('Error uploading attachment:', error);
+      }
+    };
+
+    createIssue(); // First create the issue and then handle the attachment
   };
 
   // Handle drag and drop

@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import './IssueView.css';
-import apiClient from '../api/apiClient';
+import React, { useState, useEffect, useCallback } from "react";
+import "./IssueView.css";
+import apiClient from "../api/apiClient";
+import { useUser } from "../context/UserContext";
 
 function formatDate(dateString) {
   const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
 
   return `${day}/${month}/${year}`;
 }
 
-const emojiOptions = ['🐞', '🚀', '⚠️'];
+const emojiOptions = ["🐞", "🚀", "⚠️"];
 
 export default function IssueView({ issue, onClose }) {
+  const { user } = useUser();
+
   // State for the full issue details, separate from the initial 'issue' prop
   const [detailedIssue, setDetailedIssue] = useState(issue);
   // Toggle for edit mode
@@ -25,56 +28,120 @@ export default function IssueView({ issue, onClose }) {
   });
 
   // State for new occurrence input
-  const [newOccurrence, setNewOccurrence] = useState('');
+  const [newOccurrence, setNewOccurrence] = useState("");
 
   // New state for occurrence editing
   const [selectedOccurrence, setSelectedOccurrence] = useState(null);
 
-  const [editedOccurrence, setEditedOccurrence] = useState('');
+  const [editedOccurrence, setEditedOccurrence] = useState("");
 
-  const [reporterName, setReporterName] = useState(''); // Reporter name
 
   const [editedCharm, setEditedCharm] = useState(issue.charm);
 
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    const fetchIssueDetails = async () => {
-      try {
-        // Fetch full issue details
-        const response = await apiClient.get(`/api/issues/${issue._id}`);
-        setDetailedIssue(response.data);
-        setEditedIssue(response.data);
+  const [canEdit, setCanEdit] = useState(false);
 
-        // Fetch the reporter's username after getting issue details
-        if (response.data.reporter_id) {
-          fetchReporterName(response.data.reporter_id);
-        }
-      } catch (error) {
-        console.error('Error fetching issue details:', error);
-      }
-    };
+  const [isAdmin, setIsAdmin] = useState(false);
 
-    // Function to fetch reporter's username
-    const fetchReporterName = async (reporterId) => {
-      try {
-        const response = await apiClient.get(`/api/users/${reporterId}`);
-        if (response.data && response.data.username) {
-          setReporterName(response.data.username); // Set the username from fetched user data
-        } else {
-          console.error('Reporter data not found or invalid format');
-        }
-      } catch (error) {
-        console.error('Error fetching reporter name:', error);
-      }
-    };
+  const [newComment, setNewComment] = useState("");
+  const [selectedComment, setSelectedComment] = useState(null);
+  const [editedComment, setEditedComment] = useState("");
+  const[selectedFile, setSelectedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentError, setAttachmentError] = useState(null);
+  const [uploadConfirmation, setUploadConfirmation] = useState(null);
 
-    fetchIssueDetails();
+  
+
+  const fetchIssueDetails = useCallback(async () => {
+    try {
+      const response = await apiClient.get(`/api/issues/${issue._id}`);
+      setDetailedIssue(response.data);
+      fetchAttachments();
+    } catch (error) {
+      console.error('Error fetching issue details:', error);
+      showToast('Error fetching issue details', 'error');
+    }
   }, [issue._id]);
 
+  useEffect(() => {
+    fetchIssueDetails();
+    
+    const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
+    setCanEdit(userCanEdit);
+    setIsAdmin(user.role === 'admin');
+  }, [issue._id, user, fetchIssueDetails, issue.reporter_id]);
+
+  const fetchAttachments = async () => {
+    try {
+      const response = await apiClient.get(`/api/attachments/${issue._id}`);
+      setAttachments(response.data);
+      setAttachmentError(null);
+    } catch (error) {
+      console.error('Error fetching attachments:', error);
+      setAttachmentError('Failed to load attachments. Please try again later.');
+    }
+  };
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      showToast('Please select a file to upload', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+       await apiClient.post(`/api/attachments/${issue._id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        },
+      });
+
+      setUploadConfirmation(`File "${selectedFile.name}" uploaded successfully`);
+      setSelectedFile(null);
+      setUploadProgress(0);
+      fetchIssueDetails(); // Refresh the issue view
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      showToast('Error uploading file', 'error');
+    }
+  };
+
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (window.confirm('Are you sure you want to delete this attachment?')) {
+      try {
+        const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
+        if (response.status === 200) {
+          showToast('Attachment deleted successfully', 'success');
+          setAttachments(attachments.filter(attachment => attachment._id !== attachmentId));
+        } else {
+          throw new Error(response.data.message || 'Error deleting attachment');
+        }
+      } catch (error) {
+        console.error('Error deleting attachment:', error);
+        showToast(`Error deleting attachment: ${error.message}`, 'error');
+      }
+    }
+  };
+
   const handleEdit = () => {
-    setEditMode(true);
-    setEditedIssue({ ...detailedIssue }); // Ensure we're working with a fresh copy
+    if (canEdit) {
+      setEditMode(true);
+      setEditedIssue({ ...detailedIssue });
+    }
   };
 
   const showToast = (message, type, duration, onConfirm = null) => {
@@ -84,67 +151,95 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  /**
-  * Save the updated issue details to the backend.
-  */
+
+
+function formatSmartDate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInMinutes < 60) {
+    return diffInMinutes === 1 ? '1 min ago' : `${diffInMinutes} mins ago`;
+  } else if (diffInHours < 24) {
+    return diffInHours === 1 ? '1 hr ago' : `${diffInHours} hrs ago`;
+  } else if (diffInDays === 1) {
+    return 'yesterday';
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`;
+  } else {
+    return formatDate(dateString);
+  }
+}
+  
+
   const handleSave = async () => {
-    try {
-      // Prepare the data to be sent to the backend
-      const dataToSend = {
-        title: editedIssue.title,
-        description: editedIssue.description,
-        status_id: editedIssue.status_id,
-        charm: editedCharm,
-      };
-  
-      // Make the PUT request to update the issue
-      console.log('Sending data to update issue:', dataToSend);
-      const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
-  
-      // Update the detailed issue with the returned data
-      setDetailedIssue(response.data.updatedIssue);
-      setEditMode(false); // Exit edit mode
-      showToast('Issue updated successfully', 'success', 5000);
-  
-      // Pass the updated issue data to the onClose function
-      onClose(response.data.updatedIssue);
-    } catch (error) {
-      console.error('Error updating issue:', error);
-      showToast('Error updating issue', 'error');
+    if (canEdit) {
+      try {
+        const dataToSend = {
+          ...editedIssue,
+          created_at: detailedIssue.created_at,
+          updated_at: new Date().toISOString(),
+          occurrences: editedIssue.occurrences.map(occurrence => ({
+            ...occurrence,
+            user_id: occurrence.user_id || user.id // Use the existing user_id or fallback to the current user's id
+          }))
+        };
+
+        console.log("Sending data to update issue:", dataToSend);
+        const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
+
+        setDetailedIssue(response.data.updatedIssue);
+        setEditMode(false);
+        showToast("Issue updated successfully", "success", 5000);
+
+        onClose(response.data.updatedIssue);
+      } catch (error) {
+        console.error("Error updating issue:", error);
+        showToast("Error updating issue", "error");
+      }
     }
   };
 
   const handleCancel = () => {
-    // Reset edited issue to original state and exit edit mode
-    setEditMode(false);
-    setEditedIssue(detailedIssue);
+    if (canEdit) {
+      setEditMode(false);
+      setEditedIssue(detailedIssue);
+    }
   };
 
   const handleAddOccurrence = async () => {
     if (!newOccurrence.trim()) return;
 
     try {
-      // Send POST request to add new occurrence
+      console.log("Sending occurrence:", { description: newOccurrence });
       const response = await apiClient.post(`/api/occurrences/${issue._id}`, {
         description: newOccurrence,
+        user_id: user.id, // Include the user's ID
       });
+
+      console.log("Response:", response.data);
 
       setDetailedIssue({
         ...detailedIssue,
         occurrences: [...detailedIssue.occurrences, response.data.occurrence],
       });
-      setNewOccurrence('');
-      showToast('Occurrence added successfully', 'success');
+      setNewOccurrence("");
+      showToast("Occurrence added successfully", "success");
     } catch (error) {
       console.error(
-        'Error adding occurrence:',
+        "Error adding occurrence:",
         error.response ? error.response.data : error.message
       );
       showToast(
         `Failed to add occurrence: ${
           error.response ? error.response.data.message : error.message
         }`,
-        'error'
+        "error"
       );
     }
   };
@@ -155,95 +250,158 @@ export default function IssueView({ issue, onClose }) {
   };
 
   const handleSelectOccurrence = (occurrence) => {
-    setSelectedOccurrence(occurrence);
-    setEditedOccurrence(occurrence.description);
-  };
-
-  const handleEditOccurrence = async () => {
-    if (!selectedOccurrence || !editedOccurrence.trim()) return;
-
-    try {
-      const response = await apiClient.put(
-        `/api/occurrences/${issue._id}/${selectedOccurrence._id}`,
-        { description: editedOccurrence }
+    if (isAdmin || user.id === occurrence.user_id) {
+      setSelectedOccurrence(
+        selectedOccurrence && selectedOccurrence._id === occurrence._id
+          ? null
+          : occurrence
       );
-
-      const updatedOccurrences = detailedIssue.occurrences.map((occ) =>
-        occ._id === selectedOccurrence._id ? { ...response.data.occurrence, _id: occ._id } : occ
-      );
-
-      setDetailedIssue({
-        ...detailedIssue,
-        occurrences: updatedOccurrences,
-      });
-      setSelectedOccurrence(null);
-      setEditedOccurrence('');
-      showToast('Occurrence updated successfully', 'success');
-    } catch (error) {
-      console.error('Error updating occurrence:', error);
-      showToast('Error updating occurrence', 'error');
+      setEditedOccurrence(occurrence.description);
     }
   };
 
-  const handleDeleteOccurrence = async () => {
-    if (!selectedOccurrence) return;
-    showToast(
-      'Are you sure you want to delete this occurrence?',
-      'warning',
-      0,
-      async () => {
-        try {
-          const response = await apiClient.delete(
-            `/api/occurrences/${issue._id}/${selectedOccurrence._id}`
-          );
-
-          const updatedIssue = response.data;
-          console.log('Updated issue received from server:', updatedIssue);
-
-          setDetailedIssue(updatedIssue);
-          setEditedIssue(updatedIssue);
-          setSelectedOccurrence(null);
-          setEditedOccurrence('');
-
-          showToast('Occurrence deleted successfully', 'success', 3000);
-        } catch (error) {
-          console.error('Error deleting occurrence:', error);
-          showToast('Error deleting occurrence', 'error', 3000);
+  const handleEditOccurrence = async (occurrence) => {
+    if (!isAdmin && user.id !== occurrence.user_id) {
+      showToast("You do not have permission to edit this occurrence", "error");
+      return;
+    }
+    try {
+      const response = await apiClient.put(
+        `/api/occurrences/${issue._id}/${occurrence._id}`,
+        {
+          description: editedOccurrence,
+          
         }
-      }
-    );
+      );
+
+      const updatedOccurrences = detailedIssue.occurrences.map((occ) =>
+        occ._id === occurrence._id ? response.data.occurrence : occ
+      );
+
+      setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
+      setSelectedOccurrence(null);
+      setEditedOccurrence("");
+      showToast("Occurrence updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating occurrence:", error);
+      showToast("Error updating occurrence", "error");
+    }
   };
 
-  const handleDelete = () => {
-    showToast(
-      'Are you sure you want to delete this issue?',
-      'warning',
-      0,
-      async () => {
-        try {
-          await apiClient.delete(`/api/issues/${issue._id}`);
-          showToast('Issue deleted successfully', 'success');
-          onClose('deleted');
-        } catch (error) {
-          console.error('Error deleting issue:', error);
-          showToast('Error deleting issue', 'error');
-        }
-      }
-    );
+  const handleDeleteOccurrence = async (occurrence) => {
+    if (user.id !== occurrence.user_id) {
+      showToast(
+        "You do not have permission to delete this occurrence",
+        "error"
+      );
+      return;
+    }
+    try {
+      await apiClient.delete(`/api/occurrences/${issue._id}/${occurrence._id}`);
+
+      const updatedOccurrences = detailedIssue.occurrences.filter(
+        (occ) => occ._id !== occurrence._id
+      );
+
+      setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
+      setSelectedOccurrence(null);
+      showToast("Occurrence deleted successfully", "success");
+    } catch (error) {
+      console.error("Error deleting occurrence:", error);
+      showToast("Error deleting occurrence", "error");
+    }
   };
 
   const getStatusText = (statusId) => {
     switch (statusId) {
       case 0:
-        return 'Pending';
+        return "Pending";
       case 1:
-        return 'Complete';
+        return "Complete";
       case 2:
-        return 'In Progress';
+        return "In Progress";
       case 3:
-        return 'Cancelled';
+        return "Cancelled";
       default:
-        return 'Unknown';
+        return "Unknown";
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const response = await apiClient.post(`/api/comments/${issue._id}`, {
+        comment_text: newComment,
+      });
+
+      setDetailedIssue({
+        ...detailedIssue,
+        comments: [...detailedIssue.comments, response.data.comment],
+      });
+      setNewComment("");
+      showToast("Comment added successfully", "success");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      showToast("Error adding comment", "error");
+    }
+  };
+
+  const handleEditComment = async (comment) => {
+    if (!isAdmin && user.id !== comment.user_id) {
+      showToast("You do not have permission to edit this comment", "error");
+      return;
+    }
+    try {
+      const response = await apiClient.put(
+        `/api/comments/${issue._id}/${comment._id}`,
+        { 
+          comment_text: editedComment,
+          edited_by: user.id,
+        }
+      );
+
+      setDetailedIssue(prevState => ({
+        ...prevState,
+        comments: prevState.comments.map(c => 
+          c._id === comment._id ? response.data.comment : c
+        )
+      }));
+      setSelectedComment(null);
+      setEditedComment("");
+      showToast("Comment updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      showToast("Error updating comment", "error");
+    }
+  };
+
+  const handleDeleteComment = async (comment) => {
+    if (user.id !== comment.user_id) {
+      showToast("You do not have permission to delete this comment", "error");
+      return;
+    }
+    try {
+      await apiClient.delete(`/api/comments/${issue._id}/${comment._id}`);
+
+      setDetailedIssue(prevState => ({
+        ...prevState,
+        comments: prevState.comments.filter(c => c._id !== comment._id)
+      }));
+      setSelectedComment(null);
+      showToast("Comment deleted successfully", "success");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      showToast("Error deleting comment", "error");
+    }
+  };
+
+  const handleSelectComment = (comment) => {
+    if (isAdmin || user.id === comment.user_id) {
+      setSelectedComment(
+        selectedComment && selectedComment._id === comment._id ? null : comment
+      );
+      setEditedComment(comment.comment_text);
     }
   };
 
@@ -253,7 +411,7 @@ export default function IssueView({ issue, onClose }) {
         <div className="mt-3">
           <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2">
-              {!editMode && (
+              {canEdit && !editMode && (
                 <button
                   onClick={handleEdit}
                   className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -261,7 +419,7 @@ export default function IssueView({ issue, onClose }) {
                   Edit
                 </button>
               )}
-              {editMode && (
+              {canEdit && editMode && (
                 <>
                   <button
                     onClick={handleSave}
@@ -277,12 +435,14 @@ export default function IssueView({ issue, onClose }) {
                   </button>
                 </>
               )}
-              <button
-                onClick={handleDelete}
-                className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-              >
-                Delete
-              </button>
+              {isAdmin && (
+                <button
+                  //onClick={handleDelete}
+                  className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
 
@@ -356,128 +516,283 @@ export default function IssueView({ issue, onClose }) {
                 )}
 
                 {/* Occurrences section */}
-                <h2>Occurrences</h2>
-                <ul className="occurrences-list">
-                  {(detailedIssue.occurrences || []).map((occurrence) => (
-                    <li
-                      key={occurrence._id}
-                      className={`occurrence-item ${
-                        selectedOccurrence &&
-                        selectedOccurrence._id === occurrence._id
-                          ? 'selected'
-                          : ''
-                      }`}
-                      onClick={() => handleSelectOccurrence(occurrence)}
-                    >
-                      <p>
-                        <strong>ID:</strong> {occurrence._id}
-                      </p>
-                      <p>
-                        <strong>Date:</strong>{' '}
-                        {new Date(occurrence.created_at).toLocaleString()}
-                      </p>
-                      <p>
-                        <strong>Description:</strong> {occurrence.description}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-xl font-bold">Occurrences</h2>
+                  </div>
+                  <ul className="occurrences-list">
+                    {(detailedIssue.occurrences || []).map((occurrence) => (
+                      <li
+                        key={occurrence._id}
+                        className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
+                          isAdmin || user.id === occurrence.user_id
+                            ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
+                            : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
+                        }`}
+                        onClick={() => handleSelectOccurrence(occurrence)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              <strong>Date:</strong>{" "}
+                              {new Date(occurrence.created_at).toLocaleString()}
+                            </p>
+                            <p className="mt-1">
+                              <strong>Description:</strong> {occurrence.description}
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 {/* Occurrence edit section */}
-                {selectedOccurrence && (
-                  <div className="occurrence-edit">
+                {selectedOccurrence && (isAdmin || user.id === selectedOccurrence.user_id) && (
+                  <div className="occurrence-edit mt-4">
                     <textarea
                       value={editedOccurrence}
                       onChange={(e) => setEditedOccurrence(e.target.value)}
-                      className="edit-occurrence-input"
+                      className="w-full p-2 border rounded mb-2"
                     />
-                    <div className="occurrence-edit-buttons">
+                    <div className="flex justify-end space-x-2">
                       <button
-                        onClick={handleEditOccurrence}
-                        className="save-occurrence-button"
+                        onClick={() => handleEditOccurrence(selectedOccurrence)}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
                       >
                         Save Occurrence
                       </button>
                       <button
-                        onClick={handleDeleteOccurrence}
-                        className="delete-occurrence-button"
-                      >
-                        Delete Occurrence
-                      </button>
-                      <button
                         onClick={() => setSelectedOccurrence(null)}
-                        className="cancel-edit-button"
+                        className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
                       >
                         Cancel
                       </button>
+                      {user.id === selectedOccurrence.user_id && (
+                        <button
+                          onClick={() => handleDeleteOccurrence(selectedOccurrence)}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Delete Occurrence
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* New occurrence input */}
-                <textarea
-                  placeholder="Add new occurrence"
-                  value={newOccurrence}
-                  onChange={(e) => setNewOccurrence(e.target.value)}
-                  className="new-occurrence-input"
-                />
-                <button
-                  onClick={handleAddOccurrence}
-                  className="add-occurrence-button"
-                >
-                  Add Occurrence
-                </button>
+                <>
+                  <textarea
+                    placeholder="Add new occurrence"
+                    value={newOccurrence}
+                    onChange={(e) => setNewOccurrence(e.target.value)}
+                    className="new-occurrence-input"
+                  />
+                  <button
+                    onClick={handleAddOccurrence}
+                    className="add-occurrence-button"
+                  >
+                    Add Occurrence
+                  </button>
+                </>
 
                 {/* Attachments section */}
-                <h2>Attachments</h2>
-                <ul className="attachments-list">
-                  {(detailedIssue.attachments || []).map((attachment) => (
-                    <li key={attachment._id} className="attachment-item">
-                      <a
-                        href={attachment.file_path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="attachment-link"
-                      >
-                        {attachment.file_path.split('/').pop()}
-                      </a>
-                      <p>
-                        <strong>Attached at:</strong>{' '}
-                        {new Date(attachment.created_at).toLocaleString()}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                  {attachmentError && <p className="text-red-500">{attachmentError}</p>}
+                  {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {attachments.map((attachment) => (
+                      <div key={attachment._id} className="relative group">
+                        <img 
+                          src={attachment.signedUrl} 
+                          alt={attachment.title} 
+                          className="w-full h-40 object-cover rounded-lg"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
+                          <p className="text-white text-sm mb-2">{attachment.title}</p>
+                          <div>
+                            <a 
+                              href={attachment.signedUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded mr-2"
+                            >
+                              View
+                            </a>
+                            {(isAdmin || user.id === attachment.user_id) && (
+                              <button
+                                onClick={() => handleDeleteAttachment(attachment._id)}
+                                className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* File upload input */}
+                  <div className="mt-4">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="mb-2"
+                    />
+                    <button
+                      onClick={handleFileUpload}
+                      disabled={!selectedFile}
+                      className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-400"
+                    >
+                      Upload File
+                    </button>
+                    {uploadProgress > 0 && uploadProgress < 100 && (
+                      <div className="mt-2">
+                        <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                          <div 
+                            className="bg-blue-600 h-2.5 rounded-full" 
+                            style={{width: `${uploadProgress}%`}}
+                          ></div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">{uploadProgress}% uploaded</p>
+                      </div>
+                    )}
+                    {uploadConfirmation && (
+                      <p className="text-green-500 mt-2">{uploadConfirmation}</p>
+                    )}
+                  </div>
+                </div>
 
                 {/* Comments section */}
-                <h2>Comments</h2>
+                <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Comments</h2>
                 <ul className="comments-list">
                   {(detailedIssue.comments || []).map((comment) => (
-                    <li key={comment._id} className="comment-item">
-                      <p>{comment.comment_text}</p>
-                      <p>
-                        <strong>Commented at:</strong>{' '}
-                        {new Date(comment.created_at).toLocaleString()}
-                      </p>
+                    <li 
+                      key={comment._id} 
+                      className={`comment-item mb-4 ${
+                        isAdmin || user.id === comment.user_id 
+                          ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100' 
+                          : 'bg-gray-50 border-l-4 border-gray-300'
+                      }`}
+                    >
+                      <div 
+                        className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
+                        onClick={() => handleSelectComment(comment)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              <strong>Date:</strong> {new Date(comment.created_at).toLocaleString()}
+                            </p>
+                            <p className="mt-1">
+                              <strong>Comment:</strong> {comment.comment_text}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>
+                </div>
+
+                {/* Comment edit section */}
+                {selectedComment && (isAdmin || user.id === selectedComment.user_id) && (
+                  <div className="comment-edit mt-4">
+                    <textarea
+                      value={editedComment}
+                      onChange={(e) => setEditedComment(e.target.value)}
+                      className="w-full p-2 border rounded mb-2"
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEditComment(selectedComment)}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      >
+                        Save Comment
+                      </button>
+                      <button
+                        onClick={() => setSelectedComment(null)}
+                        className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      {user.id === selectedComment.user_id && (
+                        <button
+                          onClick={() => handleDeleteComment(selectedComment)}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Delete Comment
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add new comment section */}
+                <div className="mt-4">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="w-full p-2 border rounded mb-2"
+                    placeholder="Add a new comment..."
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                  >
+                    Add Comment
+                  </button>
+                </div>
               </div>
               {/* Issue sidebar with metadata */}
               <div className="issue-sidebar">
                 <div className="issue-meta">
                   <p>
-                    <strong>Reported by:</strong>{' '}
-                    {reporterName || detailedIssue.reporter_id}
+                    <strong>Reported by:</strong>{" "}
+                    {detailedIssue.reporter_id}
                   </p>
-                  <p>
-                    <strong>Created at:</strong>{' '}
-                    {formatDate(detailedIssue.created_at)}
-                  </p>
-                  <p>
-                    <strong>Updated at:</strong>{' '}
-                    {formatDate(detailedIssue.updated_at)}
-                  </p>
+                  {editMode ? (
+                    <>
+                      <div>
+                        <strong>Created at:</strong>{" "}
+                        <input
+                          type="datetime-local"
+                          value={detailedIssue.created_at ? detailedIssue.created_at.slice(0, 16) : ''}
+                          onChange={(e) => setDetailedIssue({...detailedIssue, created_at: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <strong>Updated at:</strong>{" "}
+                        <input
+                          type="datetime-local"
+                          value={detailedIssue.updated_at ? detailedIssue.updated_at.slice(0, 16) : ''}
+                          onChange={(e) => setDetailedIssue({...detailedIssue, updated_at: e.target.value})}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        <strong>Created at:</strong>{" "}
+                        <span 
+                          title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
+                        >
+                          {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Updated at:</strong>{" "}
+                        <span 
+                          title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
+                        >
+                          {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}
+                        </span>
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -496,13 +811,13 @@ export default function IssueView({ issue, onClose }) {
             <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 max-w-sm w-full">
               <p
                 className={`text-center mb-4 ${
-                  toast.type === 'success'
-                    ? 'text-green-600'
-                    : toast.type === 'error'
-                    ? 'text-red-600'
-                    : toast.type === 'warning'
-                    ? 'text-yellow-600'
-                    : 'text-blue-600'
+                  toast.type === "success"
+                    ? "text-green-600"
+                    : toast.type === "error"
+                    ? "text-red-600"
+                    : toast.type === "warning"
+                    ? "text-yellow-600"
+                    : "text-blue-600"
                 }`}
               >
                 {toast.message}

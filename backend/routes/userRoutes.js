@@ -230,7 +230,7 @@ router.post('/check_email', async (req, res) => {
  */
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userID);
+    const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

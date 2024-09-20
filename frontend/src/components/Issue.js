@@ -99,14 +99,15 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                             <div className="loader"></div>
                         </div>
                     )}
-                    {/* Image */}
-                    <img
-                        src={`https://loremflickr.com/250/150/kitten?lock=${data._id}`}
-                        alt="Attachment"
-                        className="rounded-md object-cover cursor-pointer"
-                        onLoad={() => setIsLoading(false)} // Set loading state to false once the image is loaded
-                        onClick={() => handleImageClick(`https://loremflickr.com/250/150/kitten?lock=${data._id}`)} // Handle image click to show full preview
-                    />
+                    {data.attachments && data.attachments.length > 0 && (
+                        <img
+                            src={data.attachments[0].signedUrl} // Use the signed URL here
+                            alt="Attachment"
+                            className="rounded-md object-cover cursor-pointer"
+                            onLoad={() => setIsLoading(false)} // Set loading state to false once the image is loaded
+                            onClick={() => handleImageClick(data.attachments[0].signedUrl)} // Handle image click to show full preview
+                        />
+                    )}
                 </div>
             </div>
 
