@@ -52,6 +52,10 @@ export default function IssueView({ issue, onClose }) {
   const [attachments, setAttachments] = useState([]);
   const [attachmentError, setAttachmentError] = useState(null);
   const [uploadConfirmation, setUploadConfirmation] = useState(null);
+  const [images, setImages] = useState([]); // Stores the selected image files
+  const [imagePreviews, setImagePreviews] = useState([]); // Stores URLs for image previews
+  const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state for the images
+
 
   
 
@@ -85,40 +89,64 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleImageSelection(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const handleImageSelection = (files) => {
+    const newImages = [...images, ...files];
+    const newPreviews = [...imagePreviews, ...files.map(file => URL.createObjectURL(file))];
+    setImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
+  const handleRemoveImage = (index) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setImages(newImages);
+    setImagePreviews(newPreviews);
   };
 
   const handleFileUpload = async () => {
-    if (!selectedFile) {
-      showToast('Please select a file to upload', 'error');
+    if (images.length === 0) {
+      showToast('Please select files to upload', 'error');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    images.forEach((file) => {
+      formData.append('file', file);
+    });
 
     try {
-       await apiClient.post(`/api/attachments/${issue._id}`, formData, {
+      const response = await apiClient.post(`/api/attachments/${issue._id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(percentCompleted);
-        },
       });
 
-      setUploadConfirmation(`File "${selectedFile.name}" uploaded successfully`);
-      setSelectedFile(null);
-      setUploadProgress(0);
+      showToast('Files uploaded successfully', 'success');
+      setImages([]);
+      setImagePreviews([]);
       fetchIssueDetails(); // Refresh the issue view
     } catch (error) {
-      console.error('Error uploading file:', error);
-      showToast('Error uploading file', 'error');
+      console.error('Error uploading files:', error);
+      showToast(`Error uploading files: ${error.response?.data?.details || error.message}`, 'error');
     }
   };
-
 
   const handleDeleteAttachment = async (attachmentId) => {
     if (window.confirm('Are you sure you want to delete this attachment?')) {
@@ -636,32 +664,52 @@ function formatSmartDate(dateString) {
                   
                   {/* File upload input */}
                   <div className="mt-4">
+                    <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
+                    <div
+                      className={`mb-4 p-4 h-32 border-2 ${isDragging ? 'border-primary' : 'border-secondary'} border-dashed rounded cursor-pointer flex justify-center items-center`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => document.getElementById('fileInput').click()}
+                    >
+                      <p className="text-sm text-gray-500">
+                        {images.length > 0 ? `${images.length} file(s) selected` : 'Drag & drop images here, or click to select'}
+                      </p>
+                    </div>
                     <input
+                      id="fileInput"
                       type="file"
-                      onChange={handleFileChange}
-                      className="mb-2"
-                    />
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleImageSelection(Array.from(e.target.files))}
+                      className="hidden"
+                    />  
+                    {imagePreviews.length > 0 && (
+                    <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index}`}
+                            className="w-full h-40 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}    
                     <button
                       onClick={handleFileUpload}
-                      disabled={!selectedFile}
-                      className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-400"
+                      className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     >
-                      Upload File
+                      Upload Selected Files
                     </button>
-                    {uploadProgress > 0 && uploadProgress < 100 && (
-                      <div className="mt-2">
-                        <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                          <div 
-                            className="bg-blue-600 h-2.5 rounded-full" 
-                            style={{width: `${uploadProgress}%`}}
-                          ></div>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">{uploadProgress}% uploaded</p>
-                      </div>
-                    )}
-                    {uploadConfirmation && (
-                      <p className="text-green-500 mt-2">{uploadConfirmation}</p>
-                    )}
                   </div>
                 </div>
 

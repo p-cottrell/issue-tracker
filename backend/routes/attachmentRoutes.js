@@ -54,38 +54,44 @@ router.get("/:issueId", authenticateToken, async (req, res) => {
     }
   });
 
-router.post("/:issueId", authenticateToken, upload.single('file'), async (req, res) => {
+  router.post("/:issueId", authenticateToken, upload.array('file', 5), async (req, res) => {
     try {
-        const issue = await Issue.findById(req.params.issueId);
+        const { issueId } = req.params;
+        const files = req.files || [];
+
+        if (files.length === 0) {
+            return res.status(400).json({ message: 'No files uploaded' });
+        }
+
+        const issue = await Issue.findById(issueId);
         if (!issue) {
             return res.status(404).json({ message: 'Issue not found' });
         }
 
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
-        }
-
-        const newAttachment = {
+        const newAttachments = files.map(file => ({
             user_id: req.user.id,
-            file_path: req.file.key, // Store the file key as provided by multer-s3
-            title: req.body.title || 'Untitled', // Use the provided title or default to 'Untitled'
+            file_path: file.key, // Use file.key for S3 uploads
+            title: file.originalname || 'Untitled',
             created_at: new Date()
-        };
+        }));
 
-        issue.attachments.push(newAttachment);
+        issue.attachments.push(...newAttachments);
         await issue.save();
 
-        // Generate signed URL for the new attachment
-        const command = new GetObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: req.file.key,
-        });
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        // Generate signed URLs for the new attachments
+        const attachmentsWithSignedUrls = await Promise.all(newAttachments.map(async (attachment) => {
+            const command = new GetObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key: attachment.file_path,
+            });
+            const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+            return { ...attachment, signedUrl };
+        }));
 
-        res.json({...newAttachment, signedUrl});
+        res.json(attachmentsWithSignedUrls);
     } catch (error) {
-        console.error('Error creating attachment:', error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error uploading files:', error);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
