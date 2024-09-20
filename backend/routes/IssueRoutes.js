@@ -63,12 +63,12 @@ router.post('/', authenticateToken, async (req, res) => {
     await issue.save();
     res.status(201).send({ message: 'Issue created', issueID: issue._id });
   } catch (error) {
-    console.error('Error creating issue:', error); // Add console logging for error debugging
+    console.error('Error creating issue:', error);
     res.status(500).send({ error: 'Error creating issue', details: error.message });
   }
 });
 
-/**
+/**]
  * Route to retrieve all issues or issues by a specific user
  *
  * This route allows an authenticated user to retrieve all issues.

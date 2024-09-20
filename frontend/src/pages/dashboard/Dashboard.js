@@ -2,7 +2,7 @@ import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
-import AddIssuePopup from '../../components/AddIssuePopup';
+import AddIssuePopup from '../../components/AddIssue';
 import Issue from '../../components/Issue';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
