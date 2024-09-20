@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
-const Issue = require('../models/Issue'); 
+const Issue = require('../models/Issue');
+const mongoose = require('mongoose');
 
 /**
  * Occurrence Management Routes
@@ -49,6 +50,7 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
   }
 
   try {
+    const now = new Date();
     const newOccurrence = {
       user_id: userId,
       description,
@@ -57,7 +59,7 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
     console.log('New occurrence:', newOccurrence);
 
     const updatedIssue = await Issue.findByIdAndUpdate(
-      issueId,
+      issueObjectId,
       { $push: { occurrences: newOccurrence } },
       { new: true, runValidators: true }
     );

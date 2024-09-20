@@ -316,7 +316,7 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {showAddIssue && <AddIssuePopup closeHandler={() => setShowAddIssue(false)} />}
+      {showAddIssue && <AddIssuePopup  closeHandler={() => setShowAddIssue(false)}/>}
 
       {showDeleteIssue && (
         <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue} />

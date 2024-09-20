@@ -36,8 +36,8 @@ router.post('/', authenticateToken, async (req, res) => {
     const { title, description, status_id, charm, project_id } = req.body;
     console.log('Received data:', req.body);
 
-    // Use req.user.userID instead of req.user.id to get the authenticated user's ID
-    const reporter_id = req.user.userID;
+    const reporter_id = req.user.id;
+    console.log("User Id", reporter_id);
 
     // Validate required fields
     if (!title || !description) {
@@ -63,7 +63,7 @@ router.post('/', authenticateToken, async (req, res) => {
     await issue.save();
     res.status(201).send({ message: 'Issue created', issueID: issue._id });
   } catch (error) {
-    console.error('Error creating issue:', error);
+    console.error('Error creating issue:', error); // Add console logging for error debugging
     res.status(500).send({ error: 'Error creating issue', details: error.message });
   }
 });
@@ -74,6 +74,7 @@ router.post('/', authenticateToken, async (req, res) => {
  * This route allows an authenticated user to retrieve all issues.
  * If a `userId` is provided as a query parameter, it filters the issues
  * to only those reported by that specific user.
+ * Sort by 'updated_at' in descending order
  *
  * @name GET /issues
  * @function
@@ -83,7 +84,6 @@ router.post('/', authenticateToken, async (req, res) => {
  * @throws {404} - If no issues are found.
  * @throws {500} - If an error occurs while retrieving the issues.
  */
-
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.query.userId; // Get userId from query parameters
@@ -227,7 +227,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    if (issue.reporter_id.toString() !== req.user.userID && req.user.role !== 'admin') {
+    if (issue.reporter_id.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
 

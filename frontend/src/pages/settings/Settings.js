@@ -10,15 +10,15 @@ const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Notification settings state
-  const [notificationSettings, setNotificationSettings] = useState({
-    comments: { push: true, email: true, sms: false },
-    reminders: { push: false, email: true, sms: false },
-    updates: { push: false, email: false, sms: false },
+  // Default filter state for issues and status
+  const [defaultFilter, setDefaultFilter] = useState({
+    issueFilter: 'all', // Default to "all"
+    statusFilter: 'all', // Default to "all"
   });
 
-  // Check localStorage for saved theme preference on initial render
+  // Check localStorage for saved settings on initial render
   useEffect(() => {
+    // Load theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
@@ -42,15 +42,11 @@ const Settings = () => {
     }
   };
 
-  // Function to handle notification toggle
-  const handleNotificationToggle = (section, type) => {
-    setNotificationSettings((prevSettings) => ({
-      ...prevSettings,
-      [section]: {
-        ...prevSettings[section],
-        [type]: !prevSettings[section][type],
-      },
-    }));
+  // Function to handle filter selection
+  const handleFilterSelection = (type, value) => {
+    const updatedFilter = { ...defaultFilter, [type]: value };
+    setDefaultFilter(updatedFilter);
+    localStorage.setItem(`default${type.charAt(0).toUpperCase() + type.slice(1)}Filter`, value); // Save to localStorage
   };
 
   return (
@@ -79,38 +75,65 @@ const Settings = () => {
         <main className="flex-grow p-6">
           {/* Container for Settings */}
           <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg dark:bg-gray-800">
-            {/* Notification Settings Section */}
+            {/* Default Dashboard Filter Section */}
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold mb-6 text-dark dark:text-neutral">Notification Settings</h2>
-              {Object.keys(notificationSettings).map((section, idx) => (
-                <div key={idx} className="border-b pb-6">
-                  <h2 className="text-lg font-semibold mb-4 text-dark dark:text-gray-200 capitalize">{section}</h2>
-
-                  {/* Notification Toggles */}
-                  <div className="flex flex-col gap-4">
-                    {['Push', 'Email', 'SMS'].map((type, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        {/* Text label for each toggle */}
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-300">{type}</span>
-
-                        {/* Toggle button */}
-                        <button
-                          onClick={() => handleNotificationToggle(section, type.toLowerCase())}
-                          className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
-                            notificationSettings[section][type.toLowerCase()] ? 'bg-primary' : 'bg-gray-300'
-                          }`}
-                        >
-                          <span
-                            className={`${
-                              notificationSettings[section][type.toLowerCase()] ? 'translate-x-6' : 'translate-x-1'
-                            } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
-                          />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+              <h2 className="text-2xl font-semibold mb-6 text-dark dark:text-neutral">Default Dashboard Filters</h2>
+              {/* Filter options for Issues */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4 text-dark dark:text-gray-200">Issues Filter</h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-dark dark:text-neutral">All Issues</span>
+                  <button
+                    onClick={() => handleFilterSelection('issueFilter', 'all')}
+                    className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                      defaultFilter.issueFilter === 'all' ? 'bg-primary' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`${
+                        defaultFilter.issueFilter === 'all' ? 'translate-x-6' : 'translate-x-1'
+                      } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
+                    />
+                  </button>
                 </div>
-              ))}
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-dark dark:text-neutral">My Issues</span>
+                  <button
+                    onClick={() => handleFilterSelection('issueFilter', 'myIssues')}
+                    className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                      defaultFilter.issueFilter === 'myIssues' ? 'bg-primary' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`${
+                        defaultFilter.issueFilter === 'myIssues' ? 'translate-x-6' : 'translate-x-1'
+                      } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter options for Status */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4 text-dark dark:text-gray-200">Status Filter</h3>
+                {['all', 'Complete', 'InProgress', 'Cancelled', 'Pending'].map((status, index) => (
+                  <div key={index} className="flex items-center justify-between mt-2">
+                    <span className="text-dark dark:text-neutral">{status === 'all' ? 'All Statuses' : status}</span>
+                    <button
+                      onClick={() => handleFilterSelection('statusFilter', status)}
+                      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                        defaultFilter.statusFilter === status ? 'bg-primary' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`${
+                          defaultFilter.statusFilter === status ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Dark Mode Section */}
