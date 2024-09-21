@@ -47,6 +47,7 @@ export default function IssueView({ issue, onClose }) {
   const [newComment, setNewComment] = useState("");
   const [selectedComment, setSelectedComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
+  const [userName, setUserName] = useState("");
  
   const [attachments, setAttachments] = useState([]);
   const [attachmentError, setAttachmentError] = useState(null);
@@ -74,6 +75,7 @@ export default function IssueView({ issue, onClose }) {
     
     const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
     setCanEdit(userCanEdit);
+    setUserName(user.username);
     setIsAdmin(user.role === 'admin');
   }, [issue._id, user, fetchIssueDetails, issue.reporter_id]);
 
@@ -799,7 +801,7 @@ function formatSmartDate(dateString) {
                 <div className="issue-meta">
                   <p>
                     <strong>Reported by:</strong>{" "}
-                    {detailedIssue.reporter_id}
+                    {userName.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
                   </p>
                   {editMode ? (
                     <>
