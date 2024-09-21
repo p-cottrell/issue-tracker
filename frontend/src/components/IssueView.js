@@ -55,6 +55,16 @@ export default function IssueView({ issue, onClose }) {
   const [images, setImages] = useState([]); // Stores the selected image files
   const [imagePreviews, setImagePreviews] = useState([]); // Stores URLs for image previews
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state for the images
+  const [previewImage, setPreviewImage] = useState(null); // State for the preview image
+
+
+
+
+
+
+
+
+
 
 
   
@@ -119,6 +129,10 @@ export default function IssueView({ issue, onClose }) {
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
     setImages(newImages);
     setImagePreviews(newPreviews);
+  };
+
+  const handlePreviewImage = (imageUrl) => {
+    setPreviewImage(imageUrl);
   };
 
   const handleFileUpload = async () => {
@@ -641,17 +655,17 @@ function formatSmartDate(dateString) {
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
                       
                         <div>
-                        <a 
-                            href={attachment.signedUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                            title="View attachment"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" transform="rotate(-45)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          </a>
+                        <button
+                          onClick={() => handlePreviewImage(attachment.signedUrl)}
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                          title="View attachment"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" transform="rotate(-45)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </button>
                           {(isAdmin || user.id === attachment.user_id) && (
                             <button
                               onClick={() => handleDeleteAttachment(attachment._id)}
@@ -665,6 +679,22 @@ function formatSmartDate(dateString) {
                       </div>
                     ))}
                   </div>
+
+                  {previewImage && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
+                      <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
+                      <button 
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+
                   
                   {/* File upload input */}
                   <div className="mt-4">
