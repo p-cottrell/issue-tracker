@@ -47,11 +47,10 @@ export default function IssueView({ issue, onClose }) {
   const [newComment, setNewComment] = useState("");
   const [selectedComment, setSelectedComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
-  const[selectedFile, setSelectedFile] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+ 
   const [attachments, setAttachments] = useState([]);
   const [attachmentError, setAttachmentError] = useState(null);
-  const [uploadConfirmation, setUploadConfirmation] = useState(null);
+
   const [images, setImages] = useState([]); // Stores the selected image files
   const [imagePreviews, setImagePreviews] = useState([]); // Stores URLs for image previews
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state for the images
