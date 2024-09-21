@@ -59,7 +59,7 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
     console.log('New occurrence:', newOccurrence);
 
     const updatedIssue = await Issue.findByIdAndUpdate(
-      issueObjectId,
+      issueId,
       { $push: { occurrences: newOccurrence } },
       { new: true, runValidators: true }
     );
