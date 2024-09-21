@@ -627,35 +627,38 @@ function formatSmartDate(dateString) {
 
                 {/* Attachments section */}
                 <div className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">Attachments</h2>
-                  {attachmentError && <p className="text-red-500">{attachmentError}</p>}
-                  {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {attachments.map((attachment) => (
-                      <div key={attachment._id} className="relative group">
-                        <img 
-                          src={attachment.signedUrl} 
-                          alt={attachment.title} 
-                          className="w-full h-40 object-cover rounded-lg"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
-                          <p className="text-white text-sm mb-2">{attachment.title}</p>
-                          <div>
-                            <a 
-                              href={attachment.signedUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded mr-2"
+                <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                {attachmentError && <p className="text-red-500">{attachmentError}</p>}
+                {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {attachments.map((attachment) => (
+                    <div key={attachment._id} className="relative group">
+                      <img 
+                        src={attachment.signedUrl} 
+                        alt={attachment.title} 
+                        className="w-full h-40 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
+                      
+                        <div>
+                        <a 
+                            href={attachment.signedUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                            title="View attachment"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" transform="rotate(-45)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          </a>
+                          {(isAdmin || user.id === attachment.user_id) && (
+                            <button
+                              onClick={() => handleDeleteAttachment(attachment._id)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
                             >
-                              View
-                            </a>
-                            {(isAdmin || user.id === attachment.user_id) && (
-                              <button
-                                onClick={() => handleDeleteAttachment(attachment._id)}
-                                className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
-                              >
-                                Delete
-                              </button>
+                              X
+                            </button>
                             )}
                           </div>
                         </div>
