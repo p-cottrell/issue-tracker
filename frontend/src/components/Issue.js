@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
 import '../styles/loader.css';
 
 export default function Issue({ data, openIssueModal, deleteHandler }) {
-    const navigate = useNavigate(); // Hook for programmatic navigation
-    const { openModal, closeModal } = useModal(); // Custom hook to open or close modal dialogs
+    const { openModal} = useModal(); // Custom hook to open or close modal dialogs
     const [isLoading, setIsLoading] = useState(true); // State to track the loading state of the image
 
     // Extract the latest status from the status_history array. 

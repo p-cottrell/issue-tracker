@@ -94,6 +94,12 @@ const handleRefreshToken = async (req, res, next) => {
     // Check if the refresh token is valid and not expired
     const storedToken = await RefreshToken.findOne({ token: refreshToken });
 
+    if (storedToken.expiresAt < Date.now()) {
+      console.log('Refresh token is expired.');
+      await RefreshToken.deleteOne({ token: refreshToken });  // Clean up expired tokens
+      return res.status(403).send('Invalid or expired refresh token');
+    }
+
     if (!storedToken) {
       console.log('Refresh token not found in the database.');
       return res.status(403).send('Invalid or expired refresh token');
