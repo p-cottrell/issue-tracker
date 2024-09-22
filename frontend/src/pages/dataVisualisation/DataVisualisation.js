@@ -1,10 +1,12 @@
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
 import apiClient from '../../api/apiClient';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import React from 'react';
+import { useUser } from '../../context/UserContext';
+
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
@@ -20,22 +22,131 @@ const DataVisualisation = () => {
     const [issues, setIssues] = useState([]); 
     const [fetched, setFetched] = useState(false);
 
+    const { user } = useUser(); // Fetch authenticated user data from the context
+    const [noIssuesMessage, setNoIssuesMessage] = useState(''); // Holds message to display when no issues are found
+    const [allIssues, setAllIssues] = useState([]); // All issues retrieved from the API
+    const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
+    const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
+    const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
+    const [statusFilter, setStatusFilter] = useState('all'); // State for the status filter
+    const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering issues
+
     const [graphType, setGraphType] = useState("added"); // Used for changing which graph is displayed.
 
-    useEffect(() => {
-        const fetchIssues = async () => {
-          try {
-            const response = await apiClient.get('api/issues');
-            setIssues(response.data);
-            setFetched(true);
-          } catch (error) {
-            console.error('Error fetching issues:', error);
-            setFetched(true);
-          }
-        };
+    // useEffect(() => {
+    //     const fetchIssues = async () => {
+    //       try {
+    //         const response = await apiClient.get('api/issues');
+    //         setIssues(response.data);
+    //         setFetched(true);
+    //       } catch (error) {
+    //         console.error('Error fetching issues:', error);
+    //         setFetched(true);
+    //       }
+    //     };
     
-        fetchIssues();
-    }, []);
+    //     fetchIssues();
+    // }, []);
+
+  /**
+ * Helper function to convert status_id to readable status text.
+ * @param {number} status_id - The ID representing the status.
+ * @returns {string} - The text representation of the status.
+ */
+const getStatusText = (status_id) => {
+  switch (status_id) {
+    case 1:
+      return 'Complete';
+    case 2:
+      return 'In Progress';
+    case 3:
+      return 'Cancelled';
+    default:
+      return 'Pending';
+  }
+};
+
+    /**
+   * Fetches issues from the API based on the filter type and user context.
+   * Uses useCallback to memoize the function, preventing unnecessary re-fetching on re-renders.
+   */
+  const fetchIssues = useCallback(async () => {
+    if (!user || !user.id) {
+      console.error('User data is not available yet.');
+      return;
+    }
+
+    setFetched(false); // Ensure UI shows loading wheel when fetching begins
+
+    try {
+      // Clear previous issues state
+      setAllIssues([]);
+      setFilteredIssues([]);
+      setNoIssuesMessage(''); // Clear any existing messages
+
+      let endpoint = 'api/issues'; // Default endpoint to fetch all issues
+      if (filterType === 'myIssues' && user.id) {
+        endpoint = `api/issues?userId=${user.id}`; // Fetch only issues reported by the current user
+      }
+
+      const response = await apiClient.get(endpoint); // Fetch issues from API
+
+      if (response.data.success) {
+        let issues = response.data.data;
+
+        // Apply status filter
+        if (statusFilter !== 'all') {
+          issues = issues.filter((issue) => {
+            // Extract the latest status_id from status_history
+            const latestStatus = issue.status_history.length > 0 ? issue.status_history[issue.status_history.length - 1].status_id : null;
+            return latestStatus === parseInt(statusFilter);
+          });
+        }
+
+        setAllIssues(issues); // Set the issues data
+        setFilteredIssues(issues);
+        setNoIssuesMessage(''); // Clear any existing message
+      } else {
+        setNoIssuesMessage(response.data.message); // Display the message from the backend
+      }
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+      setNoIssuesMessage('Error fetching issues. Please try again later.');
+    } finally {
+      setFetched(true); // Ensure UI shows that fetching is complete
+    }
+  }, [filterType, statusFilter, user]);
+
+  /**
+   * useEffect hook to fetch issues whenever the filter type, update trigger, or user context changes.
+   */
+  useEffect(() => {
+    fetchIssues();
+  }, [fetchIssues, updateTrigger]);
+
+  /**
+   * Handles changes in the filter type dropdown.
+   * Saves the selected filter type to localStorage for persistence across sessions.
+   * @param {Object} event - The event object from the filter dropdown.
+   */
+  const handleFilterChange = (event) => {
+    const selectedFilter = event.target.value;
+    setFilterType(selectedFilter);
+    localStorage.setItem('filterType', selectedFilter); // Persist filter type to localStorage
+  };
+
+  // Return loading screen if issues have not been fetched yet
+  if (!fetched) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
 
     // For counting how many issues were added per month.
     let addedIssuesPerMonth = {
@@ -77,10 +188,12 @@ const DataVisualisation = () => {
       "Pending": 0
     }
 
+    filteredIssues && console.log(filteredIssues)
+
     let date = '';
     let issueMonth = '';
     let last = 0;
-    issues.length != 0 && issues.data.map((issue) => { // For each issue retrieved from the database...
+    filteredIssues && filteredIssues.map((issue) => { // For each issue retrieved from the database...
       date = new Date(issue.created_at); // ... convert the date it was created to a Date object...
       issueMonth = date.toLocaleString('default', {month: 'long' }); // ... get only the month...
       addedIssuesPerMonth[issueMonth] += 1 // ... and count the issue's occurrence in that month.
@@ -179,29 +292,6 @@ const DataVisualisation = () => {
       ]
     }
 
-    const users = [
-      {
-        "username": "Phil Collins"
-      },
-      {
-        "username": "Bill Fallins"
-      }
-    ]
-
-    function displayUsers() {
-      return (
-        <div>
-              {users.map((user) => {
-                return (
-                  <div className="bg-background shadow-md rounded-lg p-4 m-4 min-h-[100px] bg-white flex">
-                    {user.username}
-                  </div>
-                )
-              })}
-            </div>
-      )
-    }
-
     // Used to control which graph is being displayed on screen.
     function displayGraph() {
       switch (graphType) {
@@ -223,8 +313,6 @@ const DataVisualisation = () => {
             <PieChart graphData={pieChartData} />
           </div>
           )
-        case 'user':
-          return (displayUsers())
         default:
           return 'Error.'
       }
@@ -251,14 +339,24 @@ const DataVisualisation = () => {
             {/* Main Content */}
             <main className="flex-grow p-6">
 
-              <div className="justify-normal">
-                <button className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("added")}># Issues added per month</button>
-                <button className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("solved")}># Completed issues per month</button>
-                <button className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("status")}>Status of current issues</button>
-                {/* <button className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("user")}># Issues added per user</button> */}
+              <div className="justify-normal grid grid-cols-1">
+                {/* Filter Dropdown */}
+                <label className="break-before-avoid">Sort by: </label>
+                <select
+                  onChange={handleFilterChange}
+                  value={filterType}
+                  className="bg-white w-72 text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
+                    <option value="all">All Issues</option>
+                    <option value="myIssues">My Issues</option>
+                </select>
+                <button className="bg-white w-72 text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("added")}># Issues added per month</button>
+                <button className="bg-white w-72 text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("solved")}># Completed issues per month</button>
+                <button className="bg-white w-72 text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("status")}>Status of current issues</button>
               </div>
 
-                {displayGraph()}
+              <div>
+                {displayGraph()}  
+              </div>
             </main>
           </div>
         </div>
