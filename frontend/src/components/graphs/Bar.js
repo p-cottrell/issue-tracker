@@ -20,7 +20,20 @@ ChartJS.register(
 
 
 export const BarGraph = ({graphData}) => {
-    const options = {};
+
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false,
+            },
+            title: {
+                display: true,
+                text: "# issues added per month"
+            }
+        }
+    };
+    
     return (
         <Bar options={options} data={graphData}/>
     )
