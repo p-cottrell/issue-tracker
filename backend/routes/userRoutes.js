@@ -309,6 +309,94 @@ router.get('/all', authenticateToken, async (req, res) => {
 });
 
 /**
+ * Route to update the username of the currently logged-in user.
+ *
+ * This route allows users to change their username after performing necessary validations.
+ *
+ * @name PUT /users/update-username
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.body.username - The new username.
+ * @param {Object} res - The response object.
+ */
+router.put('/update-username', authenticateToken, async (req, res) => {
+  const { username } = req.body;
+
+  try {
+    // Check if the username is taken
+    if (await isUsernameTaken(username)) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    // Find the logged-in user by ID and update their username
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { username },
+      { new: true } // Return the updated user document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Username updated successfully',
+      username: updatedUser.username,
+    });
+  } catch (error) {
+    console.error('Error updating username:', error);
+    return res.status(500).json({ error: 'Error updating username', details: error.message });
+  }
+});
+
+
+/**
+ * Route to update the password of the currently logged-in user.
+ *
+ * This route allows users to change their password after performing necessary validations.
+ *
+ * @name PUT /users/update-password
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.body.password - The new password.
+ * @param {Object} res - The response object.
+ */
+router.put('/update-password', authenticateToken, async (req, res) => {
+  const { password } = req.body;
+
+  try {
+    // Validate the password against the defined rules
+    validatePassword(password);
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Find the logged-in user by ID and update their password
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { password_hash: hashedPassword },
+      { new: true } // Return the updated user document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password updated successfully',
+    });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    return res.status(500).json({ error: 'Error updating password', details: error.message });
+  }
+});
+
+
+
+/**
  * Route to delete a user by ID.
  *
  * This route is used to delete a user by ID.

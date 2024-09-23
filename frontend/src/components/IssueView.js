@@ -47,7 +47,7 @@ export default function IssueView({ issue, onClose }) {
   const [newComment, setNewComment] = useState("");
   const [selectedComment, setSelectedComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
-  const [userName, setUserName] = useState("");
+  const [username, setUserName] = useState("");
  
   const [attachments, setAttachments] = useState([]);
   const [attachmentError, setAttachmentError] = useState(null);
@@ -57,35 +57,35 @@ export default function IssueView({ issue, onClose }) {
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state for the images
   const [previewImage, setPreviewImage] = useState(null); // State for the preview image
 
-
-
-
-
-
-
-
-
-
-
-  
-
   const fetchIssueDetails = useCallback(async () => {
     try {
       const response = await apiClient.get(`/api/issues/${issue._id}`);
       setDetailedIssue(response.data);
       fetchAttachments();
+      fetchUsername(response.data.reporter_id);
     } catch (error) {
       console.error('Error fetching issue details:', error);
       showToast('Error fetching issue details', 'error');
     }
   }, [issue._id]);
 
+  // Fetch reporter's username based on reporter_id
+  const fetchUsername = async (reporterId) => {
+    try {
+      const response = await apiClient.get(`/api/users/${reporterId}`);
+      const reporter = response.data;
+      setUserName(reporter.username); // Set reporter's username
+    } catch (error) {
+      console.error('Error fetching reporter username:', error);
+      showToast('Error fetching reporter username', 'error');
+    }
+  };
+
   useEffect(() => {
     fetchIssueDetails();
     
     const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
     setCanEdit(userCanEdit);
-    setUserName(user.username);
     setIsAdmin(user.role === 'admin');
   }, [issue._id, user, fetchIssueDetails, issue.reporter_id]);
 
@@ -835,7 +835,7 @@ function formatSmartDate(dateString) {
                 <div className="issue-meta">
                   <p>
                     <strong>Reported by:</strong>{" "}
-                    {userName.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
+                    {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
                   </p>
                   {editMode ? (
                     <>
