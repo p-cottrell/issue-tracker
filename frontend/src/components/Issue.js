@@ -46,7 +46,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     // Function to check if a character is a letter (used for charm styling).
     // Utilizes Unicode support to handle various languages and symbols.
     const isLetter = (char) => {
-        return /\p{L}/u.test(char); 
+        return /\p{L}/u.test(char);
     };
 
     // Function to handle the click event on an image.
