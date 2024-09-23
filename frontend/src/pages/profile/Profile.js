@@ -222,7 +222,7 @@ const Profile = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-dark">
-      {/* Header with logo and sidebar toggle */}
+      {/* Header */}
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         <div>
           <button
@@ -237,9 +237,9 @@ const Profile = () => {
         </div>
       </header>
 
-      {/* Main content layout with sidebar and profile info */}
+      {/* Main content*/}
       <div className="flex flex-grow">
-        {/* Sidebar for navigation */}
+        {/* Sidebar*/}
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main content area */}
@@ -324,7 +324,7 @@ const Profile = () => {
               {/* Password change section */}
               <div className="w-full sm:w-2/3">
                 {isPasswordEditVisible ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Reduced gap from 6 to 4 */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-gray-700 px-2">New Password</label>
                       <input
@@ -353,7 +353,7 @@ const Profile = () => {
                       )}
                     </div>
 
-                    {/* Password rules always visible when focused */}
+                    {/* Password rules visible when focused */}
                     <div className="col-span-1 sm:col-span-2">
                       {passwordFocused && <PasswordRules password={password} />}
                     </div>
