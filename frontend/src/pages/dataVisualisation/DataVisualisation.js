@@ -19,7 +19,6 @@ const DataVisualisation = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Used for loading the issues.
-    const [issues, setIssues] = useState([]); 
     const [fetched, setFetched] = useState(false);
 
     const { user } = useUser(); // Fetch authenticated user data from the context
@@ -29,24 +28,8 @@ const DataVisualisation = () => {
     const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
     const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
     const [statusFilter, setStatusFilter] = useState('all'); // State for the status filter
-    const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering issues
 
     const [graphType, setGraphType] = useState("added"); // Used for changing which graph is displayed.
-
-    // useEffect(() => {
-    //     const fetchIssues = async () => {
-    //       try {
-    //         const response = await apiClient.get('api/issues');
-    //         setIssues(response.data);
-    //         setFetched(true);
-    //       } catch (error) {
-    //         console.error('Error fetching issues:', error);
-    //         setFetched(true);
-    //       }
-    //     };
-    
-    //     fetchIssues();
-    // }, []);
 
   /**
  * Helper function to convert status_id to readable status text.
@@ -68,7 +51,7 @@ const getStatusText = (status_id) => {
 
     /**
    * Fetches issues from the API based on the filter type and user context.
-   * Uses useCallback to memoize the function, preventing unnecessary re-fetching on re-renders.
+   * Uses useCallback to memorize the function, preventing unnecessary re-fetching on re-renders.
    */
   const fetchIssues = useCallback(async () => {
     if (!user || !user.id) {
@@ -188,8 +171,6 @@ const getStatusText = (status_id) => {
       "Pending": 0
     }
 
-    filteredIssues && console.log(filteredIssues)
-
     let date = '';
     let issueMonth = '';
     let last = 0;
@@ -238,8 +219,8 @@ const getStatusText = (status_id) => {
           {
               label: "Issues Added",
               data: addedIssuesPerMonth, // Y-axis.
-              borderColor: ["rgb(75, 192, 192)"],
-              backgroundColor: ["rgb(75, 192, 192)"],
+              borderColor: ["#185D78"],
+              backgroundColor: ["#185D78"],
               borderWidth: 1,
           },
       ]
@@ -265,7 +246,7 @@ const getStatusText = (status_id) => {
           {
               label: "Issues Solved",
               data: solvedIssuesPerMonth, // Y-axis.
-              borderColor: ["rgb(75, 192, 192)"],
+              borderColor: ["#185D78"],
           },
       ]
     }  
@@ -297,19 +278,19 @@ const getStatusText = (status_id) => {
       switch (graphType) {
         case 'added':
           return (
-          <div>
+          <div className='relative min-w-3.5 max-w-4xl'>
             <BarGraph graphData={graphData}/>
           </div>
         )
         case 'solved':
           return (
-            <div>
+            <div className='relative min-w-3.5 max-w-4xl'>
               <LineGraph graphData={lineData}/>
             </div>
           )
         case 'status':
           return (
-            <div>
+            <div className='relative min-w-3.5 max-w-2xl'>
             <PieChart graphData={pieChartData} />
           </div>
           )
@@ -333,30 +314,45 @@ const getStatusText = (status_id) => {
             </div>
           </header>
     
-          <div className="flex flex-grow">
+          <div className="flex first-letter:flex-grow">
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
     
             {/* Main Content */}
             <main className="flex-grow p-6">
 
-              <div className="justify-normal grid grid-cols-1">
+              {/* Drop down menus */}
+              <div className="flex space-x-4 justify-center mb-4">
+
                 {/* Filter Dropdown */}
-                <label className="break-before-avoid">Sort by: </label>
-                <select
-                  onChange={handleFilterChange}
-                  value={filterType}
-                  className="bg-white w-72 text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
-                    <option value="all">All Issues</option>
-                    <option value="myIssues">My Issues</option>
-                </select>
-                <button className="bg-white w-72 text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("added")}># Issues added per month</button>
-                <button className="bg-white w-72 text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("solved")}># Completed issues per month</button>
-                <button className="bg-white w-72 text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg items-center space-x-2" onClick={() => setGraphType("status")}>Status of current issues</button>
+                <div>
+                  <select
+                    onChange={handleFilterChange}
+                    value={filterType}
+                    className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
+                      <option value="all">All Issues</option>
+                      <option value="myIssues">My Issues</option>
+                  </select>
+                </div>
+
+                {/* "Sort by category" dropdown */}
+                <div>
+                  <select
+                    onChange={(e) => setGraphType(e.target.value)}
+                    value={graphType}
+                    className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
+                      <option value="added">Added issues / month</option>
+                      <option value="solved">Completed issues / month</option>
+                      <option value="status">Status of current issues</option>
+                  </select>
+                </div>
+                
               </div>
 
-              <div>
-                {displayGraph()}  
+              {/* Graph display */}
+              <div className='relative flex-auto'>
+                <center>{displayGraph()}</center>
               </div>
+
             </main>
           </div>
         </div>
