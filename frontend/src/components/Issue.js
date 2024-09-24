@@ -152,7 +152,9 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             {/* Attachments */}
             {attachments && attachments.length > 0 && (
                 <div className="mb-4 relative">
-                    <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
+                    <p className="text-sm text-gray-500 mb-4">
+                        <strong>Attachment(s):</strong>
+                    </p>
                     <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
                         {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center">

@@ -412,7 +412,7 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-4 max-w-[600px] mx-auto">
               {filteredIssues.map((issue, index) => (
                 <Issue
                   key={issue._id}
