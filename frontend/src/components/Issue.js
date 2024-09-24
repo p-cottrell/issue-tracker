@@ -88,16 +88,16 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             </p>
 
             {/* Attachments */}
-            <div className="mb-4 relative">
-                <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
-                <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
-                    {isLoading && (
-                        // Loading spinner to indicate the image is still loading
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="loader"></div>
-                        </div>
-                    )}
-                    {data.attachments && data.attachments.length > 0 && (
+            {data.attachments && data.attachments.length > 0 && (
+                <div className="mb-4 relative">
+                    <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
+                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
+                        {isLoading && (
+                            // Loading spinner to indicate the image is still loading
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="loader"></div>
+                            </div>
+                        )}
                         <img
                             src={data.attachments[0].signedUrl} // Use the signed URL here
                             alt="Attachment"
@@ -105,9 +105,9 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                             onLoad={() => setIsLoading(false)} // Set loading state to false once the image is loaded
                             onClick={() => handleImageClick(data.attachments[0].signedUrl)} // Handle image click to show full preview
                         />
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* View More Button */}
             <button
