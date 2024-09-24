@@ -73,6 +73,7 @@ const Dashboard = () => {
   const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
   const [statusFilter, setStatusFilter] = useState('all'); // State for the status filter
   const { user } = useUser(); // Fetch authenticated user data from the context
+  const [layoutType, setLayoutType] = useState('masonry'); // 'masonry' or 'grid'
 
   /**
    * Fetches issues from the API based on the filter type and user context.
@@ -235,6 +236,10 @@ const Dashboard = () => {
     localStorage.setItem('filterType', selectedFilter); // Persist filter type to localStorage
   };
 
+  const toggleLayoutType = () => {
+    setLayoutType((prevType) => (prevType === 'masonry' ? 'grid' : 'masonry'));
+  };
+
   // Return loading screen if issues have not been fetched yet
   if (!fetched) {
     return (
@@ -276,7 +281,13 @@ const Dashboard = () => {
         </div>
 
         {/* Right: New Issue Button */}
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={toggleLayoutType}
+            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+          >
+            Toggle Layout
+          </button>
           <button
             onClick={openAddHandler}
             className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
@@ -320,22 +331,37 @@ const Dashboard = () => {
           {noIssuesMessage && (
             <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
           )}
-          <Masonry
-            breakpointCols={breakpointColumnsObj}
-            className="masonry-grid"
-            columnClassName="masonry-grid_column"
-          >
-            {filteredIssues.map((issue, index) => (
-              <Issue
-                key={issue._id}
-                index={index}
-                data={issue}
-                deleteHandler={() => deleteHandler(issue)}
-                openIssueModal={() => openIssueModal(issue)}
-                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-              />
-            ))}
-          </Masonry>
+          {layoutType === 'masonry' ? (
+            <Masonry
+              breakpointCols={breakpointColumnsObj}
+              className="masonry-grid"
+              columnClassName="masonry-grid_column"
+            >
+              {filteredIssues.map((issue, index) => (
+                <Issue
+                  key={issue._id}
+                  index={index}
+                  data={issue}
+                  deleteHandler={() => deleteHandler(issue)}
+                  openIssueModal={() => openIssueModal(issue)}
+                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                />
+              ))}
+            </Masonry>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredIssues.map((issue, index) => (
+                <Issue
+                  key={issue._id}
+                  index={index}
+                  data={issue}
+                  deleteHandler={() => deleteHandler(issue)}
+                  openIssueModal={() => openIssueModal(issue)}
+                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                />
+              ))}
+            </div>
+          )}
         </main>
       </div>
 
