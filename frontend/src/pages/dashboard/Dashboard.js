@@ -1,5 +1,6 @@
 import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from 'react';
+import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssue';
@@ -30,6 +31,24 @@ const getStatusText = (status_id) => {
       return 'Pending';
   }
 };
+
+// Constants for card width and screen widths
+const CARD_WIDTH = 450; // Width of each card in pixels
+const MIN_SCREEN_WIDTH = 640; // Minimum screen width in pixels
+const MAX_SCREEN_WIDTH = 7680; // Maximum screen width in pixels
+
+// Utility function to generate breakpoint columns object
+const generateBreakpointColumns = (cardWidth, minScreenWidth, maxScreenWidth) => {
+  const breakpoints = {};
+  for (let width = minScreenWidth; width <= maxScreenWidth; width += cardWidth) {
+    const columns = Math.floor(width / cardWidth);
+    breakpoints[width] = columns;
+  }
+  return breakpoints;
+};
+
+// Generate the breakpoint columns object
+const breakpointColumnsObj = generateBreakpointColumns(CARD_WIDTH, MIN_SCREEN_WIDTH, MAX_SCREEN_WIDTH);
 
 /**
  * Dashboard component for displaying and managing issues.
@@ -301,7 +320,11 @@ const Dashboard = () => {
           {noIssuesMessage && (
             <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+          <Masonry
+            breakpointCols={breakpointColumnsObj}
+            className="masonry-grid"
+            columnClassName="masonry-grid_column"
+          >
             {filteredIssues.map((issue, index) => (
               <Issue
                 key={issue._id}
@@ -312,7 +335,7 @@ const Dashboard = () => {
                 className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
               />
             ))}
-          </div>
+          </Masonry>
         </main>
       </div>
 

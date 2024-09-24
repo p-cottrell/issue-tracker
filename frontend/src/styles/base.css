@@ -97,3 +97,21 @@ p {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.masonry-grid {
+    display: flex;
+    margin-left: -30px;
+    /* gutter size offset */
+    width: auto;
+}
+
+.masonry-grid_column {
+    padding-left: 30px;
+    /* gutter size */
+    background-clip: padding-box;
+}
+
+/* Style your grid items */
+.masonry-grid_column > div {
+    margin-bottom: 30px;
+}
