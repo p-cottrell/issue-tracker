@@ -153,6 +153,12 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                                 />
                             </div>
                         )}
+                        {attachments.length > 1 && (
+                            <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                                {attachments.length > 9 ? '9+' : attachments.length}
+                                {/* {attachments.length > 9 ? '+9' : `+${attachments.length - 1}`} */}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
