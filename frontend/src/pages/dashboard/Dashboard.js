@@ -149,7 +149,7 @@ const Dashboard = () => {
    */
   const showAddIssueModal = () => {
     setPopupHandler(() => addHandler);
-    openModal(<AddIssuePopup closeHandler={() => closeModal()} />, false);
+    openModal(<AddIssuePopup closeHandler={() => closeModalCallback(true)} />, false);
   };
 
   /**
@@ -157,7 +157,7 @@ const Dashboard = () => {
    * @param {Object} data - Issue data to be deleted.
    */
   const showDeleteIssueModal = (data) => {
-    openModal(<DeleteIssuePopup closeHandler={() => closeModal()} issue={data} />, false);
+    openModal(<DeleteIssuePopup closeHandler={() => closeModalCallback(true)} issue={data} />, false);
   };
 
   /**
@@ -165,7 +165,7 @@ const Dashboard = () => {
    * @param {Object} issue - The issue object to be displayed.
    */
   const showIssueViewModal = (issue) => {
-    openModal(<IssueView issue={issue} onClose={closeModal} />, false);
+    openModal(<IssueView issue={issue} onClose={() => closeModalCallback(true)} />, false);
   };
 
   /**
@@ -173,6 +173,7 @@ const Dashboard = () => {
    * @param {Object} changed - Flag to indicate if the object was updated.
    */
   const closeModalCallback = (changed) => {
+    closeModal(null);
     if (changed) {
       setUpdateTrigger((prev) => prev + 1);
     }
