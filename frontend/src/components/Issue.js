@@ -1,5 +1,6 @@
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
+import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';
 import '../styles/loader.css';
 
@@ -7,19 +8,40 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     const { openModal } = useModal();
     const [isLoading, setIsLoading] = useState(true);
     const [isImageError, setIsImageError] = useState(false);
+    const [attachments, setAttachments] = useState(data.attachments || []);
 
+    // Effect 1: Fetch attachments if signedUrl is missing
     useEffect(() => {
-        if (data.attachments && data.attachments.length > 0) {
+        if (attachments && attachments.length > 0 && !attachments[0].signedUrl) {
+            fetchAttachments();
+        }
+    }, [attachments]);
+
+    // Fetch attachments function (only if signedUrl is missing)
+    const fetchAttachments = async () => {
+        try {
+            const response = await apiClient.get(`/api/attachments/${data._id}`);
+            const updatedAttachments = response.data.map(attachment => ({ ...attachment, signedUrl: attachment.signedUrl || '' }));
+            setAttachments(updatedAttachments);
+        } catch (error) {
+            console.error('Error fetching attachments:', error);
+        }
+    };
+
+    // Effect 2: Load the image and handle errors
+    useEffect(() => {
+        if (attachments && attachments.length > 0 && attachments[0].signedUrl) {
             const img = new Image();
-            img.src = data.attachments[0].signedUrl;
+            img.src = attachments[0].signedUrl;
+
             img.onload = () => setIsLoading(false);
             img.onerror = (ev) => {
                 setIsImageError(true);
                 setIsLoading(false);
-                console.error(`Failed to load image '${data.attachments[0].signedUrl}':`, ev);
+                console.error(`Failed to load image '${attachments[0].signedUrl}':`, ev);
             };
         }
-    }, [data.attachments]);
+    }, [attachments]); // Ensure this effect re-runs when `attachments` are updated
 
     // Extract the latest status from the status_history array.
     // This ensures we always show the most recent status.
@@ -103,10 +125,10 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             </p>
 
             {/* Attachments */}
-            {data.attachments && data.attachments.length > 0 && (
+            {attachments && attachments.length > 0 && (
                 <div className="mb-4 relative">
                     <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
-                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
+                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
                         {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="loader"></div>
@@ -118,12 +140,18 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                                 <span className="ml-2">Failed to load image</span>
                             </div>
                         ) : (
-                            <img
-                                src={data.attachments[0].signedUrl}
-                                alt="Attachment"
-                                className="rounded-md object-cover cursor-pointer"
-                                onClick={() => handleImageClick(data.attachments[0].signedUrl)}
-                            />
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center filter blur-lg"
+                                    style={{ backgroundImage: `url(${attachments[0].signedUrl})` }}
+                                ></div>
+                                <img
+                                    src={attachments[0].signedUrl}
+                                    alt="Attachment"
+                                    className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
+                                    onClick={() => handleImageClick(attachments[0].signedUrl)}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>

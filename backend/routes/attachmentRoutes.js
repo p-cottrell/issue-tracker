@@ -41,7 +41,7 @@ router.get("/:issueId", authenticateToken, async (req, res) => {
       const attachmentsWithSignedUrls = await Promise.all(issue.attachments.map(async (attachment) => {
         const command = new GetObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: attachment.file_path, // Use the stored file_path directly
+          Key: TrimStart(attachment.file_path, '/'), // Use the stored file_path directly
         });
         const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
         return { ...attachment.toObject(), signedUrl };
@@ -82,7 +82,7 @@ router.get("/:issueId", authenticateToken, async (req, res) => {
         const attachmentsWithSignedUrls = await Promise.all(newAttachments.map(async (attachment) => {
             const command = new GetObjectCommand({
                 Bucket: process.env.S3_BUCKET_NAME,
-                Key: attachment.file_path,
+                Key: TrimStart(attachment.file_path, '/'),
             });
             const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
             return { ...attachment, signedUrl };
@@ -120,7 +120,7 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
         // Delete the file from S3
         const deleteCommand = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: attachment.file_path, // Use the file_path directly as the Key
+            Key: TrimStart(attachment.file_path, '/'), // Use the file_path directly as the Key
         });
 
         await s3Client.send(deleteCommand);
@@ -136,6 +136,16 @@ router.delete("/:issueId/:attachmentId", authenticateToken, async (req, res) => 
     }
 });
 
+function TrimStart(str, charlist) {
+    if (charlist === undefined)
+      charlist = "\s";
+  let startIndex = 0;
+  while (startIndex < str.length && charlist.indexOf(str[startIndex]) >= 0) {
+    startIndex++;
+  }
+  return str.substr(startIndex);
+}
+
 router.get("/:issueId/signedUrls", authenticateToken, async (req, res) => {
     try {
         const issue = await Issue.findById(req.params.issueId);
@@ -146,7 +156,7 @@ router.get("/:issueId/signedUrls", authenticateToken, async (req, res) => {
         const attachmentsWithSignedUrls = await Promise.all(issue.attachments.map(async (attachment) => {
             const command = new GetObjectCommand({
                 Bucket: process.env.S3_BUCKET_NAME,
-                Key: attachment.file_path.split('/').pop(), // Assuming file_path contains the full S3 URL
+                Key: TrimStart(attachment.file_path, '/').split('/').pop(), // Assuming file_path contains the full S3 URL
             });
             const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
             return { ...attachment.toObject(), signedUrl };
