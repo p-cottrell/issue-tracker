@@ -25,13 +25,15 @@ export const ModalProvider = ({ children }) => {
 
     return (
         <ModalContext.Provider value={{ openModal, closeModal }}>
-            {children}
+            <div className="relative max-w-full max-h-full">
+                {children}
+            </div>
             {modalContent && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
                     onClick={handleBackgroundClick}
                 >
-                    <div className="relative max-w-full max-h-full">
+                    <div className="relative max-w-3xl w-full max-h-full">
                         {modalContent}
                         {showCloseButton && (
                             <button

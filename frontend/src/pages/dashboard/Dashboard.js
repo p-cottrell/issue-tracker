@@ -11,6 +11,7 @@ import Issue from '../../components/Issue';
 import IssueView from '../../components/IssueView';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
+import { useModal } from '../../context/ModalContext';
 import { useUser } from '../../context/UserContext';
 
 import { generateNiceReferenceId } from '../../helpers/IssueHelpers';
@@ -43,13 +44,9 @@ const breakpointColumnsObj = generateBreakpointColumns(CARD_WIDTH, MIN_SCREEN_WI
  */
 const Dashboard = () => {
   const navigate = useNavigate(); // React Router hook for programmatic navigation
-  const [showAddIssue, setShowAddIssue] = useState(false); // State to control visibility of the 'Add Issue' popup
-  const [showDeleteIssue, setShowDeleteIssue] = useState(false); // State to control visibility of the 'Delete Issue' popup
   const [setPopupHandler] = useState(() => () => { }); // Handler function for different popups
   const [fetched, setFetched] = useState(false); // State to track if the issues have been fetched
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to control sidebar visibility
-  const [selectedIssue, setSelectedIssue] = useState(null); // The issue selected for viewing or editing
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false); // State to control visibility of the 'Issue View' modal
   const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering issues
   const [noIssuesMessage, setNoIssuesMessage] = useState(''); // Holds message to display when no issues are found
   const [allIssues, setAllIssues] = useState([]); // All issues retrieved from the API
@@ -60,6 +57,7 @@ const Dashboard = () => {
   const { user } = useUser(); // Fetch authenticated user data from the context
   const [layoutType, setLayoutType] = useState(localStorage.getItem('layoutType') || 'masonry'); // Layout type for displaying issues - masonry, grid, or list
   const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false); // State to control visibility of the layout dropdown
+  const { openModal, closeModal } = useModal();
 
   /**
    * Fetches issues from the API based on the filter type and user context.
@@ -122,22 +120,12 @@ const Dashboard = () => {
   }, [fetchIssues, updateTrigger]);
 
   /**
-   * Handler to open the 'Add Issue' popup and set the appropriate handler and type.
-   */
-  const openAddHandler = () => {
-    setPopupHandler(() => addHandler);
-    setShowAddIssue(true);
-  };
-
-  /**
    * Adds a new issue via API call, triggered from the 'Add Issue' popup.
    * @param {Object} data - Contains title and description of the new issue.
    */
   const addHandler = (data) => {
     const { title, description } = data;
     const charm = '🐞'; // Default charm for new issues
-
-    setShowAddIssue(false); // Close the 'Add Issue' popup
 
     const addIssue = async () => {
       try {
@@ -157,32 +145,36 @@ const Dashboard = () => {
   };
 
   /**
+   * Handler to open the 'Add Issue' popup and set the appropriate handler and type.
+   */
+  const showAddIssueModal = () => {
+    setPopupHandler(() => addHandler);
+    openModal(<AddIssuePopup closeHandler={() => closeModal()} />, false);
+  };
+
+  /**
    * Handler for deleting an issue.
    * @param {Object} data - Issue data to be deleted.
    */
-  const deleteHandler = (data) => {
-    setShowDeleteIssue(false);
-    console.log(data._id, ' Deleted!');
+  const showDeleteIssueModal = (data) => {
+    openModal(<DeleteIssuePopup closeHandler={() => closeModal()} issue={data} />, false);
   };
 
   /**
    * Opens the issue view modal to display details of the selected issue.
    * @param {Object} issue - The issue object to be displayed.
    */
-  const openIssueModal = (issue) => {
-    setSelectedIssue(issue);
-    setIsIssueModalOpen(true);
+  const showIssueViewModal = (issue) => {
+    openModal(<IssueView issue={issue} onClose={closeModal} />, false);
   };
 
   /**
-   * Closes the issue view modal and optionally triggers a re-fetch if the issue was updated.
-   * @param {Object} updatedIssue - The updated issue object, if any.
+   * Triggers a re-fetch of issues when a modal is closed, if the object was updated.
+   * @param {Object} changed - Flag to indicate if the object was updated.
    */
-  const closeIssueModal = (updatedIssue) => {
-    setSelectedIssue(null);
-    setIsIssueModalOpen(false);
-    if (updatedIssue) {
-      setUpdateTrigger((prev) => prev + 1); // Increment trigger to force re-fetch
+  const closeModalCallback = (changed) => {
+    if (changed) {
+      setUpdateTrigger((prev) => prev + 1);
     }
   };
 
@@ -347,7 +339,7 @@ const Dashboard = () => {
             )}
           </div>
           <button
-            onClick={openAddHandler}
+            onClick={showAddIssueModal}
             className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
           >
             <PlusIcon className="w-6 h-6" />
@@ -407,8 +399,8 @@ const Dashboard = () => {
                   key={issue._id}
                   index={index}
                   data={issue}
-                  deleteHandler={() => deleteHandler(issue)}
-                  openIssueModal={() => openIssueModal(issue)}
+                  deleteHandler={() => showDeleteIssueModal(issue)}
+                  openIssueModal={() => showIssueViewModal(issue)}
                   className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
                 />
               ))}
@@ -420,8 +412,9 @@ const Dashboard = () => {
                   key={issue._id}
                   index={index}
                   data={issue}
-                  deleteHandler={() => deleteHandler(issue)}
-                  openIssueModal={() => openIssueModal(issue)}
+                  deleteHandler={() => showDeleteIssueModal(issue)}
+                  openIssueModal={() => showIssueViewModal(issue)}
+                  closeIssueModal={closeModalCallback}
                   className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
                 />
               ))}
@@ -433,8 +426,9 @@ const Dashboard = () => {
                   key={issue._id}
                   index={index}
                   data={issue}
-                  deleteHandler={() => deleteHandler(issue)}
-                  openIssueModal={() => openIssueModal(issue)}
+                  deleteHandler={() => showDeleteIssueModal(issue)}
+                  openIssueModal={() => showIssueViewModal(issue)}
+                  closeIssueModal={closeModalCallback}
                   className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
                 />
               ))}
@@ -442,14 +436,6 @@ const Dashboard = () => {
           )}
         </main>
       </div>
-
-      {showAddIssue && <AddIssuePopup closeHandler={() => setShowAddIssue(false)} />}
-
-      {showDeleteIssue && (
-        <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue} />
-      )}
-
-      {isIssueModalOpen && <IssueView issue={selectedIssue} onClose={closeIssueModal} />}
     </div>
   );
 };
