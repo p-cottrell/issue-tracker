@@ -532,12 +532,12 @@ export default function IssueView({ issue, onClose }) {
                     }
                     className="text-xl font-bold mb-2 w-full p-2 border rounded h-[42px]"
                   />
-                  <select
-                    value={editedIssue.status_id}
+                 <select
+                    value={editedIssue.status_id} // Ensure this uses editedIssue.status_id
                     onChange={(e) =>
                       setEditedIssue({
                         ...editedIssue,
-                        status_id: Number(e.target.value),
+                        status_id: Number(e.target.value), // Ensure the value is converted to a number
                       })
                     }
                     className="p-2 border rounded h-[42px]"
