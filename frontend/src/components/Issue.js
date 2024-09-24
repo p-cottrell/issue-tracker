@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
 import { useModal } from '../context/ModalContext';
 import '../styles/loader.css';
 
 export default function Issue({ data, openIssueModal, deleteHandler }) {
-    const { openModal} = useModal(); // Custom hook to open or close modal dialogs
-    const [isLoading, setIsLoading] = useState(true); // State to track the loading state of the image
+    const { openModal } = useModal();
+    const [isLoading, setIsLoading] = useState(true);
+    const [isImageError, setIsImageError] = useState(false);
 
-    // Extract the latest status from the status_history array. 
+    useEffect(() => {
+        if (data.attachments && data.attachments.length > 0) {
+            const img = new Image();
+            img.src = data.attachments[0].signedUrl;
+            img.onload = () => setIsLoading(false);
+            img.onerror = (ev) => {
+                setIsImageError(true);
+                setIsLoading(false);
+                console.error(`Failed to load image '${data.attachments[0].signedUrl}':`, ev);
+            };
+        }
+    }, [data.attachments]);
+
+    // Extract the latest status from the status_history array.
     // This ensures we always show the most recent status.
-    const latestStatus = data.status_history && data.status_history.length > 0 
-        ? data.status_history[data.status_history.length - 1].status_id 
+    const latestStatus = data.status_history && data.status_history.length > 0
+        ? data.status_history[data.status_history.length - 1].status_id
         : undefined;
 
     // Function to determine the appropriate CSS class based on the latest status.
@@ -44,7 +59,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     };
 
     // Function to check if a character is a letter (used for charm styling).
-    // Utilizes Unicode support to handle various languages and symbols.
+    // Utilises Unicode support to handle various languages and symbols.
     const isLetter = (char) => {
         return /\p{L}/u.test(char);
     };
@@ -93,25 +108,30 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                     <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
                     <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
                         {isLoading && (
-                            // Loading spinner to indicate the image is still loading
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="loader"></div>
                             </div>
                         )}
-                        <img
-                            src={data.attachments[0].signedUrl} // Use the signed URL here
-                            alt="Attachment"
-                            className="rounded-md object-cover cursor-pointer"
-                            onLoad={() => setIsLoading(false)} // Set loading state to false once the image is loaded
-                            onClick={() => handleImageClick(data.attachments[0].signedUrl)} // Handle image click to show full preview
-                        />
+                        {isImageError ? (
+                            <div className="absolute inset-0 flex items-center justify-center text-red-500">
+                                <ExclamationCircleIcon className="h-6 w-6" />
+                                <span className="ml-2">Failed to load image</span>
+                            </div>
+                        ) : (
+                            <img
+                                src={data.attachments[0].signedUrl}
+                                alt="Attachment"
+                                className="rounded-md object-cover cursor-pointer"
+                                onClick={() => handleImageClick(data.attachments[0].signedUrl)}
+                            />
+                        )}
                     </div>
                 </div>
             )}
 
             {/* View More Button */}
             <button
-                onClick={() => openIssueModal(data)} // Open the detailed view modal for the issue
+                onClick={() => openIssueModal(data)}
                 className="mt-auto bg-primary text-white py-2 px-4 my-2 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
                 View More
