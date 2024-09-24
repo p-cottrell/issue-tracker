@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import Logo from '../../components/Logo';
 import ScrollingBackground from '../../components/ScrollingBackground';
 import { useUser } from '../../context/UserContext';
 import './../../index.css';
@@ -18,6 +19,22 @@ const Login = () => {
     const [error, setError] = useState('');
     const { setUser } = useUser();
 
+    // Hook for navigating programmatically
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Set email and password from location state if available
+    useEffect(() => {
+        if (location.state) {
+            if (location.state.email) {
+                setEmail(location.state.email);
+            }
+            if (location.state.password) {
+                setPassword(location.state.password);
+            }
+        }
+    }, [location.state]);
+
     /**
      * Validates the email format using a regular expression.
      * @param {string} email - User input email to validate.
@@ -27,9 +44,6 @@ const Login = () => {
         const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         return re.test(String(email).trim().toLowerCase());
     };
-
-    // Hook for navigating programmatically
-    const navigate = useNavigate();
 
     /**
      * Handles form submission.
@@ -70,7 +84,15 @@ const Login = () => {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            {/* Background Animation */}
             <ScrollingBackground />
+
+            {/* Logo */}
+            <div className="absolute top-0 left-0 right-0 z-10 flex justify-center p-4">
+                <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+            </div>
+
+            {/* Main Content */}
             <div className="relative z-10 w-full">
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
@@ -117,7 +139,7 @@ const Login = () => {
                         </motion.button>
                     </form>
                     <p className="text-center text-dark mt-4">
-                        Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
+                        Don't have an account yet? <Link to="/register" state={{ email, password }} className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
                     </p>
                 </motion.div>
             </div>
