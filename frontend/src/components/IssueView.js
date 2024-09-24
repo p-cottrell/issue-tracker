@@ -188,6 +188,25 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this issue?')) {
+      try {
+        const response = await apiClient.delete(`/api/issues/${issue._id}`);
+        if (response.status === 200) {
+          showToast('Issue deleted successfully', 'success');
+          onClose();
+        } else {
+          throw new Error(response.data.message || 'Error deleting issue');
+        }
+      } catch (error) {
+        console.error('Error deleting issue:', error);
+        showToast(`Error deleting issue: ${error.message}`, 'error');
+      }
+    }
+  };
+  
+
   const showToast = (message, type, duration, onConfirm = null) => {
     setToast({ message, type, onConfirm, duration });
     if (!onConfirm) {
@@ -483,7 +502,7 @@ function formatSmartDate(dateString) {
               )}
               {isAdmin && (
                 <button
-                  //onClick={handleDelete}
+                  onClick={handleDelete}
                   className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                 >
                   Delete
@@ -656,9 +675,9 @@ function formatSmartDate(dateString) {
                   />
                   <button
                     onClick={handleAddOccurrence}
-                    className="add-occurrence-button"
+                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
                   >
-                    Add Occurrence
+                    Add Occurance
                   </button>
                 </>
 
