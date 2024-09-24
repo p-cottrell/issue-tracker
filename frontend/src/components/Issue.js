@@ -96,8 +96,33 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         );
     };
 
+    const handleCardClick = (e) => {
+        if (e.detail === 1) {
+            openIssueModal(data);
+        }
+    };
+
+    const handleMouseDown = (e) => {
+        e.currentTarget.dataset.dragging = false;
+    };
+
+    const handleMouseMove = (e) => {
+        e.currentTarget.dataset.dragging = true;
+    };
+
+    const handleMouseUp = (e) => {
+        if (e.currentTarget.dataset.dragging === 'false') {
+            handleCardClick(e);
+        }
+    };
+
     return (
-        <div className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative">
+        <div
+            className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+        >
             {/* Header Line */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
@@ -162,14 +187,6 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                     </div>
                 </div>
             )}
-
-            {/* View More Button */}
-            <button
-                onClick={() => openIssueModal(data)}
-                className="mt-auto bg-primary text-white py-2 px-4 my-2 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-                View More
-            </button>
         </div>
     );
 }
