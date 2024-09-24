@@ -593,38 +593,58 @@ function formatSmartDate(dateString) {
                   </ul>
                 </div>
 
-                {/* Occurrence edit section */}
-                {selectedOccurrence && (isAdmin || user.id === selectedOccurrence.user_id) && (
+               {/* Occurrence edit section */}
+             
+                {selectedOccurrence && (
                   <div className="occurrence-edit mt-4">
-                    <textarea
-                      value={editedOccurrence}
-                      onChange={(e) => setEditedOccurrence(e.target.value)}
-                      className="w-full p-2 border rounded mb-2"
-                    />
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        onClick={() => handleEditOccurrence(selectedOccurrence)}
-                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                      >
-                        Save Occurrence
-                      </button>
-                      <button
-                        onClick={() => setSelectedOccurrence(null)}
-                        className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                      >
-                        Cancel
-                      </button>
-                      {user.id === selectedOccurrence.user_id && (
+                    {/* Only allow the person who posted the occurrence to edit */}
+                    {user.id === selectedOccurrence.user_id && (
+                      <>
+                        <textarea
+                          value={editedOccurrence}
+                          onChange={(e) => setEditedOccurrence(e.target.value)}
+                          className="w-full p-2 border rounded mb-2"
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleEditOccurrence(selectedOccurrence)}
+                            className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          >
+                            Save Occurrence
+                          </button>
+                          <button
+                            onClick={() => setSelectedOccurrence(null)}
+                            className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                          >
+                            Cancel
+                          </button>
+                          {/* Show Delete button in the same line as Save if allowed */}
+                          {(isAdmin || user.id === selectedOccurrence.user_id) && (
+                            <button
+                              onClick={() => handleDeleteOccurrence(selectedOccurrence)}
+                              className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                            >
+                              Delete Occurrence
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* If user cannot edit but can delete (admin or occurrence poster), only show the Delete button */}
+                    {user.id !== selectedOccurrence.user_id && (isAdmin || user.id === selectedOccurrence.user_id) && (
+                      <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleDeleteOccurrence(selectedOccurrence)}
                           className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
                           Delete Occurrence
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
+
 
                 {/* New occurrence input */}
                 <>
@@ -798,37 +818,58 @@ function formatSmartDate(dateString) {
                 </div>
 
                 {/* Comment edit section */}
-                {selectedComment && (isAdmin || user.id === selectedComment.user_id) && (
+               
+                {selectedComment && (
                   <div className="comment-edit mt-4">
-                    <textarea
-                      value={editedComment}
-                      onChange={(e) => setEditedComment(e.target.value)}
-                      className="w-full p-2 border rounded mb-2"
-                    />
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        onClick={() => handleEditComment(selectedComment)}
-                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                      >
-                        Save Comment
-                      </button>
-                      <button
-                        onClick={() => setSelectedComment(null)}
-                        className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                      >
-                        Cancel
-                      </button>
-                      {user.id === selectedComment.user_id && (
+                    {/* Only allow the person who posted the comment or admin to edit */}
+                    {(isAdmin || user.id === selectedComment.user_id) && (
+                      <>
+                        <textarea
+                          value={editedComment}
+                          onChange={(e) => setEditedComment(e.target.value)}
+                          className="w-full p-2 border rounded mb-2"
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleEditComment(selectedComment)}
+                            className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          >
+                            Save Comment
+                          </button>
+                          <button
+                            onClick={() => setSelectedComment(null)}
+                            className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                          >
+                            Cancel
+                          </button>
+                          {/* Show Delete button in the same line as Save if allowed */}
+                          {(isAdmin || user.id === selectedComment.user_id) && (
+                            <button
+                              onClick={() => handleDeleteComment(selectedComment)}
+                              className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                            >
+                              Delete Comment
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* If user cannot edit but can delete (admin or comment poster), only show the Delete button */}
+                    {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id) && (
+                      <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleDeleteComment(selectedComment)}
                           className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
                           Delete Comment
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
+
+                
 
                 {/* Add new comment section */}
                 <div className="mt-4">
