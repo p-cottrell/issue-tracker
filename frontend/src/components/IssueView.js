@@ -449,6 +449,8 @@ function formatSmartDate(dateString) {
     }
   };
 
+  console.log("Opened issue:", detailedIssue);
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
       <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
@@ -740,12 +742,25 @@ function formatSmartDate(dateString) {
                       ))}
                     </div>
                   )}
-                    <button
-                      onClick={handleFileUpload}
-                      className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                    >
-                      Upload Selected Files
-                    </button>
+                    {images.length > 0 && (
+                      <div className="flex justify-start space-x-2">
+                        <button
+                          onClick={handleFileUpload}
+                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        >
+                          Upload Selected Files
+                        </button>
+                        <button
+                          onClick={() => {
+                            setImages([]);
+                            setImagePreviews([]);
+                          }}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
