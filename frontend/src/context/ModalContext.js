@@ -14,11 +14,20 @@ export const ModalProvider = ({ children }) => {
         setModalContent(null);
     };
 
+    const handleBackgroundClick = (e) => {
+        if (e.target === e.currentTarget) {
+            closeModal();
+        }
+    };
+
     return (
         <ModalContext.Provider value={{ openModal, closeModal }}>
             {children}
             {modalContent && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+                    onClick={handleBackgroundClick}
+                >
                     <div className="relative max-w-full max-h-full">
                         {modalContent}
                         <button
