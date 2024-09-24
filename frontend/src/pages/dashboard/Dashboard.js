@@ -1,4 +1,4 @@
-import { Bars3Icon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { Bars3Icon, InformationCircleIcon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from 'react';
 import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
@@ -15,23 +15,6 @@ import { useUser } from '../../context/UserContext';
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
-/**
- * Helper function to convert status_id to readable status text.
- * @param {number} status_id - The ID representing the status.
- * @returns {string} - The text representation of the status.
- */
-const getStatusText = (status_id) => {
-  switch (status_id) {
-    case 1:
-      return 'Complete';
-    case 2:
-      return 'In Progress';
-    case 3:
-      return 'Cancelled';
-    default:
-      return 'Pending';
-  }
-};
 
 // Constants for card width and screen widths
 const CARD_WIDTH = 450; // Width of each card in pixels
@@ -211,10 +194,9 @@ const Dashboard = () => {
     // Filter issues based on the search term and selected status
     const newFilteredIssues = allIssues.filter(
       (issue) =>
-        (issue.title && issue.title.toLowerCase().includes(term)) ||
-        (issue.description && issue.description.toLowerCase().includes(term)) ||
-        (issue._id && issue._id.toLowerCase().includes(term)) ||
-        (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
+        (issue.title && issue.title.toLowerCase().includes(term))
+        || (issue.description && issue.description.toLowerCase().includes(term))
+        || (issue._id && issue._id.toLowerCase().includes(term))
     );
 
     // Apply status filter
@@ -392,6 +374,12 @@ const Dashboard = () => {
           {/* Display message if no issues found */}
           {noIssuesMessage && (
             <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
+          )}
+          {filteredIssues.length === 0 && !noIssuesMessage && (
+            <div className="flex justify-center items-center text-center text-gray-500 mb-4 h-full">
+              <InformationCircleIcon className="w-6 h-6 inline mr-2" />
+              No issues found. Try changing the search term or filters
+            </div>
           )}
           {layoutType === 'masonry' ? (
             <Masonry
