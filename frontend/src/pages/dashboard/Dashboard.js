@@ -1,4 +1,4 @@
-import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from 'react';
 import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
@@ -73,7 +73,8 @@ const Dashboard = () => {
   const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
   const [statusFilter, setStatusFilter] = useState('all'); // State for the status filter
   const { user } = useUser(); // Fetch authenticated user data from the context
-  const [layoutType, setLayoutType] = useState('masonry'); // 'masonry' or 'grid'
+  const [layoutType, setLayoutType] = useState('masonry'); // 'masonry', 'grid', or 'list'
+  const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false);
 
   /**
    * Fetches issues from the API based on the filter type and user context.
@@ -236,9 +237,27 @@ const Dashboard = () => {
     localStorage.setItem('filterType', selectedFilter); // Persist filter type to localStorage
   };
 
-  const toggleLayoutType = () => {
-    setLayoutType((prevType) => (prevType === 'masonry' ? 'grid' : 'masonry'));
+  const handleLayoutChange = (type) => {
+    setLayoutType(type);
+    setIsLayoutDropdownOpen(false);
   };
+
+  const toggleLayoutDropdown = () => {
+    setIsLayoutDropdownOpen(!isLayoutDropdownOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isLayoutDropdownOpen && !event.target.closest('.layout-dropdown')) {
+        setIsLayoutDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isLayoutDropdownOpen]);
 
   // Return loading screen if issues have not been fetched yet
   if (!fetched) {
@@ -280,14 +299,41 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Right: New Issue Button */}
+        {/* Right: New Issue Button and Layout Toggle */}
         <div className="flex items-center space-x-4">
-          <button
-            onClick={toggleLayoutType}
-            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
-          >
-            Toggle Layout
-          </button>
+          <div className="relative layout-dropdown">
+            <button
+              onClick={toggleLayoutDropdown}
+              className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+            >
+              {layoutType === 'masonry' ? <RectangleGroupIcon className="w-6 h-6" /> : layoutType === 'grid' ? <Squares2X2Icon className="w-6 h-6" /> : <QueueListIcon className="w-6 h-6" />}
+            </button>
+            {isLayoutDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 layout-dropdown-menu">
+                <button
+                  onClick={() => handleLayoutChange('masonry')}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'masonry' ? 'bg-gray-100' : ''}`}
+                >
+                  <RectangleGroupIcon className="w-5 h-5 inline mr-2" />
+                  Adaptive
+                </button>
+                <button
+                  onClick={() => handleLayoutChange('grid')}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'grid' ? 'bg-gray-100' : ''}`}
+                >
+                  <Squares2X2Icon className="w-5 h-5 inline mr-2" />
+                  Grid
+                </button>
+                <button
+                  onClick={() => handleLayoutChange('list')}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'list' ? 'bg-gray-100' : ''}`}
+                >
+                  <QueueListIcon className="w-5 h-5 inline mr-2" />
+                  List
+                </button>
+              </div>
+            )}
+          </div>
           <button
             onClick={openAddHandler}
             className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
@@ -348,8 +394,21 @@ const Dashboard = () => {
                 />
               ))}
             </Masonry>
-          ) : (
+          ) : layoutType === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredIssues.map((issue, index) => (
+                <Issue
+                  key={issue._id}
+                  index={index}
+                  data={issue}
+                  deleteHandler={() => deleteHandler(issue)}
+                  openIssueModal={() => openIssueModal(issue)}
+                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-4">
               {filteredIssues.map((issue, index) => (
                 <Issue
                   key={issue._id}

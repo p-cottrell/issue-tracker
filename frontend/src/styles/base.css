@@ -111,7 +111,25 @@ p {
     background-clip: padding-box;
 }
 
-/* Style your grid items */
 .masonry-grid_column > div {
     margin-bottom: 30px;
+}
+
+.layout-dropdown-menu {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.layout-dropdown-menu button {
+    border-radius: 0;
+}
+
+.layout-dropdown-menu button:first-child {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.layout-dropdown-menu button:last-child {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
 }
