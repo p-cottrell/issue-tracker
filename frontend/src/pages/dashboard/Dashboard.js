@@ -1,13 +1,13 @@
 import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssue';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import Issue from '../../components/Issue';
+import IssueView from '../../components/IssueView';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
-import IssueView from '../../components/IssueView';
-import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import { useUser } from '../../context/UserContext';
 
 import '../../styles/base.css';
@@ -40,7 +40,7 @@ const Dashboard = () => {
   const navigate = useNavigate(); // React Router hook for programmatic navigation
   const [showAddIssue, setShowAddIssue] = useState(false); // State to control visibility of the 'Add Issue' popup
   const [showDeleteIssue, setShowDeleteIssue] = useState(false); // State to control visibility of the 'Delete Issue' popup
-  const [setPopupHandler] = useState(() => () => {}); // Handler function for different popups
+  const [setPopupHandler] = useState(() => () => { }); // Handler function for different popups
   const [popupType, setPopupType] = useState(null); // Type of popup currently being displayed
   const [fetched, setFetched] = useState(false); // State to track if the issues have been fetched
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to control sidebar visibility
@@ -187,7 +187,7 @@ const Dashboard = () => {
   const handleSearch = (event) => {
     const term = event.target.value.toLowerCase();
     setSearchTerm(term);
-  
+
     // Filter issues based on the search term and selected status
     const newFilteredIssues = allIssues.filter(
       (issue) =>
@@ -196,12 +196,12 @@ const Dashboard = () => {
         (issue._id && issue._id.toLowerCase().includes(term)) ||
         (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
     );
-  
+
     // Apply status filter
-    const statusFilteredIssues = statusFilter === 'all' 
-      ? newFilteredIssues 
+    const statusFilteredIssues = statusFilter === 'all'
+      ? newFilteredIssues
       : newFilteredIssues.filter((issue) => issue.status_id === parseInt(statusFilter));
-  
+
     setFilteredIssues(statusFilteredIssues);
   };
 
@@ -297,26 +297,26 @@ const Dashboard = () => {
               <option value="0">Pending</option>
             </select>
           </div>
-            {/* Display message if no issues found */}
-            {noIssuesMessage && (
-              <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => deleteHandler(issue)}
-                  openIssueModal={() => openIssueModal(issue)}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
+          {/* Display message if no issues found */}
+          {noIssuesMessage && (
+            <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+            {filteredIssues.map((issue, index) => (
+              <Issue
+                key={issue._id}
+                index={index}
+                data={issue}
+                deleteHandler={() => deleteHandler(issue)}
+                openIssueModal={() => openIssueModal(issue)}
+                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+              />
+            ))}
           </div>
         </main>
       </div>
 
-      {showAddIssue && <AddIssuePopup  closeHandler={() => setShowAddIssue(false)}/>}
+      {showAddIssue && <AddIssuePopup closeHandler={() => setShowAddIssue(false)} />}
 
       {showDeleteIssue && (
         <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue} />
