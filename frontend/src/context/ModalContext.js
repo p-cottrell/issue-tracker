@@ -5,13 +5,16 @@ const ModalContext = createContext();
 
 export const ModalProvider = ({ children }) => {
     const [modalContent, setModalContent] = useState(null);
+    const [showCloseButton, setShowCloseButton] = useState(true);
 
-    const openModal = (content) => {
+    const openModal = (content, showCloseButton = true) => {
         setModalContent(content);
+        setShowCloseButton(showCloseButton);
     };
 
     const closeModal = () => {
         setModalContent(null);
+        setShowCloseButton(true);
     };
 
     const handleBackgroundClick = (e) => {
@@ -30,12 +33,14 @@ export const ModalProvider = ({ children }) => {
                 >
                     <div className="relative max-w-full max-h-full">
                         {modalContent}
-                        <button
-                            onClick={closeModal}
-                            className="absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-75 focus:outline-none"
-                        >
-                            <XMarkIcon className="w-6 h-6" />
-                        </button>
+                        {showCloseButton && (
+                            <button
+                                onClick={closeModal}
+                                className="absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-75 focus:outline-none"
+                            >
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
