@@ -1,4 +1,5 @@
 import { Bars3Icon, InformationCircleIcon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import Fuse from 'fuse.js';
 import React, { useCallback, useEffect, useState } from 'react';
 import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
@@ -87,6 +88,7 @@ const Dashboard = () => {
 
       if (response.data.success) {
         let issues = response.data.data;
+        issues = issues.map((issue) => ({ ...issue, ref_id: generateNiceReferenceId(issue) }));
 
         // Apply status filter
         if (statusFilter.length > 0) {
@@ -184,6 +186,15 @@ const Dashboard = () => {
     }
   };
 
+  // Configuration for Fuse.js
+  const fuseOptions = {
+    keys: ['title', 'description', 'ref_id'],
+    threshold: 0.3, // Adjust the threshold for fuzzy matching
+  };
+
+  // Initialize Fuse.js with all issues
+  const fuse = new Fuse(allIssues, fuseOptions);
+
   /**
    * Handles user input for searching issues.
    * @param {Object} event - The event object from the search input.
@@ -192,13 +203,16 @@ const Dashboard = () => {
     const term = event.target.value.toLowerCase();
     setSearchTerm(term);
 
-    // Filter issues based on the search term and selected status
-    const newFilteredIssues = allIssues.filter(
-      (issue) =>
-        (issue.title && issue.title.toLowerCase().includes(term))
-        || (issue.description && issue.description.toLowerCase().includes(term))
-        || (issue._id && (issue._id.toLowerCase().includes(term) || generateNiceReferenceId(issue).toLowerCase().includes(term)))
-    );
+    let newFilteredIssues;
+
+    if (!term) {
+      // If search term is empty, show all issues
+      newFilteredIssues = allIssues;
+    } else {
+      // Use Fuse.js for fuzzy search
+      const result = fuse.search(term);
+      newFilteredIssues = result.map(({ item }) => item);
+    }
 
     // Apply status filter
     const statusFilteredIssues = statusFilter.length === 0
