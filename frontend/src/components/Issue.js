@@ -2,6 +2,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';
+import { generateNiceReferenceId } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
 export default function Issue({ data, openIssueModal, deleteHandler }) {
@@ -146,7 +147,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
 
             {/* Reference */}
             <p className="text-sm text-gray-500 mb-4">
-                <strong>Reference:</strong> {data._id}
+                <strong>Reference:</strong> {generateNiceReferenceId(data)}
             </p>
 
             {/* Attachments */}

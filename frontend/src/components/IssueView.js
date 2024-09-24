@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
-import "./IssueView.css";
+import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useUser } from "../context/UserContext";
+import { generateNiceReferenceId } from '../helpers/IssueHelpers';
+import "./IssueView.css";
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -48,7 +49,7 @@ export default function IssueView({ issue, onClose }) {
   const [selectedComment, setSelectedComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
   const [username, setUserName] = useState("");
- 
+
   const [attachments, setAttachments] = useState([]);
   const [attachmentError, setAttachmentError] = useState(null);
 
@@ -83,7 +84,7 @@ export default function IssueView({ issue, onClose }) {
 
   useEffect(() => {
     fetchIssueDetails();
-    
+
     const userCanEdit = user.role === 'admin' || user.id === issue.reporter_id;
     setCanEdit(userCanEdit);
     setIsAdmin(user.role === 'admin');
@@ -218,7 +219,7 @@ function formatSmartDate(dateString) {
     return formatDate(dateString);
   }
 }
-  
+
 
   const handleSave = async () => {
     if (canEdit) {
@@ -313,7 +314,7 @@ function formatSmartDate(dateString) {
         `/api/occurrences/${issue._id}/${occurrence._id}`,
         {
           description: editedOccurrence,
-          
+
         }
       );
 
@@ -398,7 +399,7 @@ function formatSmartDate(dateString) {
     try {
       const response = await apiClient.put(
         `/api/comments/${issue._id}/${comment._id}`,
-        { 
+        {
           comment_text: editedComment,
           edited_by: user.id,
         }
@@ -406,7 +407,7 @@ function formatSmartDate(dateString) {
 
       setDetailedIssue(prevState => ({
         ...prevState,
-        comments: prevState.comments.map(c => 
+        comments: prevState.comments.map(c =>
           c._id === comment._id ? response.data.comment : c
         )
       }));
@@ -537,7 +538,7 @@ function formatSmartDate(dateString) {
                   </p>
                   <p className="text-2xl ml-2">{issue.charm}</p>
                   <p className="text-sm text-gray-600">
-                    <strong>Issue ID:</strong> {issue._id}
+                    <strong>Reference:</strong> {generateNiceReferenceId(issue._id)}
                   </p>
                 </>
               )}
@@ -647,18 +648,18 @@ function formatSmartDate(dateString) {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {attachments.map((attachment) => (
                     <div key={attachment._id} className="relative group">
-                      <img 
-                        src={attachment.signedUrl} 
-                        alt={attachment.title} 
+                      <img
+                        src={attachment.signedUrl}
+                        alt={attachment.title}
                         className="w-full h-40 object-cover rounded-lg"
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
-                      
+
                         <div>
                         <button
                           onClick={() => handlePreviewImage(attachment.signedUrl)}
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
                           title="View attachment"
                         >
@@ -685,7 +686,7 @@ function formatSmartDate(dateString) {
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
                       <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
-                      <button 
+                      <button
                         onClick={() => setPreviewImage(null)}
                         className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
                       >
@@ -696,7 +697,7 @@ function formatSmartDate(dateString) {
                 )}
 
 
-                  
+
                   {/* File upload input */}
                   <div className="mt-4">
                     <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
@@ -718,7 +719,7 @@ function formatSmartDate(dateString) {
                       multiple
                       onChange={(e) => handleImageSelection(Array.from(e.target.files))}
                       className="hidden"
-                    />  
+                    />
                     {imagePreviews.length > 0 && (
                     <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
                       {imagePreviews.map((preview, index) => (
@@ -738,7 +739,7 @@ function formatSmartDate(dateString) {
                         </div>
                       ))}
                     </div>
-                  )}    
+                  )}
                     <button
                       onClick={handleFileUpload}
                       className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -753,15 +754,15 @@ function formatSmartDate(dateString) {
                 <h2 className="text-xl font-bold mb-2">Comments</h2>
                 <ul className="comments-list">
                   {(detailedIssue.comments || []).map((comment) => (
-                    <li 
-                      key={comment._id} 
+                    <li
+                      key={comment._id}
                       className={`comment-item mb-4 ${
-                        isAdmin || user.id === comment.user_id 
-                          ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100' 
+                        isAdmin || user.id === comment.user_id
+                          ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100'
                           : 'bg-gray-50 border-l-4 border-gray-300'
                       }`}
                     >
-                      <div 
+                      <div
                         className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
                         onClick={() => handleSelectComment(comment)}
                       >
@@ -860,7 +861,7 @@ function formatSmartDate(dateString) {
                     <>
                       <p>
                         <strong>Created at:</strong>{" "}
-                        <span 
+                        <span
                           title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
                         >
                           {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
@@ -868,7 +869,7 @@ function formatSmartDate(dateString) {
                       </p>
                       <p>
                         <strong>Updated at:</strong>{" "}
-                        <span 
+                        <span
                           title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
                         >
                           {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}

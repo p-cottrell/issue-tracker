@@ -12,6 +12,7 @@ import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
 import { useUser } from '../../context/UserContext';
 
+import { generateNiceReferenceId } from '../../helpers/IssueHelpers';
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
@@ -196,7 +197,7 @@ const Dashboard = () => {
       (issue) =>
         (issue.title && issue.title.toLowerCase().includes(term))
         || (issue.description && issue.description.toLowerCase().includes(term))
-        || (issue._id && issue._id.toLowerCase().includes(term))
+        || (issue._id && (issue._id.toLowerCase().includes(term) || generateNiceReferenceId(issue).toLowerCase().includes(term)))
     );
 
     // Apply status filter
