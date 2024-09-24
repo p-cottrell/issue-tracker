@@ -2,9 +2,10 @@ import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import Logo from '../../components/Logo';
 import ScrollingBackground from '../../components/ScrollingBackground';
-import PasswordRules from './../../components/PasswordRules';
 import { useUser } from '../../context/UserContext';
+import PasswordRules from './../../components/PasswordRules';
 import './../../index.css';
 
 /**
@@ -20,24 +21,38 @@ const Register = () => {
     // State for managing user inputs and validation error message
     const [email, setEmail] = useState(location.state?.email || '');
     const [username, setName] = useState('');
-    const [password, setPassword] = useState('');
+    const [password, setPassword] = useState(location.state?.password || '');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordFocused, setPasswordFocused] = useState(false);
     const [showPasswordRules, setShowPasswordRules] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(!!location.state?.password);
     const [step, setStep] = useState(1);
     const { setUser } = useUser();
 
     useEffect(() => {
+        const checkEmail = async () => {
+            if (location.state?.email) {
+                const emailExists = await checkEmailAvailability(location.state.email);
+                if (!emailExists) {
+                    setEmail(location.state.email);
+                    setStep(2);
+                } else {
+                    setEmailError('Email is already in use.');
+                }
+            }
+        };
+
+        checkEmail();
+
         const handleFocus = passwordFocused;
         const timer = setTimeout(() => {
             setShowPasswordRules(handleFocus);
         }, 200);
 
         return () => clearTimeout(timer);
-    }, [passwordFocused]);
+    }, [location.state, passwordFocused]);
 
     const handlePasswordFocus = () => {
         setPasswordFocused(true);
@@ -61,7 +76,7 @@ const Register = () => {
         }
     };
 
-    const handleEmailSubmit = () => {
+    const handleEmailSubmit = async () => {
         if (!email.trim()) {
             setEmailError('Email is required.');
             return;
@@ -72,7 +87,12 @@ const Register = () => {
             return;
         }
 
-        checkEmailAvailability();
+        const emailExists = await checkEmailAvailability(email);
+        if (emailExists) {
+            setEmailError('Email is already in use.');
+        } else {
+            setStep(2);
+        }
     };
 
     const validateEmail = (email) => {
@@ -106,16 +126,13 @@ const Register = () => {
         return true;
     };
 
-    const checkEmailAvailability = async () => {
+    const checkEmailAvailability = async (emailToCheck) => {
         try {
-            const response = await apiClient.post('/api/users/check_email', { email: email.trim() });
-            if (response.data.taken) {
-                setEmailError('Email is already in use.');
-            } else {
-                setStep(2);
-            }
+            const response = await apiClient.post('/api/users/check_email', { email: emailToCheck.trim() });
+            return response.data.taken;
         } catch (error) {
             setEmailError('An error occurred while checking email availability.');
+            return true; // Assume email is taken if there's an error
         }
     };
 
@@ -179,7 +196,15 @@ const Register = () => {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            {/* Background Animation */}
             <ScrollingBackground />
+
+            {/* Logo */}
+            <div className="absolute top-0 left-0 right-0 z-10 flex justify-center p-4">
+                <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+            </div>
+
+            {/* Main Content */}
             <div className="relative z-10 w-full">
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
@@ -271,7 +296,6 @@ const Register = () => {
                                         />
                                     </div>
                                 )}
-                                {/* {error && <div className="text-sm text-red-600 mb-6">{error}</div>} */}
                                 <div className="mb-6 flex justify-between">
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
@@ -304,7 +328,7 @@ const Register = () => {
                     {step === 1 && (
                         <p className="text-sm text-center text-gray-600">
                             Already have an account?{' '}
-                            <Link to="/login" className="font-semibold text-primary focus:outline-none focus:underline">Sign in</Link>.
+                            <Link to="/login" state={{ email, password }} className="font-semibold text-primary focus:outline-none focus:underline">Sign in</Link>.
                         </p>
                     )}
                 </motion.div>

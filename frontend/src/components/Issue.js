@@ -1,15 +1,53 @@
-import React, { useState } from 'react';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
+import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';
+import { generateNiceReferenceId } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
 export default function Issue({ data, openIssueModal, deleteHandler }) {
-    const { openModal} = useModal(); // Custom hook to open or close modal dialogs
-    const [isLoading, setIsLoading] = useState(true); // State to track the loading state of the image
+    const { openModal } = useModal();
+    const [isLoading, setIsLoading] = useState(true);
+    const [isImageError, setIsImageError] = useState(false);
+    const [attachments, setAttachments] = useState(data.attachments || []);
 
-    // Extract the latest status from the status_history array. 
+    // Effect 1: Fetch attachments if signedUrl is missing
+    useEffect(() => {
+        if (attachments && attachments.length > 0 && !attachments[0].signedUrl) {
+            fetchAttachments();
+        }
+    }, [attachments]);
+
+    // Fetch attachments function (only if signedUrl is missing)
+    const fetchAttachments = async () => {
+        try {
+            const response = await apiClient.get(`/api/attachments/${data._id}`);
+            const updatedAttachments = response.data.map(attachment => ({ ...attachment, signedUrl: attachment.signedUrl || '' }));
+            setAttachments(updatedAttachments);
+        } catch (error) {
+            console.error('Error fetching attachments:', error);
+        }
+    };
+
+    // Effect 2: Load the image and handle errors
+    useEffect(() => {
+        if (attachments && attachments.length > 0 && attachments[0].signedUrl) {
+            const img = new Image();
+            img.src = attachments[0].signedUrl;
+
+            img.onload = () => setIsLoading(false);
+            img.onerror = (ev) => {
+                setIsImageError(true);
+                setIsLoading(false);
+                console.error(`Failed to load image '${attachments[0].signedUrl}':`, ev);
+            };
+        }
+    }, [attachments]); // Ensure this effect re-runs when `attachments` are updated
+
+    // Extract the latest status from the status_history array.
     // This ensures we always show the most recent status.
-    const latestStatus = data.status_history && data.status_history.length > 0 
-        ? data.status_history[data.status_history.length - 1].status_id 
+    const latestStatus = data.status_history && data.status_history.length > 0
+        ? data.status_history[data.status_history.length - 1].status_id
         : undefined;
 
     // Function to determine the appropriate CSS class based on the latest status.
@@ -44,7 +82,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     };
 
     // Function to check if a character is a letter (used for charm styling).
-    // Utilizes Unicode support to handle various languages and symbols.
+    // Utilises Unicode support to handle various languages and symbols.
     const isLetter = (char) => {
         return /\p{L}/u.test(char);
     };
@@ -59,8 +97,33 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         );
     };
 
+    const handleCardClick = (e) => {
+        if (e.detail === 1) {
+            openIssueModal(data);
+        }
+    };
+
+    const handleMouseDown = (e) => {
+        e.currentTarget.dataset.dragging = false;
+    };
+
+    const handleMouseMove = (e) => {
+        e.currentTarget.dataset.dragging = true;
+    };
+
+    const handleMouseUp = (e) => {
+        if (e.currentTarget.dataset.dragging === 'false') {
+            handleCardClick(e);
+        }
+    };
+
     return (
-        <div className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative">
+        <div
+            className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+        >
             {/* Header Line */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
@@ -84,38 +147,49 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
 
             {/* Reference */}
             <p className="text-sm text-gray-500 mb-4">
-                <strong>Reference:</strong> {data._id}
+                <strong>Reference:</strong> {generateNiceReferenceId(data)}
             </p>
 
             {/* Attachments */}
-            <div className="mb-4 relative">
-                <strong className="text-sm text-gray-500 mb-4">Attachment(s):</strong>
-                <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative">
-                    {isLoading && (
-                        // Loading spinner to indicate the image is still loading
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="loader"></div>
-                        </div>
-                    )}
-                    {data.attachments && data.attachments.length > 0 && (
-                        <img
-                            src={data.attachments[0].signedUrl} // Use the signed URL here
-                            alt="Attachment"
-                            className="rounded-md object-cover cursor-pointer"
-                            onLoad={() => setIsLoading(false)} // Set loading state to false once the image is loaded
-                            onClick={() => handleImageClick(data.attachments[0].signedUrl)} // Handle image click to show full preview
-                        />
-                    )}
+            {attachments && attachments.length > 0 && (
+                <div className="mb-4 relative">
+                    <p className="text-sm text-gray-500 mb-4">
+                        <strong>Attachment(s):</strong>
+                    </p>
+                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="loader"></div>
+                            </div>
+                        )}
+                        {isImageError ? (
+                            <div className="absolute inset-0 flex items-center justify-center text-red-500">
+                                <ExclamationCircleIcon className="h-6 w-6" />
+                                <span className="ml-2">Failed to load image</span>
+                            </div>
+                        ) : (
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center filter blur-lg"
+                                    style={{ backgroundImage: `url(${attachments[0].signedUrl})` }}
+                                ></div>
+                                <img
+                                    src={attachments[0].signedUrl}
+                                    alt="Attachment"
+                                    className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
+                                    onClick={() => handleImageClick(attachments[0].signedUrl)}
+                                />
+                            </div>
+                        )}
+                        {attachments.length > 1 && (
+                            <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                                {attachments.length > 9 ? '9+' : attachments.length}
+                                {/* {attachments.length > 9 ? '+9' : `+${attachments.length - 1}`} */}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-
-            {/* View More Button */}
-            <button
-                onClick={() => openIssueModal(data)} // Open the detailed view modal for the issue
-                className="mt-auto bg-primary text-white py-2 px-4 my-2 rounded-md text-sm font-semibold hover:bg-primary-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-                View More
-            </button>
+            )}
         </div>
     );
 }

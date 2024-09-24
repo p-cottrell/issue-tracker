@@ -1,35 +1,41 @@
-import { Bars3Icon, PlusIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useState, useCallback } from 'react';
+import { Bars3Icon, InformationCircleIcon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import Fuse from 'fuse.js';
+import React, { useCallback, useEffect, useState } from 'react';
+import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssue';
+import DeleteIssuePopup from '../../components/DeleteIssuePopup';
 import Issue from '../../components/Issue';
+import IssueView from '../../components/IssueView';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
-import IssueView from '../../components/IssueView';
-import DeleteIssuePopup from '../../components/DeleteIssuePopup';
+import { useModal } from '../../context/ModalContext';
 import { useUser } from '../../context/UserContext';
 
+import { generateNiceReferenceId } from '../../helpers/IssueHelpers';
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
-/**
- * Helper function to convert status_id to readable status text.
- * @param {number} status_id - The ID representing the status.
- * @returns {string} - The text representation of the status.
- */
-const getStatusText = (status_id) => {
-  switch (status_id) {
-    case 1:
-      return 'Complete';
-    case 2:
-      return 'In Progress';
-    case 3:
-      return 'Cancelled';
-    default:
-      return 'Pending';
+
+// Constants for card width and screen widths
+const CARD_WIDTH = 450; // Width of each card in pixels
+const MIN_SCREEN_WIDTH = 640; // Minimum screen width in pixels
+const MAX_SCREEN_WIDTH = 7680; // Maximum screen width in pixels
+
+// Utility function to generate breakpoint columns object
+const generateBreakpointColumns = (cardWidth, minScreenWidth, maxScreenWidth) => {
+  const breakpoints = {};
+  for (let width = minScreenWidth; width <= maxScreenWidth; width += cardWidth) {
+    const columns = Math.floor(width / cardWidth);
+    breakpoints[width] = columns;
   }
+  return breakpoints;
 };
+
+// Generate the breakpoint columns object
+const breakpointColumnsObj = generateBreakpointColumns(CARD_WIDTH, MIN_SCREEN_WIDTH, MAX_SCREEN_WIDTH);
 
 /**
  * Dashboard component for displaying and managing issues.
@@ -38,22 +44,20 @@ const getStatusText = (status_id) => {
  */
 const Dashboard = () => {
   const navigate = useNavigate(); // React Router hook for programmatic navigation
-  const [showAddIssue, setShowAddIssue] = useState(false); // State to control visibility of the 'Add Issue' popup
-  const [showDeleteIssue, setShowDeleteIssue] = useState(false); // State to control visibility of the 'Delete Issue' popup
-  const [setPopupHandler] = useState(() => () => {}); // Handler function for different popups
-  const [popupType, setPopupType] = useState(null); // Type of popup currently being displayed
+  const [setPopupHandler] = useState(() => () => { }); // Handler function for different popups
   const [fetched, setFetched] = useState(false); // State to track if the issues have been fetched
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to control sidebar visibility
-  const [selectedIssue, setSelectedIssue] = useState(null); // The issue selected for viewing or editing
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false); // State to control visibility of the 'Issue View' modal
   const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering issues
   const [noIssuesMessage, setNoIssuesMessage] = useState(''); // Holds message to display when no issues are found
   const [allIssues, setAllIssues] = useState([]); // All issues retrieved from the API
   const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
   const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
   const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
-  const [statusFilter, setStatusFilter] = useState('all'); // State for the status filter
+  const [statusFilter, setStatusFilter] = useState([]); // State for the status filter
   const { user } = useUser(); // Fetch authenticated user data from the context
+  const [layoutType, setLayoutType] = useState(localStorage.getItem('layoutType') || 'masonry'); // Layout type for displaying issues - masonry, grid, or list
+  const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false); // State to control visibility of the layout dropdown
+  const { openModal, closeModal } = useModal();
 
   /**
    * Fetches issues from the API based on the filter type and user context.
@@ -82,13 +86,14 @@ const Dashboard = () => {
 
       if (response.data.success) {
         let issues = response.data.data;
+        issues = issues.map((issue) => ({ ...issue, ref_id: generateNiceReferenceId(issue) }));
 
         // Apply status filter
-        if (statusFilter !== 'all') {
+        if (statusFilter.length > 0) {
           issues = issues.filter((issue) => {
             // Extract the latest status_id from status_history
             const latestStatus = issue.status_history.length > 0 ? issue.status_history[issue.status_history.length - 1].status_id : null;
-            return latestStatus === parseInt(statusFilter);
+            return statusFilter.includes(latestStatus);
           });
         }
 
@@ -115,23 +120,12 @@ const Dashboard = () => {
   }, [fetchIssues, updateTrigger]);
 
   /**
-   * Handler to open the 'Add Issue' popup and set the appropriate handler and type.
-   */
-  const openAddHandler = () => {
-    setPopupHandler(() => addHandler);
-    setPopupType('add');
-    setShowAddIssue(true);
-  };
-
-  /**
    * Adds a new issue via API call, triggered from the 'Add Issue' popup.
    * @param {Object} data - Contains title and description of the new issue.
    */
   const addHandler = (data) => {
     const { title, description } = data;
     const charm = '🐞'; // Default charm for new issues
-
-    setShowAddIssue(false); // Close the 'Add Issue' popup
 
     const addIssue = async () => {
       try {
@@ -151,34 +145,48 @@ const Dashboard = () => {
   };
 
   /**
+   * Handler to open the 'Add Issue' popup and set the appropriate handler and type.
+   */
+  const showAddIssueModal = () => {
+    setPopupHandler(() => addHandler);
+    openModal(<AddIssuePopup closeHandler={() => closeModalCallback(true)} />, false);
+  };
+
+  /**
    * Handler for deleting an issue.
    * @param {Object} data - Issue data to be deleted.
    */
-  const deleteHandler = (data) => {
-    setShowDeleteIssue(false);
-    console.log(data._id, ' Deleted!');
+  const showDeleteIssueModal = (data) => {
+    openModal(<DeleteIssuePopup closeHandler={() => closeModalCallback(true)} issue={data} />, false);
   };
 
   /**
    * Opens the issue view modal to display details of the selected issue.
    * @param {Object} issue - The issue object to be displayed.
    */
-  const openIssueModal = (issue) => {
-    setSelectedIssue(issue);
-    setIsIssueModalOpen(true);
+  const showIssueViewModal = (issue) => {
+    openModal(<IssueView issue={issue} onClose={() => closeModalCallback(true)} />, false);
   };
 
   /**
-   * Closes the issue view modal and optionally triggers a re-fetch if the issue was updated.
-   * @param {Object} updatedIssue - The updated issue object, if any.
+   * Triggers a re-fetch of issues when a modal is closed, if the object was updated.
+   * @param {Object} changed - Flag to indicate if the object was updated.
    */
-  const closeIssueModal = (updatedIssue) => {
-    setSelectedIssue(null);
-    setIsIssueModalOpen(false);
-    if (updatedIssue) {
-      setUpdateTrigger((prev) => prev + 1); // Increment trigger to force re-fetch
+  const closeModalCallback = (changed) => {
+    closeModal(null);
+    if (changed) {
+      setUpdateTrigger((prev) => prev + 1);
     }
   };
+
+  // Configuration for Fuse.js
+  const fuseOptions = {
+    keys: ['title', 'description', 'ref_id'],
+    threshold: 0.3, // Adjust the threshold for fuzzy matching
+  };
+
+  // Initialize Fuse.js with all issues
+  const fuse = new Fuse(allIssues, fuseOptions);
 
   /**
    * Handles user input for searching issues.
@@ -187,34 +195,59 @@ const Dashboard = () => {
   const handleSearch = (event) => {
     const term = event.target.value.toLowerCase();
     setSearchTerm(term);
-  
-    // Filter issues based on the search term and selected status
-    const newFilteredIssues = allIssues.filter(
-      (issue) =>
-        (issue.title && issue.title.toLowerCase().includes(term)) ||
-        (issue.description && issue.description.toLowerCase().includes(term)) ||
-        (issue._id && issue._id.toLowerCase().includes(term)) ||
-        (issue.status_id !== undefined && getStatusText(issue.status_id).toLowerCase().includes(term))
-    );
-  
+
+    let newFilteredIssues;
+
+    if (!term) {
+      // If search term is empty, show all issues
+      newFilteredIssues = allIssues;
+    } else {
+      // Use Fuse.js for fuzzy search
+      const result = fuse.search(term);
+      newFilteredIssues = result.map(({ item }) => item);
+    }
+
     // Apply status filter
-    const statusFilteredIssues = statusFilter === 'all' 
-      ? newFilteredIssues 
-      : newFilteredIssues.filter((issue) => issue.status_id === parseInt(statusFilter));
-  
+    const statusFilteredIssues = statusFilter.length === 0
+      ? newFilteredIssues
+      : newFilteredIssues.filter((issue) => statusFilter.includes(issue.status_id));
+
     setFilteredIssues(statusFilteredIssues);
   };
 
-  /**
-   * Handles changes in the filter type dropdown.
-   * Saves the selected filter type to localStorage for persistence across sessions.
-   * @param {Object} event - The event object from the filter dropdown.
-   */
-  const handleFilterChange = (event) => {
-    const selectedFilter = event.target.value;
-    setFilterType(selectedFilter);
-    localStorage.setItem('filterType', selectedFilter); // Persist filter type to localStorage
+  const handleFilterChange = (selectedOption) => {
+    const selectedFilters = selectedOption.value;
+    setFilterType(selectedFilters);
+    localStorage.setItem('filterType', selectedFilters);
   };
+
+  const handleLayoutChange = (type) => {
+    setLayoutType(type);
+    localStorage.setItem('layoutType', type);
+    setIsLayoutDropdownOpen(false);
+  };
+
+  const toggleLayoutDropdown = () => {
+    setIsLayoutDropdownOpen(!isLayoutDropdownOpen);
+  };
+
+  const handleStatusFilterChange = (selectedOptions) => {
+    const selectedStatuses = selectedOptions.map(option => option.value);
+    setStatusFilter(selectedStatuses);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isLayoutDropdownOpen && !event.target.closest('.layout-dropdown')) {
+        setIsLayoutDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isLayoutDropdownOpen]);
 
   // Return loading screen if issues have not been fetched yet
   if (!fetched) {
@@ -227,6 +260,20 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  const filterOptions = [
+    // Insertion order depicts the order in the dropdown
+    { value: 'all', label: 'All Issues' },
+    { value: 'myIssues', label: 'My Issues' },
+  ];
+
+  const statusOptions = [
+    // Insertion order depicts the order in the dropdown
+    { value: 0, label: 'Pending' },
+    { value: 2, label: 'In Progress' },
+    { value: 1, label: 'Complete' },
+    { value: 3, label: 'Cancelled' },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -252,14 +299,48 @@ const Dashboard = () => {
             placeholder="Search issues..."
             value={searchTerm}
             onChange={handleSearch}
-            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-center"
+            style={{ textAlign: 'center' }}
           />
         </div>
 
-        {/* Right: New Issue Button */}
-        <div className="flex items-center">
+        {/* Right: New Issue Button and Layout Toggle */}
+        <div className="flex items-center space-x-4">
+          <div className="relative layout-dropdown">
+            <button
+              onClick={toggleLayoutDropdown}
+              className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+            >
+              {layoutType === 'masonry' ? <RectangleGroupIcon className="w-6 h-6" /> : layoutType === 'grid' ? <Squares2X2Icon className="w-6 h-6" /> : <QueueListIcon className="w-6 h-6" />}
+            </button>
+            {isLayoutDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 layout-dropdown-menu">
+                <button
+                  onClick={() => handleLayoutChange('masonry')}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'masonry' ? 'bg-gray-100' : ''}`}
+                >
+                  <RectangleGroupIcon className="w-5 h-5 inline mr-2" />
+                  Adaptive
+                </button>
+                <button
+                  onClick={() => handleLayoutChange('grid')}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'grid' ? 'bg-gray-100' : ''}`}
+                >
+                  <Squares2X2Icon className="w-5 h-5 inline mr-2" />
+                  Grid
+                </button>
+                <button
+                  onClick={() => handleLayoutChange('list')}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'list' ? 'bg-gray-100' : ''}`}
+                >
+                  <QueueListIcon className="w-5 h-5 inline mr-2" />
+                  List
+                </button>
+              </div>
+            )}
+          </div>
           <button
-            onClick={openAddHandler}
+            onClick={showAddIssueModal}
             className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
           >
             <PlusIcon className="w-6 h-6" />
@@ -275,54 +356,87 @@ const Dashboard = () => {
         <main className="flex-grow p-6">
           <div className="flex space-x-4 items-center mb-4">
             {/* Filter Dropdown */}
-            <select
-              onChange={handleFilterChange}
-              value={filterType}
-              className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
-            >
-              <option value="all">All Issues</option>
-              <option value="myIssues">My Issues</option>
-            </select>
 
-            {/* Status Filter Dropdown */}
-            <select
-              onChange={(e) => setStatusFilter(e.target.value)} // Update the status filter
-              value={statusFilter}
-              className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
-            >
-              <option value="all">All Statuses</option>
-              <option value="1">Complete</option>
-              <option value="2">In Progress</option>
-              <option value="3">Cancelled</option>
-              <option value="0">Pending</option>
-            </select>
+            <div className="bg-white px-2 py-2 rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+              <Select
+                options={filterOptions}
+                value={filterOptions.filter(option => filterType.includes(option.value))}
+                onChange={handleFilterChange}
+                className="text-primary-600 font-semibold focus:outline-none"
+                placeholder="Filter by Owner"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="bg-white px-2 py-2 rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+              <Select
+                isMulti
+                options={statusOptions}
+                value={statusOptions.filter(option => statusFilter.includes(option.value))}
+                onChange={handleStatusFilterChange}
+                className="text-primary-600 font-semibold focus:outline-none"
+                placeholder="Filter by Status"
+              />
+            </div>
           </div>
-            {/* Display message if no issues found */}
-            {noIssuesMessage && (
-              <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+          {/* Display message if no issues found */}
+          {noIssuesMessage && (
+            <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
+          )}
+          {filteredIssues.length === 0 && !noIssuesMessage && (
+            <div className="flex justify-center items-center text-center text-gray-500 mb-4 h-full">
+              <InformationCircleIcon className="w-6 h-6 inline mr-2" />
+              No issues found. Try changing the search term or filters
+            </div>
+          )}
+          {layoutType === 'masonry' ? (
+            <Masonry
+              breakpointCols={breakpointColumnsObj}
+              className="masonry-grid"
+              columnClassName="masonry-grid_column"
+            >
               {filteredIssues.map((issue, index) => (
                 <Issue
                   key={issue._id}
                   index={index}
                   data={issue}
-                  deleteHandler={() => deleteHandler(issue)}
-                  openIssueModal={() => openIssueModal(issue)}
+                  deleteHandler={() => showDeleteIssueModal(issue)}
+                  openIssueModal={() => showIssueViewModal(issue)}
                   className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
                 />
               ))}
-          </div>
+            </Masonry>
+          ) : layoutType === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredIssues.map((issue, index) => (
+                <Issue
+                  key={issue._id}
+                  index={index}
+                  data={issue}
+                  deleteHandler={() => showDeleteIssueModal(issue)}
+                  openIssueModal={() => showIssueViewModal(issue)}
+                  closeIssueModal={closeModalCallback}
+                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-4 max-w-[600px] mx-auto">
+              {filteredIssues.map((issue, index) => (
+                <Issue
+                  key={issue._id}
+                  index={index}
+                  data={issue}
+                  deleteHandler={() => showDeleteIssueModal(issue)}
+                  openIssueModal={() => showIssueViewModal(issue)}
+                  closeIssueModal={closeModalCallback}
+                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                />
+              ))}
+            </div>
+          )}
         </main>
       </div>
-
-      {showAddIssue && <AddIssuePopup  closeHandler={() => setShowAddIssue(false)}/>}
-
-      {showDeleteIssue && (
-        <DeleteIssuePopup closeHandler={() => setShowDeleteIssue(false)} issue={selectedIssue} />
-      )}
-
-      {isIssueModalOpen && <IssueView issue={selectedIssue} onClose={closeIssueModal} />}
     </div>
   );
 };
