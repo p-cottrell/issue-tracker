@@ -13,7 +13,11 @@ function formatDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
-const emojiOptions = ["🐞", "🚀", "⚠️"];
+const emojiOptions = [
+  '⚠️', '🚀', '🐞', '💻', '📅', '🌐', '🏆', '🏠', '🐈', '🐕', '⏱️', '🎵',
+  '⭐', '🔎', '📸', '💾', '❤️', '🎬', '📖', '🎂', '🖥️', '🔥', '🎫', '🔧',
+  '🚫', '💥', '🎓', '📚'
+];
 
 export default function IssueView({ issue, onClose }) {
   const { user } = useUser();
@@ -183,7 +187,8 @@ export default function IssueView({ issue, onClose }) {
   const handleEdit = () => {
     if (canEdit) {
       setEditMode(true);
-      setEditedIssue({ ...detailedIssue });
+      setEditedIssue({ ...detailedIssue, status_id: Number(detailedIssue.status_id) });
+      setEditedCharm(detailedIssue.charm); 
     }
   };
 
@@ -471,7 +476,7 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  console.log("Opened issue:", detailedIssue);
+ 
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
@@ -675,22 +680,142 @@ export default function IssueView({ issue, onClose }) {
 
                 {/* New occurrence input */}
                 <>
-                  <textarea
-                    placeholder="Add new occurrence"
-                    value={newOccurrence}
-                    onChange={(e) => setNewOccurrence(e.target.value)}
-                    className="new-occurrence-input"
-                  />
-                  <button
-                    onClick={handleAddOccurrence}
-                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    Add Occurrence
-                  </button>
-                </>
+                    <textarea
+                      placeholder="Add new occurrence"
+                      value={newOccurrence}
+                      onChange={(e) => setNewOccurrence(e.target.value)}
+                      className="new-occurrence-input"
+                    />
+                    <button
+                      onClick={handleAddOccurrence}
+                      className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                    >
+                      Add Occurrence
+                    </button>
+                  </>
 
                 {/* Attachments section */}
-                {/* ... (Attachment code remains the same) */}
+                  {/* Attachments section */}
+                  <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                {attachmentError && <p className="text-red-500">{attachmentError}</p>}
+                {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {attachments.map((attachment) => (
+                    <div key={attachment._id} className="relative group">
+                      <img
+                        src={attachment.signedUrl}
+                        alt={attachment.title}
+                        className="w-full h-40 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
+
+                        <div>
+                        <button
+                          onClick={() => handlePreviewImage(attachment.signedUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                          title="View attachment"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" transform="rotate(-45)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </button>
+                          {(isAdmin || user.id === attachment.user_id) && (
+                            <button
+                              onClick={() => handleDeleteAttachment(attachment._id)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                              title="Delete attachment"
+                            >
+                              X
+                            </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {previewImage && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
+                      <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
+                      <button
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+
+
+                  {/* File upload input */}
+                  <div className="mt-4">
+                    <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
+                    <div
+                      className={`mb-4 p-4 h-32 border-2 ${isDragging ? 'border-primary' : 'border-secondary'} border-dashed rounded cursor-pointer flex justify-center items-center`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => document.getElementById('fileInput').click()}
+                    >
+                      <p className="text-sm text-gray-500">
+                        {images.length > 0 ? `${images.length} file(s) selected` : 'Drag & drop images here, or click to select'}
+                      </p>
+                    </div>
+                    <input
+                      id="fileInput"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleImageSelection(Array.from(e.target.files))}
+                      className="hidden"
+                    />
+                    {imagePreviews.length > 0 && (
+                    <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index}`}
+                            className="w-full h-40 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                    {images.length > 0 && (
+                      <div className="flex justify-start space-x-2">
+                        <button
+                          onClick={handleFileUpload}
+                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        >
+                          Upload Selected Files
+                        </button>
+                        <button
+                          onClick={() => {
+                            setImages([]);
+                            setImagePreviews([]);
+                          }}
+                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* Comments section */}
                 <div className="mt-4">
