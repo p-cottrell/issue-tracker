@@ -296,7 +296,8 @@ const Dashboard = () => {
             placeholder="Search issues..."
             value={searchTerm}
             onChange={handleSearch}
-            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-center"
+            style={{ textAlign: 'center' }}
           />
         </div>
 
