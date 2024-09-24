@@ -2,6 +2,7 @@ import { Bars3Icon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon 
 import React, { useCallback, useEffect, useState } from 'react';
 import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssue';
 import DeleteIssuePopup from '../../components/DeleteIssuePopup';
@@ -60,7 +61,6 @@ const Dashboard = () => {
   const [showAddIssue, setShowAddIssue] = useState(false); // State to control visibility of the 'Add Issue' popup
   const [showDeleteIssue, setShowDeleteIssue] = useState(false); // State to control visibility of the 'Delete Issue' popup
   const [setPopupHandler] = useState(() => () => { }); // Handler function for different popups
-  const [popupType, setPopupType] = useState(null); // Type of popup currently being displayed
   const [fetched, setFetched] = useState(false); // State to track if the issues have been fetched
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to control sidebar visibility
   const [selectedIssue, setSelectedIssue] = useState(null); // The issue selected for viewing or editing
@@ -71,7 +71,7 @@ const Dashboard = () => {
   const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
   const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
   const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
-  const [statusFilter, setStatusFilter] = useState('all'); // State for the status filter
+  const [statusFilter, setStatusFilter] = useState([]); // State for the status filter
   const { user } = useUser(); // Fetch authenticated user data from the context
   const [layoutType, setLayoutType] = useState(localStorage.getItem('layoutType') || 'masonry'); // Layout type for displaying issues - masonry, grid, or list
   const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false); // State to control visibility of the layout dropdown
@@ -105,11 +105,11 @@ const Dashboard = () => {
         let issues = response.data.data;
 
         // Apply status filter
-        if (statusFilter !== 'all') {
+        if (statusFilter.length > 0) {
           issues = issues.filter((issue) => {
             // Extract the latest status_id from status_history
             const latestStatus = issue.status_history.length > 0 ? issue.status_history[issue.status_history.length - 1].status_id : null;
-            return latestStatus === parseInt(statusFilter);
+            return statusFilter.includes(latestStatus);
           });
         }
 
@@ -140,7 +140,6 @@ const Dashboard = () => {
    */
   const openAddHandler = () => {
     setPopupHandler(() => addHandler);
-    setPopupType('add');
     setShowAddIssue(true);
   };
 
@@ -219,22 +218,17 @@ const Dashboard = () => {
     );
 
     // Apply status filter
-    const statusFilteredIssues = statusFilter === 'all'
+    const statusFilteredIssues = statusFilter.length === 0
       ? newFilteredIssues
-      : newFilteredIssues.filter((issue) => issue.status_id === parseInt(statusFilter));
+      : newFilteredIssues.filter((issue) => statusFilter.includes(issue.status_id));
 
     setFilteredIssues(statusFilteredIssues);
   };
 
-  /**
-   * Handles changes in the filter type dropdown.
-   * Saves the selected filter type to localStorage for persistence across sessions.
-   * @param {Object} event - The event object from the filter dropdown.
-   */
-  const handleFilterChange = (event) => {
-    const selectedFilter = event.target.value;
-    setFilterType(selectedFilter);
-    localStorage.setItem('filterType', selectedFilter); // Persist filter type to localStorage
+  const handleFilterChange = (selectedOption) => {
+    const selectedFilters = selectedOption.value;
+    setFilterType(selectedFilters);
+    localStorage.setItem('filterType', selectedFilters);
   };
 
   const handleLayoutChange = (type) => {
@@ -245,6 +239,11 @@ const Dashboard = () => {
 
   const toggleLayoutDropdown = () => {
     setIsLayoutDropdownOpen(!isLayoutDropdownOpen);
+  };
+
+  const handleStatusFilterChange = (selectedOptions) => {
+    const selectedStatuses = selectedOptions.map(option => option.value);
+    setStatusFilter(selectedStatuses);
   };
 
   useEffect(() => {
@@ -271,6 +270,20 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  const filterOptions = [
+    // Insertion order depicts the order in the dropdown
+    { value: 'all', label: 'All Issues' },
+    { value: 'myIssues', label: 'My Issues' },
+  ];
+
+  const statusOptions = [
+    // Insertion order depicts the order in the dropdown
+    { value: 0, label: 'Pending' },
+    { value: 2, label: 'In Progress' },
+    { value: 1, label: 'Complete' },
+    { value: 3, label: 'Cancelled' },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -353,27 +366,28 @@ const Dashboard = () => {
         <main className="flex-grow p-6">
           <div className="flex space-x-4 items-center mb-4">
             {/* Filter Dropdown */}
-            <select
-              onChange={handleFilterChange}
-              value={filterType}
-              className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
-            >
-              <option value="all">All Issues</option>
-              <option value="myIssues">My Issues</option>
-            </select>
 
-            {/* Status Filter Dropdown */}
-            <select
-              onChange={(e) => setStatusFilter(e.target.value)} // Update the status filter
-              value={statusFilter}
-              className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
-            >
-              <option value="all">All Statuses</option>
-              <option value="1">Complete</option>
-              <option value="2">In Progress</option>
-              <option value="3">Cancelled</option>
-              <option value="0">Pending</option>
-            </select>
+            <div className="bg-white px-2 py-2 rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+              <Select
+                options={filterOptions}
+                value={filterOptions.filter(option => filterType.includes(option.value))}
+                onChange={handleFilterChange}
+                className="text-primary-600 font-semibold focus:outline-none"
+                placeholder="Filter by Owner"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="bg-white px-2 py-2 rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+              <Select
+                isMulti
+                options={statusOptions}
+                value={statusOptions.filter(option => statusFilter.includes(option.value))}
+                onChange={handleStatusFilterChange}
+                className="text-primary-600 font-semibold focus:outline-none"
+                placeholder="Filter by Status"
+              />
+            </div>
           </div>
           {/* Display message if no issues found */}
           {noIssuesMessage && (
