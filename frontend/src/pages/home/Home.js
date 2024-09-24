@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { isAuthenticated } from '../../api/apiClient';
+import apiClient, { isAuthenticated } from '../../api/apiClient';
+import Logo from '../../components/Logo';
 import ScrollingBackground from '../../components/ScrollingBackground';
 import './../../index.css';
 import hero from "./hero.jpg";
@@ -13,25 +14,46 @@ import hero from "./hero.jpg";
  */
 const Home = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const authenticated = await isAuthenticated();
-      if (authenticated) {
-        console.log('User is authenticated');
-        navigate('/dashboard');
-      }
-      else {
-        console.log('User is not authenticated');
+      try {
+        const authenticated = await isAuthenticated();
+        if (authenticated) {
+          console.log('User is authenticated');
+          navigate('/dashboard');
+        } else {
+          console.log('User is not authenticated');
+        }
+      } catch (error) {
+        // Ignore the error. This sometimes happens in-dev if you save changes to this source file and reload too quickly.
+        // Realistically, if we can't check auth (i.e. can't access the server) on the landing page, we should just show the landing page.
+        console.log('Ignoring authentication error on the home page');
       }
     };
 
     checkAuth();
   }, [navigate]);
 
-  const handleGetStarted = () => {
-    navigate('/register', { state: { email } });
+  const checkEmailAvailability = async () => {
+    try {
+      const response = await apiClient.post('/api/users/check_email', { email: email.trim() });
+      return response.data.taken;
+    } catch (error) {
+      console.error('Error checking email availability:', error);
+      return false;
+    }
+  };
+
+  const handleGetStarted = async () => {
+    const isEmailInUse = await checkEmailAvailability();
+    if (isEmailInUse) {
+      navigate('/login', { state: { email, password } });
+    } else {
+      navigate('/register', { state: { email, password } });
+    }
   };
 
   return (
@@ -73,7 +95,7 @@ const Home = () => {
                   className="mb-3 text-secondary font-extrabold leading-none lg:text-3xl md:text-3xl sm:text-2xl xs:text-lg"
                   whileHover={{ scale: 1.1 }}
                 >
-                  Intermittent Issue Tracker
+                  <Logo className="truncate" navigate={navigate} useClick={false} />
                 </motion.h5>
                 <motion.h5
                   className="mb-3 font-extrabold leading-none lg:text-xl md:text-base sm:text-sm text-secondary"
@@ -82,7 +104,7 @@ const Home = () => {
                   Track issues effortlessly.
                 </motion.h5>
                 <motion.p
-                  className="mb-5 text-secondary"
+                  className="mb-5 text-secondary text-sm leading-relaxed lg:text-base md:text-sm sm:text-xs xs:text-xs"
                   whileHover={{ scale: 1.03 }}
                 >
                   <span className="font-bold">IssueStream</span> simplifies how you log, track, and analyse issues of any kind, enhancing efficiency and productivity.
@@ -94,16 +116,26 @@ const Home = () => {
                 <div className="flex w-full justify-between">
                   <motion.input
                     type="email"
+                    id="email"
+                    autoComplete="email"
                     placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full h-12 px-4 mb-3 border-2 border-secondary rounded placeholder:text-primary hidden sm:block"
-                    whileFocus={{ borderColor: '#4A90E2' }}
+                    className="w-full h-12 px-4 mb-3 mr-1 border-2 rounded hidden sm:block focus:border-primaryHover"
+                  />
+                  <motion.input
+                    type="password"
+                    id="password"
+                    autoComplete="current-password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="hidden"
                   />
                   <motion.button
                     type="submit"
                     onClick={handleGetStarted}
-                    className="ml-4 xs:ml-0 inline-flex w-48 items-center justify-center h-12 px-6 font-medium rounded shadow-md bg-primary hover:bg-primaryHover text-neutral"
+                    className="ml-4 xs:ml-0 inline-flex w-48 items-center justify-center h-12 px-6 font-medium rounded shadow-md bg-secondary hover:bg-primaryHover text-neutral"
                     whileHover={{ scale: 1.05 }}
                   >
                     Get Started
@@ -122,7 +154,7 @@ const Home = () => {
                     Already a member?{' '}
                     <motion.span
                       className="text-dark"
-                      whileHover={{ color: '#4A90E2' }} // Change to main accent color on hover
+                      whileHover={{ color: '#26A8DF' }} // Change to main accent color on hover
                     >
                       <Link to="/login">Sign in</Link>
                     </motion.span>
