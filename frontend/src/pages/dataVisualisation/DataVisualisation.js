@@ -278,19 +278,19 @@ const getStatusText = (status_id) => {
       switch (graphType) {
         case 'added':
           return (
-          <div className='relative min-w-3.5 max-w-4xl'>
+          <div className='flex flex-auto relative min-w-3.5 max-w-4xl'>
             <BarGraph graphData={graphData}/>
           </div>
         )
         case 'solved':
           return (
-            <div className='relative min-w-3.5 max-w-4xl'>
+            <div className='flex flex-auto relative min-w-3.5 max-w-4xl'>
               <LineGraph graphData={lineData}/>
             </div>
           )
         case 'status':
           return (
-            <div className='relative min-w-3.5 max-w-2xl'>
+            <div className='flex flex-auto relative min-w-3.5 max-w-2xl'>
             <PieChart graphData={pieChartData} />
           </div>
           )
@@ -349,8 +349,8 @@ const getStatusText = (status_id) => {
               </div>
 
               {/* Graph display */}
-              <div className='relative flex-auto'>
-                <center>{displayGraph()}</center>
+              <div className='flex justify-center'>
+                {displayGraph()}
               </div>
 
             </main>
