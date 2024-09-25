@@ -314,7 +314,7 @@ const getStatusText = (status_id) => {
             </div>
           </header>
     
-          <div className="flex first-letter:flex-grow">
+          <div className="flex flex-grow">
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
     
             {/* Main Content */}
