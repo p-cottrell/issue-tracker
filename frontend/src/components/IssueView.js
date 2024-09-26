@@ -75,7 +75,7 @@ export default function IssueView({ issue, onClose }) {
 
   // Other states
   const [toast, setToast] = useState(null); // Toast notification state
-  const [reporterUsername, setReporterUsername] = useState(""); // Reporter's username
+  const [username, setUserName] = useState(""); // Reporter's username
   const [attachments, setAttachments] = useState([]); // List of attachments
   const [attachmentError, setAttachmentError] = useState(null); // Attachment error message
   const [images, setImages] = useState([]); // Selected images for upload
@@ -91,6 +91,7 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
+
   // Fetch issue details from the server
   const fetchIssueDetails = useCallback(async () => {
     try {
@@ -101,18 +102,28 @@ export default function IssueView({ issue, onClose }) {
       setEditedCharm(fetchedIssue.charm); // Update editedCharm
   
       // Set reporter's username
-      if (fetchedIssue.reporter_id && fetchedIssue.reporter_id) {
-        setReporterUsername(fetchedIssue.reporter_id);
-      } else {
-        setReporterUsername('Unknown');
-      }
-  
+    
+      fetchUsername(response.data.reporter_id);
       fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
       console.error('Error fetching issue details:', error);
       showToast('Error fetching issue details', 'error');
     }
   }, [issue._id]);
+
+
+
+  const fetchUsername = async (reporterId) => {
+    try {
+      const response = await apiClient.get(`/api/users/${reporterId}`);
+      const reporter = response.data;
+      setUserName(reporter.username); // Set reporter's username
+    } catch (error) {
+      console.error('Error fetching reporter username:', error);
+      showToast('Error fetching reporter username', 'error');
+    }
+  };
+
   // Fetch attachments for the issue
   const fetchAttachments = async () => {
     try {
@@ -1004,7 +1015,7 @@ export default function IssueView({ issue, onClose }) {
                 <div className="issue-meta">
                   <p>
                   <strong>Reported by:</strong>{" "}
-                    {reporterUsername || 'N/A'}
+                  {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
                   </p>
                    
                   
