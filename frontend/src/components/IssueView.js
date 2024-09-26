@@ -22,44 +22,30 @@ const emojiOptions = [
 export default function IssueView({ issue, onClose }) {
   const { user } = useUser();
 
-  // State for the full issue details, separate from the initial 'issue' prop
   const [detailedIssue, setDetailedIssue] = useState(issue);
-  // Toggle for edit mode
   const [editMode, setEditMode] = useState(false);
-  // Separate state for edited issue to prevent direct mutation of detailedIssue
   const [editedIssue, setEditedIssue] = useState({
     ...issue,
     status_id: Number(issue.status_id),
   });
-
-  // State for new occurrence input
   const [newOccurrence, setNewOccurrence] = useState("");
-
-  // State for occurrence editing
   const [selectedOccurrence, setSelectedOccurrence] = useState(null);
   const [editedOccurrence, setEditedOccurrence] = useState("");
-
   const [editedCharm, setEditedCharm] = useState(issue.charm);
-
   const [toast, setToast] = useState(null);
-
   const [canEdit, setCanEdit] = useState(false);
-
   const [isAdmin, setIsAdmin] = useState(false);
-
   const [newComment, setNewComment] = useState("");
   const [selectedComment, setSelectedComment] = useState(null);
   const [editedComment, setEditedComment] = useState("");
-
   const [reporterUsername, setReporterUsername] = useState("");
+  const [currentStatus, setCurrentStatus] = useState(null);
 
-  const [attachments, setAttachments] = useState([]);
-  const [attachmentError, setAttachmentError] = useState(null);
-
-  const [images, setImages] = useState([]); // Stores the selected image files
-  const [imagePreviews, setImagePreviews] = useState([]); // Stores URLs for image previews
-  const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state for the images
-  const [previewImage, setPreviewImage] = useState(null); // State for the preview image
+  useEffect(() => {
+    if (issue.status_history && issue.status_history.length > 0) {
+      setCurrentStatus(issue.status_history[issue.status_history.length - 1].status_id);
+    }
+  }, [issue]);
 
   const fetchIssueDetails = useCallback(async () => {
     try {
@@ -73,12 +59,11 @@ export default function IssueView({ issue, onClose }) {
     }
   }, [issue._id]);
 
-  // Fetch reporter's username based on reporter_id
   const fetchReporterUsername = async (reporterId) => {
     try {
       const response = await apiClient.get(`/api/users/${reporterId}`);
       const reporter = response.data;
-      setReporterUsername(reporter.username); // Set reporter's username
+      setReporterUsername(reporter.username);
     } catch (error) {
       console.error('Error fetching reporter username:', error);
       showToast('Error fetching reporter username', 'error');
@@ -93,6 +78,50 @@ export default function IssueView({ issue, onClose }) {
     setIsAdmin(user.role === 'admin');
   }, [issue._id, user, fetchIssueDetails, issue.reporter_id]);
 
+  const showToast = (message, type, duration, onConfirm = null) => {
+    setToast({ message, type, onConfirm, duration });
+    if (!onConfirm) {
+      setTimeout(() => setToast(null), duration);
+    }
+  };
+
+  function formatSmartDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInSeconds < 60) {
+      return 'just now';
+    } else if (diffInMinutes < 60) {
+      return diffInMinutes === 1 ? '1 min ago' : `${diffInMinutes} mins ago`;
+    } else if (diffInHours < 24) {
+      return diffInHours === 1 ? '1 hr ago' : `${diffInHours} hrs ago`;
+    } else if (diffInDays === 1) {
+      return 'yesterday';
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
+    } else {
+      return formatDate(dateString);
+    }
+  }
+
+  const getStatusText = (statusId) => {
+    switch (statusId) {
+      case 0:
+        return "Pending";
+      case 1:
+        return "Complete";
+      case 2:
+        return "In Progress";
+      case 3:
+        return "Cancelled";
+      default:
+        return "Unknown";
+    }
+  };
   const fetchAttachments = async () => {
     try {
       const response = await apiClient.get(`/api/attachments/${issue._id}`);
@@ -209,12 +238,7 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  const showToast = (message, type, duration, onConfirm = null) => {
-    setToast({ message, type, onConfirm, duration });
-    if (!onConfirm) {
-      setTimeout(() => setToast(null), duration);
-    }
-  };
+ 
 
   function formatSmartDate(dateString) {
     const date = new Date(dateString);
@@ -244,6 +268,10 @@ export default function IssueView({ issue, onClose }) {
       try {
         const dataToSend = {
           ...editedIssue,
+          status_history: [
+            ...editedIssue.status_history,
+            { status_id: currentStatus, date: new Date() }
+          ],
           created_at: detailedIssue.created_at,
           updated_at: new Date().toISOString(),
           occurrences: editedIssue.occurrences.map(occurrence => ({
@@ -273,7 +301,6 @@ export default function IssueView({ issue, onClose }) {
       setEditedIssue(detailedIssue);
     }
   };
-
   const handleAddOccurrence = async () => {
     if (!newOccurrence.trim()) return;
 
@@ -281,7 +308,7 @@ export default function IssueView({ issue, onClose }) {
       console.log("Sending occurrence:", { description: newOccurrence });
       const response = await apiClient.post(`/api/occurrences/${issue._id}`, {
         description: newOccurrence,
-        user_id: user.id, // Include the user's ID
+        username: user.username,
       });
 
       console.log("Response:", response.data);
@@ -313,7 +340,18 @@ export default function IssueView({ issue, onClose }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedIssue({ ...editedIssue, [name]: value });
+    if (name === "status_id") {
+      setCurrentStatus(Number(value));
+      setEditedIssue({
+        ...editedIssue,
+        status_history: [
+          ...editedIssue.status_history,
+          { status_id: Number(value), date: new Date() }
+        ]
+      });
+    } else {
+      setEditedIssue({ ...editedIssue, [name]: value });
+    }
   };
 
   const handleSelectOccurrence = (occurrence) => {
@@ -378,20 +416,6 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  const getStatusText = (statusId) => {
-    switch (statusId) {
-      case 0:
-        return "Pending";
-      case 1:
-        return "Complete";
-      case 2:
-        return "In Progress";
-      case 3:
-        return "Cancelled";
-      default:
-        return "Unknown";
-    }
-  };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -399,6 +423,7 @@ export default function IssueView({ issue, onClose }) {
     try {
       const response = await apiClient.post(`/api/comments/${issue._id}`, {
         comment_text: newComment,
+        username: user.username,
       });
 
       const commentWithUsername = {
@@ -415,6 +440,16 @@ export default function IssueView({ issue, onClose }) {
     } catch (error) {
       console.error("Error adding comment:", error);
       showToast("Error adding comment", "error");
+    }
+  };
+
+
+ const handleSelectComment = (comment) => {
+    if (isAdmin || user.id === comment.user_id) {
+      setSelectedComment(
+        selectedComment && selectedComment._id === comment._id ? null : comment
+      );
+      setEditedComment(comment.comment_text);
     }
   };
 
@@ -464,15 +499,6 @@ export default function IssueView({ issue, onClose }) {
     } catch (error) {
       console.error("Error deleting comment:", error);
       showToast("Error deleting comment", "error");
-    }
-  };
-
-  const handleSelectComment = (comment) => {
-    if (isAdmin || user.id === comment.user_id) {
-      setSelectedComment(
-        selectedComment && selectedComment._id === comment._id ? null : comment
-      );
-      setEditedComment(comment.comment_text);
     }
   };
 
@@ -533,13 +559,8 @@ export default function IssueView({ issue, onClose }) {
                     className="text-xl font-bold mb-2 w-full p-2 border rounded h-[42px]"
                   />
                  <select
-                    value={editedIssue.status_id} // Ensure this uses editedIssue.status_id
-                    onChange={(e) =>
-                      setEditedIssue({
-                        ...editedIssue,
-                        status_id: Number(e.target.value), // Ensure the value is converted to a number
-                      })
-                    }
+                    value={currentStatus}
+                    onChange={(e) => handleInputChange({ target: { name: "status_id", value: e.target.value } })}
                     className="p-2 border rounded h-[42px]"
                   >
                     <option value={0}>Pending</option>
@@ -563,7 +584,7 @@ export default function IssueView({ issue, onClose }) {
                 <>
                   <h1 className="text-xl font-bold mb-2">{issue.title}</h1>
                   <p className="text-sm text-gray-600">
-                    Status: {getStatusText(issue.status_id)}
+                    Status: {getStatusText(currentStatus)}
                   </p>
                   <p className="text-2xl ml-2">{issue.charm}</p>
                   <p className="text-sm text-gray-600">
@@ -587,9 +608,8 @@ export default function IssueView({ issue, onClose }) {
                 ) : (
                   <p>{detailedIssue.description}</p>
                 )}
-
-                {/* Occurrences section */}
-                <div className="mt-4">
+                 {/* Occurrences section */}
+                  <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h2 className="text-xl font-bold">Occurrences</h2>
                   </div>
@@ -614,8 +634,7 @@ export default function IssueView({ issue, onClose }) {
                                 {occurrence.created_at ? formatSmartDate(occurrence.created_at) : 'N/A'}
                               </span>
                               <br />
-                              <strong>Reported by: </strong>{" "}
-                              
+                              <strong>Reported by: </strong>{occurrence.username || 'N/A'}
                             </p>
                             <p className="mt-1">
                               <strong>Description:</strong> {occurrence.description}
@@ -630,7 +649,6 @@ export default function IssueView({ issue, onClose }) {
                 {/* Occurrence edit section */}
                 {selectedOccurrence && (
                   <div className="occurrence-edit mt-4">
-                    {/* Only allow the person who posted the occurrence to edit */}
                     {user.id === selectedOccurrence.user_id && (
                       <>
                         <textarea
@@ -651,7 +669,6 @@ export default function IssueView({ issue, onClose }) {
                           >
                             Cancel
                           </button>
-                          {/* Show Delete button in the same line as Save if allowed */}
                           {(isAdmin || user.id === selectedOccurrence.user_id) && (
                             <button
                               onClick={() => handleDeleteOccurrence(selectedOccurrence)}
@@ -664,7 +681,6 @@ export default function IssueView({ issue, onClose }) {
                       </>
                     )}
 
-                    {/* If user cannot edit but can delete (admin or occurrence poster), only show the Delete button */}
                     {user.id !== selectedOccurrence.user_id && (isAdmin || user.id === selectedOccurrence.user_id) && (
                       <div className="flex justify-end space-x-2">
                         <button
@@ -694,7 +710,7 @@ export default function IssueView({ issue, onClose }) {
                     </button>
                   </>
 
-                {/* Attachments section */}
+               
                   {/* Attachments section */}
                   <div className="mt-4">
                 <h2 className="text-xl font-bold mb-2">Attachments</h2>
@@ -817,8 +833,8 @@ export default function IssueView({ issue, onClose }) {
                   </div>
                 </div>
 
-                {/* Comments section */}
-                <div className="mt-4">
+                 {/* Comments section */}
+                 <div className="mt-4">
                   <h2 className="text-xl font-bold mb-2">Comments</h2>
                   <ul className="comments-list">
                     {(detailedIssue.comments || []).map((comment) => (
@@ -845,7 +861,7 @@ export default function IssueView({ issue, onClose }) {
                                 </span>
                                 <br />
                                 <strong>Commented by:</strong>{" "}
-                                {comment.username ? comment.username.split('.').map(part => part.replace(/\d+$/, '')).join(' ') : 'N/A'}
+                                {comment.username || 'N/A'}
                               </p>
                               <p className="mt-1">
                                 <strong>Comment:</strong> {comment.comment_text}
@@ -861,7 +877,6 @@ export default function IssueView({ issue, onClose }) {
                 {/* Comment edit section */}
                 {selectedComment && (
                   <div className="comment-edit mt-4">
-                    {/* Only allow the person who posted the comment to edit */}
                     {user.id === selectedComment.user_id && (
                       <>
                         <textarea
@@ -882,7 +897,6 @@ export default function IssueView({ issue, onClose }) {
                           >
                             Cancel
                           </button>
-                          {/* Show Delete button in the same line as Save if allowed */}
                           {(isAdmin || user.id === selectedComment.user_id) && (
                             <button
                               onClick={() => handleDeleteComment(selectedComment)}
@@ -895,7 +909,6 @@ export default function IssueView({ issue, onClose }) {
                       </>
                     )}
 
-                    {/* If user cannot edit but can delete (admin or comment poster), only show the Delete button */}
                     {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id) && (
                       <div className="flex justify-end space-x-2">
                         <button

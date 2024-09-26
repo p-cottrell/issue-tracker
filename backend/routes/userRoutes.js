@@ -428,4 +428,31 @@ router.delete('/delete/:id', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * Route to get all usernames for a list of user IDs.
+ *
+ * This route is used to get all usernames for a list of user IDs.
+ *
+ * @name POST /users/usernames
+ * @function
+ * @memberof module:routes/users
+ * @param {Object} req.body.userIds - The list of user IDs.
+ * @param {Object} res - The response object.
+ */
+
+
+router.post('/usernames', authenticateToken, async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    const users = await User.find({ _id: { $in: userIds } }, 'id username');
+    const usernameMap = {};
+    users.forEach(user => {
+      usernameMap[user._id] = user.username;
+    });
+    res.json(usernameMap);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching usernames', error: error.message });
+  }
+});
+
 module.exports = router;

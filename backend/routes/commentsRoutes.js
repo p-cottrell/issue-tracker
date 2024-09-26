@@ -3,13 +3,14 @@ const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue'); 
+const User = require('../models/User'); 
 
 /**
- * Occurrence Management Routes
+ * Comment Management Routes
  *
- * This module defines routes for creating, retrieving, and deleting occurrences
+ * This module defines routes for creating, retrieving, and deleting comments
  * associated with specific issues. Each route uses JWT-based authentication to 
- * ensure that only authorized users can interact with the occurrences.
+ * ensure that only authorized users can interact with the comments.
  *
  * IMPORTANT: `authenticateToken` middleware authenticates using cookies, so when 
  * calling the API from the front-end, you must use `{ withCredentials: true }` to 
@@ -17,20 +18,20 @@ const Issue = require('../models/Issue');
  */
 
 /**
- * Route to create a new occurrence for a specific issue
+ * Route to create a new comment for a specific issue
  *
- * This route allows an authenticated user to add a new occurrence to an existing issue.
- * The issue is identified by `issueId`, and the occurrence details are provided in the request body.
- * The occurrence is associated with the authenticated user's ID and appended to the issue's 
- * `occurrences` array.
+ * This route allows an authenticated user to add a new comment to an existing issue.
+ * The issue is identified by `issueId`, and the comment details are provided in the request body.
+ * The comment is associated with the authenticated user's ID and appended to the issue's 
+ * `comments` array.
  *
  * @name POST /:issueId
  * @function
- * @memberof module:routes/occurrences
- * @param {Object} req.body - The occurrence data (description).
+ * @memberof module:routes/comments
+ * @param {Object} req.body - The comment data (description).
  * @param {Object} res - The response object.
  * @throws {404} - If the issue is not found.
- * @throws {500} - If an error occurs while creating the occurrence.
+ * @throws {500} - If an error occurs while creating the comment.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
  
@@ -45,9 +46,16 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
   }
 
   try {
+    // Fetch the user to get the username
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     const newComment = {
       user_id: userId,
       comment_text,
+      username: user.username // Add the username to the comment
     };
 
     
@@ -125,7 +133,7 @@ router.delete("/:issueId/:commentId", authenticateToken, async (req, res) => {
     // Find the issue and remove the occurrence
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,
-      { $pull: { comments: { _id: commentId } } },
+      { $pull: { comments: { _id: commentId } } } ,
       { new: true } // This option returns the updated document
     );
 
