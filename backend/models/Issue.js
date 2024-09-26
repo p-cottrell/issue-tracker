@@ -85,7 +85,6 @@ const commentSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
- 
   comment_text: {
     type: String,
     required: true,

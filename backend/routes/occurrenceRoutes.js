@@ -34,35 +34,46 @@ const mongoose = require('mongoose');
  * @throws {500} - If an error occurs while creating the occurrence.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
-  try {
-    const { issueId } = req.params;
-    const { description, username } = req.body;
+  console.log('Request body:', req.body);
+  console.log('Request user:', req.user);
+  
+  const { description } = req.body;
+  const issueId = req.params.issueId;
+  const userId = req.user ? req.user.id : null;
 
-    const occurrence = {
+  console.log('IssueId:', issueId);
+  console.log('UserId:', userId);
+  console.log('Description:', description);
+
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  try {
+    const now = new Date();
+    const newOccurrence = {
+      user_id: userId,
       description,
-      username: username || req.user.username, // Use the provided username or fallback to the authenticated user's username
-      created_at: new Date(),
-      updated_at: new Date()
     };
+
+    console.log('New occurrence:', newOccurrence);
 
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,
-      { $push: { occurrences: occurrence } },
+      { $push: { occurrences: newOccurrence } },
       { new: true, runValidators: true }
     );
 
     if (!updatedIssue) {
-      return res.status(404).json({ message: 'Issue not found' });
+      return res.status(404).json({ error: 'Issue not found' });
     }
 
-    const newOccurrence = updatedIssue.occurrences[updatedIssue.occurrences.length - 1];
+    const addedOccurrence = updatedIssue.occurrences[updatedIssue.occurrences.length - 1];
 
-    res.status(201).json({ 
-      message: 'Occurrence added successfully', 
-      occurrence: newOccurrence
-    });
+    res.status(201).json({ message: 'Occurrence added', occurrence: addedOccurrence });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding occurrence', error: error.message });
+    console.error('Error adding occurrence:', error);
+    res.status(500).json({ error: 'Error adding occurrence', details: error.message });
   }
 });
 

@@ -142,11 +142,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
     if (!issue) {
       return res.status(404).json({ message: 'Issue not found' });
     }
-
     res.json(issue);
   } catch (error) {
     console.error('Error fetching issue:', error);
-    res.status(500).json({ message: 'Error fetching issue', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
