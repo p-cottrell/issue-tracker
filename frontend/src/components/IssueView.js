@@ -99,19 +99,20 @@ export default function IssueView({ issue, onClose }) {
       setDetailedIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
       setEditedCharm(fetchedIssue.charm); // Update editedCharm
-
-      // Fetch attachments
-      fetchAttachments();
-
+  
       // Set reporter's username
-      setReporterUsername(fetchedIssue.reporter_id.username);
-
+      if (fetchedIssue.reporter_id && fetchedIssue.reporter_id) {
+        setReporterUsername(fetchedIssue.reporter_id);
+      } else {
+        setReporterUsername('Unknown');
+      }
+  
+      fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
       console.error('Error fetching issue details:', error);
       showToast('Error fetching issue details', 'error');
     }
   }, [issue._id]);
-
   // Fetch attachments for the issue
   const fetchAttachments = async () => {
     try {
@@ -1002,9 +1003,11 @@ export default function IssueView({ issue, onClose }) {
               <div className="issue-sidebar">
                 <div className="issue-meta">
                   <p>
-                    <strong>Reported by:</strong>{" "}
-                   
+                  <strong>Reported by:</strong>{" "}
+                    {reporterUsername || 'N/A'}
                   </p>
+                   
+                  
                   {editMode ? (
                     <>
                       <div>
