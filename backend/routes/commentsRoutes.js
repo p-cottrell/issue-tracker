@@ -99,10 +99,7 @@ router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
     const issueID = req.params.id;
 
     // Find the issue and populate comments.user_id
-    const issue = await Issue.findById(issueID).populate({
-      path: 'comments.user_id',
-      select: 'username',
-    });
+    const issue = await Issue.findById(issueID)
 
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });

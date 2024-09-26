@@ -933,7 +933,8 @@ export default function IssueView({ issue, onClose }) {
                                 </span>
                                 <br />
                                 <strong>Commented by: </strong>
-                                {comment.user_id?.username || 'Unknown'}
+                                {comment.user_id?.username || 'Unknown User'}
+
                               </p>
                               <p className="mt-1">
                                 <strong>Comment:</strong> {comment.comment_text}

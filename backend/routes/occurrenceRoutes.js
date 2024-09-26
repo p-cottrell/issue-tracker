@@ -95,7 +95,7 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
 router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
   try {
     const issueID = req.params.id;
-    const issue = await Issue.findById(issueID);
+    const issue = await Issue.findById(issueID)
 
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
