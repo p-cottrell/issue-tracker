@@ -39,7 +39,11 @@ function formatSmartDate(dateString) {
 }
 
 // Array of emoji options for the charm selector
-const emojiOptions = ["🐞", "🚀", "⚠️"];
+const emojiOptions = [
+  '⚠️', '🚀', '🐞', '💻', '📅', '🌐', '🏆', '🏠', '🐈', '🐕', '⏱️', '🎵',
+  '⭐', '🔎', '📸', '💾', '❤️', '🎬', '📖', '🎂', '🖥️', '🔥', '🎫', '🔧',
+  '🚫', '💥', '🎓', '📚'
+];
 
 export default function IssueView({ issue, onClose }) {
   const { user } = useUser();
