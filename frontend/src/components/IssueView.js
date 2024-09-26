@@ -57,9 +57,13 @@ export default function IssueView({ issue, onClose }) {
   const fetchIssueDetails = useCallback(async () => {
     try {
       const response = await apiClient.get(`/api/issues/${issue._id}`);
-      setDetailedIssue(response.data);
-      fetchAttachments();
-      fetchReporterUsername(response.data.reporter_id);
+      const fetchedIssue = response.data;
+  
+      setDetailedIssue(fetchedIssue);
+      setReporterUsername(fetchedIssue.reporter_id.username); // Reporter username
+  
+      
+      fetchAttachments(); 
     } catch (error) {
       console.error('Error fetching issue details:', error);
       showToast('Error fetching issue details', 'error');
@@ -247,28 +251,6 @@ export default function IssueView({ issue, onClose }) {
 
  
 
-  function formatSmartDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
-
-    if (diffInSeconds < 60) {
-      return 'just now';
-    } else if (diffInMinutes < 60) {
-      return diffInMinutes === 1 ? '1 min ago' : `${diffInMinutes} mins ago`;
-    } else if (diffInHours < 24) {
-      return diffInHours === 1 ? '1 hr ago' : `${diffInHours} hrs ago`;
-    } else if (diffInDays === 1) {
-      return 'yesterday';
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else {
-      return formatDate(dateString);
-    }
-  }
 
   const handleSave = async () => {
     if (canEdit) {
@@ -452,7 +434,7 @@ export default function IssueView({ issue, onClose }) {
 
 
  const handleSelectComment = (comment) => {
-    if (isAdmin || user.id === comment.user_id) {
+    if (isAdmin || user.id === comment.user_id._id) {
       setSelectedComment(
         selectedComment && selectedComment._id === comment._id ? null : comment
       );
@@ -461,7 +443,7 @@ export default function IssueView({ issue, onClose }) {
   };
 
   const handleEditComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (!isAdmin && user.id !== comment.user_id._id) {
       showToast("You do not have permission to edit this comment", "error");
       return;
     }
@@ -490,7 +472,7 @@ export default function IssueView({ issue, onClose }) {
   };
 
   const handleDeleteComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (!isAdmin && user.id !== comment.user_id._id) {
       showToast("You do not have permission to delete this comment", "error");
       return;
     }
@@ -868,7 +850,7 @@ export default function IssueView({ issue, onClose }) {
                                 </span>
                                 <br />
                                 <strong>Commented by:</strong>{" "}
-                                {comment.username || 'N/A'}
+                                {comment.user_id.username || 'N/A'}
                               </p>
                               <p className="mt-1">
                                 <strong>Comment:</strong> {comment.comment_text}

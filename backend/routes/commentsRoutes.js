@@ -97,13 +97,17 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
 router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
   try {
     const issueID = req.params.id;
-    const issue = await Issue.findById(issueID);
+
+    // Find the issue and populate comments.user_id
+    const issue = await Issue.findById(issueID).populate({
+      path: 'comments.user_id',
+      select: 'username',
+    });
 
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-   
     res.status(200).json(issue.comments);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching comments', details: error.message });
