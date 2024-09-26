@@ -40,6 +40,13 @@ export default function IssueView({ issue, onClose }) {
   const [editedComment, setEditedComment] = useState("");
   const [reporterUsername, setReporterUsername] = useState("");
   const [currentStatus, setCurrentStatus] = useState(null);
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentError, setAttachmentError] = useState(null);
+
+  const [images, setImages] = useState([]); // Stores the selected image files
+  const [imagePreviews, setImagePreviews] = useState([]); // Stores URLs for image previews
+  const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state for the images
+  const [previewImage, setPreviewImage] = useState(null); // State for the preview image
 
   useEffect(() => {
     if (issue.status_history && issue.status_history.length > 0) {
