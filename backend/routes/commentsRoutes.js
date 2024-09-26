@@ -4,6 +4,7 @@ const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue'); 
 const User = require('../models/User'); 
+const mongoose = require('mongoose');
 
 /**
  * Comment Management Routes
@@ -34,43 +35,45 @@ const User = require('../models/User');
  * @throws {500} - If an error occurs while creating the comment.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
- 
-  
   const { comment_text } = req.body;
   const issueId = req.params.issueId;
   const userId = req.user ? req.user.id : null;
-
 
   if (!userId) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
 
   try {
-    // Fetch the user to get the username
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    // Fetch the issue document
+    const issue = await Issue.findById(issueId);
 
-    const newComment = {
-      user_id: userId,
-      comment_text,
-      username: user.username // Add the username to the comment
-    };
-
-    
-
-    const updatedIssue = await Issue.findByIdAndUpdate(
-      issueId,
-      { $push: { comments: newComment } },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedIssue) {
+    if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    const addedComment = updatedIssue.comments[updatedIssue.comments.length - 1];
+    // Create a new comment with an _id and created_at timestamp
+    const newComment = {
+      _id: new mongoose.Types.ObjectId(), // Assign a new ObjectId
+      user_id: userId,
+      comment_text,
+      created_at: new Date(),
+    };
+
+    // Push the new comment into the comments array
+    issue.comments.push(newComment);
+
+    // Save the issue document
+    await issue.save();
+
+    // Populate the user_id field of the newly added comment
+    await issue.populate({
+      path: 'comments.user_id',
+      select: 'username',
+      match: { _id: userId }, // Only populate the comments added by this user
+    });
+
+    // Find the newly added comment with populated user_id
+    const addedComment = issue.comments.id(newComment._id);
 
     res.status(201).json({ message: 'Comment added', comment: addedComment });
   } catch (error) {

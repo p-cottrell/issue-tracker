@@ -34,16 +34,11 @@ const mongoose = require('mongoose');
  * @throws {500} - If an error occurs while creating the occurrence.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
-  console.log('Request body:', req.body);
-  console.log('Request user:', req.user);
-  
+
   const { description } = req.body;
   const issueId = req.params.issueId;
   const userId = req.user ? req.user.id : null;
 
-  console.log('IssueId:', issueId);
-  console.log('UserId:', userId);
-  console.log('Description:', description);
 
   if (!userId) {
     return res.status(401).json({ error: 'User not authenticated' });
@@ -51,24 +46,39 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
 
   try {
     const now = new Date();
+
+    // Create a new occurrence with an _id and created_at timestamp
     const newOccurrence = {
+      _id: new mongoose.Types.ObjectId(), // Assign a new ObjectId
       user_id: userId,
       description,
+      created_at: now,
     };
 
     console.log('New occurrence:', newOccurrence);
 
-    const updatedIssue = await Issue.findByIdAndUpdate(
-      issueId,
-      { $push: { occurrences: newOccurrence } },
-      { new: true, runValidators: true }
-    );
+    // Find the issue by ID
+    const issue = await Issue.findById(issueId);
 
-    if (!updatedIssue) {
+    if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    const addedOccurrence = updatedIssue.occurrences[updatedIssue.occurrences.length - 1];
+    // Push the new occurrence into the occurrences array
+    issue.occurrences.push(newOccurrence);
+
+    // Save the issue document
+    await issue.save();
+
+    // Populate the user_id field of the newly added occurrence
+    await issue.populate({
+      path: 'occurrences.user_id',
+      select: 'username',
+      match: { _id: userId }, // Only populate the occurrences added by this user
+    });
+
+    // Find the newly added occurrence with populated user_id
+    const addedOccurrence = issue.occurrences.id(newOccurrence._id);
 
     res.status(201).json({ message: 'Occurrence added', occurrence: addedOccurrence });
   } catch (error) {
