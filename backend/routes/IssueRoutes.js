@@ -132,7 +132,13 @@ router.get('/', authenticateToken, async (req, res) => {
  */
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.id);
+   
+    const issue = await Issue.findById(req.params.id)
+    
+    .populate('comments.user_id', 'username')
+    .populate('occurrences.user_id', 'username');
+
+
     if (!issue) {
       return res.status(404).json({ message: 'Issue not found' });
     }
