@@ -43,26 +43,49 @@ const Profile = () => {
   // Password-related states for rules and validation
   const [passwordFocused, setPasswordFocused] = useState(false);
 
+  // New state for dark mode setting
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   // Fetch user data from the global UserContext
   const { user } = useUser();
 
-  /**
-   * useEffect to fetch user profile data from the API on component mount.
-   * Retrieves the logged-in user's username and email.
-   */
+  // Load user data when the component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // API call to fetch the currently logged-in user's profile information
         const response = await apiClient.get('api/users/me');
-        setUserData(response.data); // Store the fetched user data in state
+        setUserData(response.data);
       } catch (error) {
-        console.error('Error fetching user data:', error); // Log any error encountered during the fetch
+        console.error('Error fetching user data:', error);
       }
     };
+    fetchUserData();
+  }, []);
 
-    fetchUserData(); // Call the function immediately after mounting
-  }, []); // Empty dependency array ensures this runs only once (on mount)
+  // Load theme from localStorage when the component mounts
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  // Function to handle theme toggle
+  const handleThemeToggle = () => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      setIsDarkMode(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      setIsDarkMode(true);
+    }
+  };
 
   /**
    * Handles the username change form submission.
@@ -94,26 +117,21 @@ const Profile = () => {
    * If the password and confirm password fields match, sends the new password to the API.
    */
   const handlePasswordChange = async () => {
-    // Validate the new password on the client-side
     if (password !== confirmPassword) {
       setErrors({ confirmPassword: 'Passwords do not match.' });
       return;
     }
 
-    if (!validatePassword(password)) {
-      return; // Exit if password validation fails
-    }
+    if (!validatePassword(password)) return;
 
     try {
-      // API call to update the user's password
       const response = await apiClient.put('api/users/update-password', { password });
-
       if (response.data.success) {
         setSuccessMessage('Password updated successfully.');
         setPassword('');
         setConfirmPassword('');
         setErrors({});
-        setPasswordEditVisible(false); // Hide the password edit form
+        setPasswordEditVisible(false);
       } else {
         setErrors({ password: 'Failed to update password.' });
       }
@@ -151,29 +169,22 @@ const Profile = () => {
     return true;
   };
 
-  // Toggles the visibility of the username editing form
   const toggleUsernameEdit = () => {
     setUsernameEditVisible((prev) => !prev); // Switch between showing and hiding the form
   };
 
-  // Toggles the visibility of the password change form
   const togglePasswordEdit = () => {
     setPasswordEditVisible((prev) => !prev); // Switch between showing and hiding the form
   };
 
-  // Cancels the username editing, hides the username editing form
   const cancelUsernameEdit = () => {
     setUsernameEditVisible(false); // Simply hides the form
   };
 
-  // Cancels the password editing, hides the password editing form
   const cancelPasswordEdit = () => {
     setPasswordEditVisible(false); // Simply hides the form
   };
 
-  /**
-   * Handle focus and blur events to display password rules
-   */
   const handlePasswordFocus = () => {
     setPasswordFocused(true);
   };
@@ -182,24 +193,18 @@ const Profile = () => {
     setPasswordFocused(false);
   };
 
-  // Fetch user issue statistics
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        // Fetch issues related to the logged-in user by userId
         const response = await apiClient.get(`api/issues?userId=${user.id}`);
-
         if (response.data && Array.isArray(response.data.data)) {
           const issues = response.data.data;
-
-          // Count issues with "In Progress" status (status_id === 2)
           const inProgressCount = issues.filter(issue => {
             if (!issue.status_history || issue.status_history.length === 0) return false;
             const latestStatus = issue.status_history[issue.status_history.length - 1].status_id;
             return latestStatus === 2;
           }).length;
 
-          // Count issues with "Complete" status (status_id === 1)
           const closedCount = issues.filter(issue => {
             if (!issue.status_history || issue.status_history.length === 0) return false;
             const latestStatus = issue.status_history[issue.status_history.length - 1].status_id;
@@ -237,54 +242,33 @@ const Profile = () => {
         </div>
       </header>
 
-      {/* Main content*/}
+      {/* Main content */}
       <div className="flex flex-grow">
-        {/* Sidebar*/}
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
-
-        {/* Main content area */}
         <main className="flex-grow p-4 sm:p-6 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* Left section: User's profile information */}
+            {/* Profile Section */}
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <img
-                src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+                src="https://i.pravatar.cc/150"
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto mb-4"
               />
-              <h2 className="text-2xl font-bold mb-2">{userData.username}</h2>
-
-              {/* Display of issue statistics (in progress, closed, and total) */}
+              <h2 className="text-2xl font-bold">{userData.username}</h2>
+              <p className="text-lg mb-2">{userData.email}</p>
               <ul className="mt-4 space-y-2 text-center">
-                <li className="text-gray-700">
-                  Issues in progress: <span className="text-green-500">{issuesInProgress}</span>
-                </li>
-                <li className="text-gray-700">
-                  Issues closed: <span className="text-red-500">{issuesClosed}</span>
-                </li>
-                <li className="text-gray-700">
-                  Total issues: <span className="text-gray-500">{totalIssues}</span>
-                </li>
+                <li className="text-gray-700">Issues in progress: <span className="text-green-500">{issuesInProgress}</span></li>
+                <li className="text-gray-700">Issues closed: <span className="text-red-500">{issuesClosed}</span></li>
+                <li className="text-gray-700">Total issues: <span className="text-gray-500">{totalIssues}</span></li>
               </ul>
             </div>
 
-            {/* Right section: Account Deails (username, password change forms) */}
+            {/* Account Details and Theme Settings */}
             <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md sm:flex sm:flex-col sm:items-center">
-              <h3 className="text-2xl font-bold mb-6 text-center">Account Details</h3>
+              <h3 className="text-2xl font-bold mb-6 text-center">Update Account Details</h3>
 
-              {/* Display user's email address */}
-              <div className="mb-6 w-full sm:w-2/3">
-                <label className="px-2 block text-gray-700">Email Address</label>
-                <input
-                  type="email"
-                  value={userData.email}
-                  className="w-full mt-1 p-2 border rounded-lg bg-gray-100"
-                  disabled
-                />
-              </div>
-
-              {/* Username editing section */}
+              {/* Username Editing */}
               {isUsernameEditVisible ? (
                 <div className="mb-6 w-full sm:w-2/3">
                   <label className="block text-gray-700 px-2">Username</label>
@@ -294,34 +278,18 @@ const Profile = () => {
                     className="w-full mt-1 p-2 border rounded-lg"
                     onChange={(e) => setUserData({ ...userData, username: e.target.value })}
                   />
-                  {/* Save and Cancel buttons for username change */}
                   <div className="grid grid-cols-2 gap-4 mt-4">
-                    <button
-                      onClick={handleUsernameChange}
-                      className="bg-primary text-white py-2 rounded-lg w-full"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={cancelUsernameEdit}
-                      className="bg-red-500 text-white py-2 rounded-lg w-full"
-                    >
-                      Cancel
-                    </button>
+                    <button onClick={handleUsernameChange} className="bg-primary text-white py-2 rounded-lg w-full">Save</button>
+                    <button onClick={cancelUsernameEdit} className="bg-red-500 text-white py-2 rounded-lg w-full">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <div className="w-full sm:w-2/3">
-                  <button
-                    onClick={toggleUsernameEdit}
-                    className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full"
-                  >
-                    Update Username
-                  </button>
+                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full">Update Username</button>
                 </div>
               )}
 
-              {/* Password change section */}
+              {/* Password Editing */}
               <div className="w-full sm:w-2/3">
                 {isPasswordEditVisible ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -338,7 +306,6 @@ const Profile = () => {
                       />
                       {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
                     </div>
-
                     <div>
                       <label className="block text-gray-700 px-2">Confirm Password</label>
                       <input
@@ -348,9 +315,7 @@ const Profile = () => {
                         className="w-full mt-1 p-2 border rounded-lg"
                         placeholder="Confirm new password"
                       />
-                      {errors.confirmPassword && (
-                        <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
-                      )}
+                      {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
                     </div>
 
                     {/* Password rules visible when focused */}
@@ -358,35 +323,35 @@ const Profile = () => {
                       {passwordFocused && <PasswordRules password={password} />}
                     </div>
 
-                    {/* Save and Cancel buttons */}
                     <div className="col-span-1 sm:col-span-2 flex justify-center mt-2 space-x-4">
-                      <button
-                        onClick={handlePasswordChange}
-                        className="bg-primary text-white py-2 px-6 rounded-lg w-1/2"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={cancelPasswordEdit}
-                        className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2"
-                      >
-                        Cancel
-                      </button>
+                      <button onClick={handlePasswordChange} className="bg-primary text-white py-2 px-6 rounded-lg w-1/2">Save</button>
+                      <button onClick={cancelPasswordEdit} className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full">
-                    <button
-                      onClick={togglePasswordEdit}
-                      className="mb-4 bg-primary text-white py-2 rounded-lg w-full"
-                    >
-                      Update Password
-                    </button>
+                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary text-white py-2 rounded-lg w-full">Update Password</button>
                   </div>
                 )}
               </div>
 
-              {/* Display success message when username or password is updated */}
+              {/* Theme Settings */}
+              <div className="w-full sm:w-2/3 mt-8">
+              <h3 className="text-2xl font-bold mb-6 text-center">Theme Settings</h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-dark dark:text-neutral">Dark Mode</span>
+                  <button
+                    onClick={handleThemeToggle}
+                    className='dark:bg-primary bg-gray-300 relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none'
+                  >
+                    <span className={`${
+                      isDarkMode ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Success Message */}
               {successMessage && (
                 <div className="mt-4 p-2 bg-green-100 text-green-700 rounded-lg w-full sm:w-2/3">
                   {successMessage}
