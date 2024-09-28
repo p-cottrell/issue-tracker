@@ -1,18 +1,21 @@
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const ModalContext = createContext();
 
 export const ModalProvider = ({ children }) => {
+    const location = useLocation();
+
     const [modals, setModals] = useState([]);
     const modalRef = useRef(null);
     const buttonRef = useRef(null);
     const [closeButtonStyle, setCloseButtonStyle] = useState({});
     const [mouseDownTarget, setMouseDownTarget] = useState(null);
 
-    const openModal = (content, showCloseButton = true) => {
+    const openModal = (content, showCloseButton = true, closeOnNavigate = true) => {
         if (content) {
-            setModals((prevModals) => [...prevModals, { content, showCloseButton }]);
+            setModals((prevModals) => [...prevModals, { content, showCloseButton, closeOnNavigate }]);
         } else {
             // Legacy dredge: If you call openModal(null), it previously closed the last modal. This adds support for that.
             closeModal();
@@ -59,6 +62,11 @@ export const ModalProvider = ({ children }) => {
             });
         }
     }, [modals]); // Recalculate when modals change
+
+        // Close all modals that should close on navigation
+    useEffect(() => {
+        setModals(modals.filter(modal => !modal.closeOnNavigate));
+    }, [location]);
 
     return (
         <ModalContext.Provider value={{ openModal, closeModal }}>
