@@ -302,7 +302,12 @@ export default function IssueView({ issue, onClose }) {
 
   // Select an occurrence for editing
   const handleSelectOccurrence = (occurrence) => {
-    if (isAdmin || user.id === occurrence.user_id) {
+    console.log('Occurrence user_id:', occurrence.user_id);
+    console.log('Current user id:', user.id);
+  
+    const occurrenceUserId = occurrence.user_id?._id || occurrence.user_id; 
+    if (isAdmin || user.id === occurrenceUserId)
+      {
       setSelectedOccurrence(
         selectedOccurrence && selectedOccurrence._id === occurrence._id
           ? null
@@ -314,7 +319,7 @@ export default function IssueView({ issue, onClose }) {
 
   // Edit an occurrence
   const handleEditOccurrence = async (occurrence) => {
-    if (!isAdmin && user.id !== occurrence.user_id) {
+    if (!isAdmin && user.id !== occurrence.user_id._id) {
       showToast("You do not have permission to edit this occurrence", "error");
       return;
     }
@@ -342,7 +347,7 @@ export default function IssueView({ issue, onClose }) {
 
   // Delete an occurrence
   const handleDeleteOccurrence = async (occurrence) => {
-    if (!isAdmin && user.id !== occurrence.user_id) {
+    if (!isAdmin && user.id !== occurrence.user_id._id) {
       showToast("You do not have permission to delete this occurrence", "error");
       return;
     }
@@ -388,7 +393,7 @@ export default function IssueView({ issue, onClose }) {
 
   // Select a comment for editing
   const handleSelectComment = (comment) => {
-    if (isAdmin || user.id === comment.user_id) {
+    if (isAdmin || user.id === comment.user_id.id) {
       setSelectedComment(
         selectedComment && selectedComment._id === comment._id ? null : comment
       );
@@ -398,7 +403,7 @@ export default function IssueView({ issue, onClose }) {
 
   // Edit a comment
   const handleEditComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (!isAdmin && user.id !== comment.user_id._id) {
       showToast("You do not have permission to edit this comment", "error");
       return;
     }
@@ -427,7 +432,7 @@ export default function IssueView({ issue, onClose }) {
 
   // Delete a comment
   const handleDeleteComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (!isAdmin && user.id !== comment.user_id.id) {
       showToast("You do not have permission to delete this comment", "error");
       return;
     }
@@ -673,7 +678,7 @@ export default function IssueView({ issue, onClose }) {
                       <li
                         key={occurrence._id}
                         className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
-                          isAdmin || user.id === occurrence.user_id
+                          isAdmin || user.id === occurrence.user_id._id
                             ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
                             : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
                         }`}
@@ -711,10 +716,11 @@ export default function IssueView({ issue, onClose }) {
                 {/* Occurrence edit section */}
                 {selectedOccurrence && (
                   <div className="occurrence-edit mt-4">
-                    {user.id === selectedOccurrence.user_id && (
+                    {user.id === selectedOccurrence.user_id._id && (
                       <>
                         <textarea
                           value={editedOccurrence}
+      
                           onChange={(e) => setEditedOccurrence(e.target.value)}
                           className="w-full p-2 border rounded mb-2"
                         />
@@ -925,7 +931,7 @@ export default function IssueView({ issue, onClose }) {
                       <li
                         key={comment._id}
                         className={`comment-item mb-4 ${
-                          isAdmin || user.id === comment.user_id
+                          isAdmin || user.id === comment.user_id._id
                             ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100'
                             : 'bg-gray-50 border-l-4 border-gray-300'
                         }`}
@@ -968,7 +974,7 @@ export default function IssueView({ issue, onClose }) {
                 {/* Comment edit section */}
                 {selectedComment && (
                   <div className="comment-edit mt-4">
-                    {user.id === selectedComment.user_id && (
+                    {user.id === selectedComment.user_id._id && (
                       <>
                         <textarea
                           value={editedComment}
@@ -988,7 +994,7 @@ export default function IssueView({ issue, onClose }) {
                           >
                             Cancel
                           </button>
-                          {(isAdmin || user.id === selectedComment.user_id) && (
+                          {(isAdmin || user.id === selectedComment.user_id._id) && (
                             <button
                               onClick={() => handleDeleteComment(selectedComment)}
                               className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
@@ -1000,7 +1006,7 @@ export default function IssueView({ issue, onClose }) {
                       </>
                     )}
 
-                    {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id) && (
+                    {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id._id) && (
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleDeleteComment(selectedComment)}
