@@ -640,7 +640,7 @@ export default function IssueView({ issue, onClose }) {
           <div className="issue-body">
             <div className="issue-main">
               {/* Description section */}
-              <h2>Description</h2>
+              <h2 className="text-xl font-bold">Description</h2>
               {editMode ? (
                 <textarea
                   name="description"
