@@ -30,7 +30,7 @@ const AddIssue = ({ closeHandler }) => {
    */
   const addHandler = (e) => {
     e.preventDefault(); // Prevent default form submission behaviour
-    closeHandler(); // Close the popup after submission
+    closeHandler(true); // Close the popup after submission
 
     const createIssue = async () => {
       const issueData = {
@@ -294,21 +294,21 @@ const AddIssue = ({ closeHandler }) => {
           </div>
         )}
 
-        {/* Form Submit and Cancel Buttons */}
+        {/* Form Submit Button */}
         <div className="flex justify-center">
           <button
             type="submit"
             className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
           >
-            + Add
+            Create Issue
           </button>
-          <button
+          {/* <button
             type="button"
             className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
-            onClick={closeHandler}
+            onClick={() => closeHandler(false)}
           >
             Cancel
-          </button>
+          </button> */}
         </div>
       </form>
 

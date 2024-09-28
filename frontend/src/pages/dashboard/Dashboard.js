@@ -149,7 +149,7 @@ const Dashboard = () => {
    */
   const showAddIssueModal = () => {
     setPopupHandler(() => addHandler);
-    openModal(<AddIssuePopup closeHandler={() => closeModalCallback(true)} />, false);
+    openModal(<AddIssuePopup closeHandler={(changed) => closeModalCallback(changed)} />, false);
   };
 
   /**

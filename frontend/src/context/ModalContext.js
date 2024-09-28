@@ -37,6 +37,9 @@ export const ModalProvider = ({ children }) => {
 
             setModals((prevModals) => prevModals.slice(0, -1)); // Close modal if onUserCloseRequest is not present or returns true
         }
+        else {
+            console.warn('closeModal() called when no modals are open.');
+        }
     };
 
     const handleMouseDown = (e) => {
