@@ -31,7 +31,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     const menuItems = [
         { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
         { name: 'Data', icon: ChartBarIcon, path: '/dataVisualisation' },
-        { name: 'Settings', icon: CogIcon, path: '/settings' },
         { name: 'Profile', icon: UserIcon, path: '/profile' },
         { name: 'Log Out', icon: ArrowLeftEndOnRectangleIcon, onClick: handleLogoutClick }
     ];
