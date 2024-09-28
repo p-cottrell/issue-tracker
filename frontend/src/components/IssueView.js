@@ -1,4 +1,4 @@
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useModal } from '../context/ModalContext';
@@ -69,7 +69,7 @@ export default function IssueView({ issue, onClose }) {
   // State for occurrences
   const [newOccurrence, setNewOccurrence] = useState(""); // New occurrence input
   const [selectedOccurrence, setSelectedOccurrence] = useState(null); // Selected occurrence for editing
-  const [editedOccurrence, setEditedOccurrence] = useState(""); // Edited occurrence text
+  const [editedOccurrence, setEditedOccurrence] = useState(null); // Edited occurrence text
 
   // State for comments
   const [newComment, setNewComment] = useState(""); // New comment input
@@ -294,13 +294,20 @@ export default function IssueView({ issue, onClose }) {
 
   // Select an occurrence for editing
   const handleSelectOccurrence = (occurrence) => {
+    if (selectedOccurrence && selectedOccurrence._id === occurrence._id) {
+      // If the occurrence is already selected, do nothing
+      return;
+    }
     if (isAdmin || user.id === occurrence.user_id) {
       setSelectedOccurrence(
         selectedOccurrence && selectedOccurrence._id === occurrence._id
           ? null
           : occurrence
       );
-      setEditedOccurrence(occurrence.description);
+      setEditedOccurrence({
+        description: occurrence.description,
+        time: occurrence.created_at ? new Date(occurrence.created_at).toISOString().slice(0, 16) : ''
+      });
     }
   };
 
@@ -314,7 +321,8 @@ export default function IssueView({ issue, onClose }) {
       const response = await apiClient.put(
         `/api/occurrences/${issue._id}/${occurrence._id}`,
         {
-          description: editedOccurrence,
+          description: editedOccurrence.description,
+          created_at: editedOccurrence.time,
         }
       );
 
@@ -324,7 +332,7 @@ export default function IssueView({ issue, onClose }) {
 
       setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
-      setEditedOccurrence("");
+      setEditedOccurrence(null);
       showToast("Occurrence updated successfully", "success");
     } catch (error) {
       console.error("Error updating occurrence:", error);
@@ -332,8 +340,37 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  // Delete an occurrence
+  // Open modal asking if the user wants to delete an occurrence
+  const promptDeleteOccurrence = async (occurrence) => {
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this occurrence?
+        </h2>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={async () => {
+              await handleDeleteOccurrence(occurrence);
+              closeModal();
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+      , false);
+  };
+
+  // Function to handle deleting an occurrence
   const handleDeleteOccurrence = async (occurrence) => {
+    console.log(`Deleting occurrence: ${occurrence._id}`);
     if (!isAdmin && user.id !== occurrence.user_id) {
       showToast("You do not have permission to delete this occurrence", "error");
       return;
@@ -353,7 +390,6 @@ export default function IssueView({ issue, onClose }) {
       showToast("Error deleting occurrence", "error");
     }
   };
-
 
   // Functions for handling comments
 
@@ -691,89 +727,86 @@ export default function IssueView({ issue, onClose }) {
                   {(detailedIssue.occurrences || []).map((occurrence) => (
                     <li
                       key={occurrence._id}
-                      className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
-                        isAdmin || user.id === occurrence.user_id
-                          ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
+                      className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200
+                        ${isAdmin || user.id === occurrence.user_id
+                          ? selectedOccurrence?._id === occurrence._id
+                            ? "bg-green-50 hover:bg-green-100 border-l-4 border-green-500"
+                            : "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
                           : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
-                      }`}
+                        }`}
                       onClick={() => handleSelectOccurrence(occurrence)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="text-sm text-gray-600">
                             <strong>Created at: </strong>
-                            <span
-                              title={
-                                occurrence.created_at
-                                  ? new Date(occurrence.created_at).toLocaleString()
-                                  : ''
-                              }
-                            >
-                              {occurrence.created_at
-                                ? formatSmartDate(occurrence.created_at)
-                                : 'N/A'}
-                            </span>
+                            {selectedOccurrence?._id === occurrence._id ? (
+                              <input
+                                type="datetime-local"
+                                value={editedOccurrence.time}
+                                onChange={(e) => setEditedOccurrence({ ...editedOccurrence, time: e.target.value })}
+                                className="w-full p-2 border rounded mb-2"
+                                max={new Date().toISOString().slice(0, 16)}
+                              />
+                            ) : (
+                              <span
+                                title={
+                                  occurrence.created_at
+                                    ? new Date(occurrence.created_at).toLocaleString()
+                                    : ''
+                                }
+                              >
+                                {occurrence.created_at
+                                  ? formatSmartDate(occurrence.created_at)
+                                  : 'N/A'}
+                              </span>
+                            )}
                             <br />
                             <strong>Reported by: </strong>
                             {occurrence.user_id?.username || 'Unknown'}
                           </p>
-                          <p className="mt-1">
-                            <strong>Description:</strong> {occurrence.description}
-                          </p>
+                          {selectedOccurrence?._id === occurrence._id ? (
+                            <textarea
+                              value={editedOccurrence.description}
+                              onChange={(e) => setEditedOccurrence({ ...editedOccurrence, description: e.target.value })}
+                              className="w-full p-2 border rounded mb-2"
+                            />
+                          ) : (
+                            <p className="mt-1">
+                              <strong>Description:</strong> {occurrence.description}
+                            </p>
+                          )}
                         </div>
+                        {selectedOccurrence?._id === occurrence._id ? (
+                          <div className="flex flex-col items-center space-y-2">
+                            <button
+                              onClick={() => handleEditOccurrence(occurrence)}
+                              className="p-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                              title="Save"
+                            >
+                              <CheckIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => setSelectedOccurrence(null)}
+                              className="p-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                              title="Cancel"
+                            >
+                              <XMarkIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => promptDeleteOccurrence(occurrence)}
+                              className="p-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                              title="Delete"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     </li>
                   ))}
                 </ul>
               </div>
-
-              {/* Occurrence edit section */}
-              {selectedOccurrence && (
-                <div className="occurrence-edit mt-4">
-                  {user.id === selectedOccurrence.user_id && (
-                    <>
-                      <textarea
-                        value={editedOccurrence}
-                        onChange={(e) => setEditedOccurrence(e.target.value)}
-                        className="w-full p-2 border rounded mb-2"
-                      />
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleEditOccurrence(selectedOccurrence)}
-                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        >
-                          Save Occurrence
-                        </button>
-                        <button
-                          onClick={() => setSelectedOccurrence(null)}
-                          className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                          Cancel
-                        </button>
-                        {(isAdmin || user.id === selectedOccurrence.user_id) && (
-                          <button
-                            onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                            className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                          >
-                            Delete Occurrence
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {user.id !== selectedOccurrence.user_id && (isAdmin || user.id === selectedOccurrence.user_id) && (
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                        className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                      >
-                        Delete Occurrence
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* New occurrence input */}
               <>

@@ -8,6 +8,7 @@ export const ModalProvider = ({ children }) => {
     const modalRef = useRef(null);
     const buttonRef = useRef(null);
     const [closeButtonStyle, setCloseButtonStyle] = useState({});
+    const [mouseDownTarget, setMouseDownTarget] = useState(null);
 
     const openModal = (content, showCloseButton = true) => {
         if (content) {
@@ -24,8 +25,12 @@ export const ModalProvider = ({ children }) => {
         setModals((prevModals) => prevModals.slice(0, -1));
     };
 
+    const handleMouseDown = (e) => {
+        setMouseDownTarget(e.target);
+    };
+
     const handleBackgroundClick = (e, index) => {
-        if (e.target === e.currentTarget && index === modals.length - 1) {
+        if (mouseDownTarget === e.currentTarget && e.target === e.currentTarget && index === modals.length - 1) {
             closeModal();
         }
     };
@@ -54,7 +59,8 @@ export const ModalProvider = ({ children }) => {
                     <div
                         key={index}
                         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-                        onClick={(e) => handleBackgroundClick(e, index)}
+                        onMouseDown={handleMouseDown}
+                        onMouseUp={(e) => handleBackgroundClick(e, index)}
                     >
                         <div ref={modalRef} className="relative max-w-3xl w-full max-h-full">
                             {modal.content}

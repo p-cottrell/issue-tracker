@@ -2,19 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
-const Issue = require('../models/Issue'); 
-const User = require('../models/User'); 
+const Issue = require('../models/Issue');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 
 /**
  * Comment Management Routes
  *
  * This module defines routes for creating, retrieving, and deleting comments
- * associated with specific issues. Each route uses JWT-based authentication to 
+ * associated with specific issues. Each route uses JWT-based authentication to
  * ensure that only authorized users can interact with the comments.
  *
- * IMPORTANT: `authenticateToken` middleware authenticates using cookies, so when 
- * calling the API from the front-end, you must use `{ withCredentials: true }` to 
+ * IMPORTANT: `authenticateToken` middleware authenticates using cookies, so when
+ * calling the API from the front-end, you must use `{ withCredentials: true }` to
  * ensure authentication cookies are passed.
  */
 
@@ -23,7 +23,7 @@ const mongoose = require('mongoose');
  *
  * This route allows an authenticated user to add a new comment to an existing issue.
  * The issue is identified by `issueId`, and the comment details are provided in the request body.
- * The comment is associated with the authenticated user's ID and appended to the issue's 
+ * The comment is associated with the authenticated user's ID and appended to the issue's
  * `comments` array.
  *
  * @name POST /:issueId
@@ -85,8 +85,8 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
 /**
  * Route to retrieve all comments for a specific issue
  *
- * This route allows an authenticated user to retrieve all comments associated 
- * with a specific issue. The issue is identified by `issueId`, and the comments 
+ * This route allows an authenticated user to retrieve all comments associated
+ * with a specific issue. The issue is identified by `issueId`, and the comments
  * are returned in the response.
  *
  * @name GET /issues/:id/comments
@@ -117,7 +117,7 @@ router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
 /**
  * Route to delete a specific comment from an issue
  *
- * This route allows an authenticated user to delete a specific comment from an 
+ * This route allows an authenticated user to delete a specific comment from an
  * issue. The issue is identified by `issueId` and the comment by `commentId`.
  * Only the user who created the comment or an admin can delete it.
  *
@@ -144,8 +144,6 @@ router.delete("/:issueId/:commentId", authenticateToken, async (req, res) => {
     if (!updatedIssue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
-
-    
 
     res.status(200).json(updatedIssue);
   } catch (error) {
@@ -179,11 +177,11 @@ router.put('/:issueId/:commentId', authenticateToken, async (req, res) => {
     // Update the specific comment using $set operator
     const updatedIssue = await Issue.findOneAndUpdate(
       { _id: issueId, 'comments._id': commentId },
-      { 
-        $set: { 
+      {
+        $set: {
           'comments.$.comment_text': comment_text,
           'comments.$.updated_at': Date.now()
-        } 
+        }
       },
       { new: true, runValidators: false }
     );
@@ -196,9 +194,9 @@ router.put('/:issueId/:commentId', authenticateToken, async (req, res) => {
       comment => comment._id.toString() === commentId
     );
 
-    res.json({ 
-      message: 'Comment updated successfully', 
-      comment: updatedComment 
+    res.json({
+      message: 'Comment updated successfully',
+      comment: updatedComment
     });
   } catch (error) {
     console.error('Error updating comment:', error);
