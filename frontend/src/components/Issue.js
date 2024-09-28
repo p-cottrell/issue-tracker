@@ -1,25 +1,26 @@
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';
 import { generateNiceReferenceId } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
+/**
+ * Issue Component: Renders an individual issue card with details like charm, title, status, description, 
+ * reference ID, and attachments (if available). Handles image loading, fallback on errors, 
+ * and opening modals for full image previews.
+ */
 export default function Issue({ data, openIssueModal, deleteHandler }) {
     const { openModal } = useModal();
-    const [isLoading, setIsLoading] = useState(true);
-    const [isImageError, setIsImageError] = useState(false);
-    const [attachments, setAttachments] = useState(data.attachments || []);
+    const [isLoading, setIsLoading] = useState(true); // Tracks loading state for attachments
+    const [isImageError, setIsImageError] = useState(false); // Tracks if the attachment image failed to load
+    const [attachments, setAttachments] = useState(data.attachments || []); // Stores attachment data
 
-    // Effect 1: Fetch attachments if signedUrl is missing
-    useEffect(() => {
-        if (attachments && attachments.length > 0 && !attachments[0].signedUrl) {
-            fetchAttachments();
-        }
-    }, [attachments]);
-
-    // Fetch attachments function (only if signedUrl is missing)
-    const fetchAttachments = async () => {
+    /**
+     * Fetches the attachments for the issue if they don't have signed URLs. This is done 
+     * via an API call to retrieve the correct URLs for image attachments.
+     */
+    const fetchAttachments = useCallback(async () => {
         try {
             const response = await apiClient.get(`/api/attachments/${data._id}`);
             const updatedAttachments = response.data.map(attachment => ({ ...attachment, signedUrl: attachment.signedUrl || '' }));
@@ -27,49 +28,65 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         } catch (error) {
             console.error('Error fetching attachments:', error);
         }
-    };
+    }, [data._id]);
 
-    // Effect 2: Load the image and handle errors
+    /**
+     * useEffect hook to fetch attachments when the component mounts if the signed URLs are missing.
+     */
+    useEffect(() => {
+        if (attachments && attachments.length > 0 && !attachments[0].signedUrl) {
+            fetchAttachments();
+        }
+    }, [attachments, fetchAttachments]);
+
+    /**
+     * useEffect hook to handle image loading. Once the attachments are fetched, this 
+     * attempts to load the first image and handle success or failure with appropriate states.
+     */
     useEffect(() => {
         if (attachments && attachments.length > 0 && attachments[0].signedUrl) {
             const img = new Image();
             img.src = attachments[0].signedUrl;
 
-            img.onload = () => setIsLoading(false);
+            img.onload = () => setIsLoading(false); // Successfully loaded image
             img.onerror = (ev) => {
-                setIsImageError(true);
+                setIsImageError(true); // Failed to load image
                 setIsLoading(false);
                 console.error(`Failed to load image '${attachments[0].signedUrl}':`, ev);
             };
         }
-    }, [attachments]); // Ensure this effect re-runs when `attachments` are updated
+    }, [attachments]);
 
-    // Extract the latest status from the status_history array.
-    // This ensures we always show the most recent status.
+    /**
+     * Extracts the latest status from the issue's status history and returns the appropriate CSS class for styling.
+     */
     const latestStatus = data.status_history && data.status_history.length > 0
         ? data.status_history[data.status_history.length - 1].status_id
         : undefined;
 
-    // Function to determine the appropriate CSS class based on the latest status.
-    // This function returns different classes for different status IDs.
+    /**
+     * Returns a CSS class based on the issue's latest status, allowing for dynamic 
+     * background and text colours that indicate the status (e.g., Complete, In Progress).
+     */
     const getStatusClass = () => {
-        const baseClass = 'whitespace-nowrap px-3 py-1 rounded-full text-sm font-semibold'; // Add `whitespace-nowrap` to prevent wrapping
+        const baseClass = 'whitespace-nowrap px-3 py-1 rounded-full text-sm font-semibold'; // Prevents wrapping
         switch (latestStatus) {
             case 1:
-                return `${baseClass} bg-green-500 text-white`; // Complete
+                return `${baseClass} bg-green-500 text-white`; // Complete status
             case 2:
-                return `${baseClass} bg-yellow-500 text-white`; // In Progress
+                return `${baseClass} bg-yellow-500 text-white`; // In Progress status
             case 3:
-                return `${baseClass} bg-red-500 text-white`; // Cancelled
+                return `${baseClass} bg-red-500 text-white`; // Cancelled status
             case 4:
-                return `${baseClass} bg-gray-500 text-white`; // Pending
+                return `${baseClass} bg-gray-500 text-white`; // Pending status
             default:
-                return `${baseClass} bg-gray-500 text-white`; // Unknown
+                return `${baseClass} bg-gray-500 text-white`; // Fallback for unknown statuses
         }
     };
 
-    // Function to get the status text corresponding to the latest status.
-    // This converts status IDs to human-readable text.
+    /**
+     * Converts the status ID into a human-readable text label for display.
+     */
     const getStatusText = () => {
         switch (latestStatus) {
             case 1:
@@ -85,14 +102,17 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         }
     };
 
-    // Function to check if a character is a letter (used for charm styling).
-    // Utilises Unicode support to handle various languages and symbols.
+    /**
+     * Utility function to determine if a character is a letter, used to conditionally style 
+     * the charm icon differently depending on whether it's a letter or a symbol.
+     */
     const isLetter = (char) => {
         return /\p{L}/u.test(char);
     };
 
-    // Function to handle the click event on an image.
-    // Opens a modal displaying the full preview of the image.
+    /**
+     * Handles the click event on an attachment image. Opens a modal to display the image in full size.
+     */
     const handleImageClick = (imageSrc) => {
         openModal(
             <div className="relative">
@@ -101,23 +121,30 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         );
     };
 
+    /**
+     * Handles the click event on the card, ensuring that clicking opens the issue modal.
+     */
     const handleCardClick = (e) => {
         if (e.detail === 1) {
-            openIssueModal(data);
+            openIssueModal(data); // Opens the full issue details
         }
     };
 
+    /**
+     * Handlers for mouse events to distinguish between drag-and-drop vs. simple click on the issue card.
+     * These handlers ensure drag actions don't trigger click events on the card.
+     */
     const handleMouseDown = (e) => {
-        e.currentTarget.dataset.dragging = false;
+        e.currentTarget.dataset.dragging = false; // Initialise dragging state
     };
 
     const handleMouseMove = (e) => {
-        e.currentTarget.dataset.dragging = true;
+        e.currentTarget.dataset.dragging = true; // Set dragging to true when the mouse moves
     };
 
     const handleMouseUp = (e) => {
         if (e.currentTarget.dataset.dragging === 'false') {
-            handleCardClick(e);
+            handleCardClick(e); // Trigger the card click if it wasn't a drag action
         }
     };
 
@@ -188,7 +215,6 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                         {attachments.length > 1 && (
                             <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
                                 {attachments.length > 9 ? '9+' : attachments.length}
-                                {/* {attachments.length > 9 ? '+9' : `+${attachments.length - 1}`} */}
                             </div>
                         )}
                     </div>

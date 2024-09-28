@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import apiClient from "../api/apiClient";
 import { useUser } from "../context/UserContext";
 import { generateNiceReferenceId } from '../helpers/IssueHelpers';
@@ -54,6 +54,7 @@ export default function IssueView({ issue, onClose }) {
   const [editedIssue, setEditedIssue] = useState({ ...issue }); // Copy of issue for editing
   const [editedCharm, setEditedCharm] = useState(issue.charm); // Edited charm (emoji)
   const [currentStatus, setCurrentStatus] = useState(() => {
+  
     // Initialize currentStatus based on the latest status in status_history
     if (issue.status_history && issue.status_history.length > 0) {
       return issue.status_history[issue.status_history.length - 1].status_id;
@@ -80,6 +81,7 @@ export default function IssueView({ issue, onClose }) {
   const [attachmentError, setAttachmentError] = useState(null); // Attachment error message
   const [images, setImages] = useState([]); // Selected images for upload
   const [imagePreviews, setImagePreviews] = useState([]); // Image preview URLs
+  const fileInputRef = useRef(null); // Create a ref for the file input
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
   const [previewImage, setPreviewImage] = useState(null); // Preview image state
 
@@ -841,7 +843,7 @@ export default function IssueView({ issue, onClose }) {
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
-                      onClick={() => document.getElementById('fileInput').click()}
+                      onClick={() => fileInputRef.current.click()} // Use the ref to trigger click
                     >
                       <p className="text-sm text-gray-500">
                         {images.length > 0
@@ -851,6 +853,7 @@ export default function IssueView({ issue, onClose }) {
                     </div>
                     <input
                       id="fileInput"
+                      ref={fileInputRef} // Attach the ref to the file input
                       type="file"
                       accept="image/*"
                       multiple

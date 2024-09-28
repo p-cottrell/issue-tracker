@@ -269,7 +269,7 @@ const Dashboard = () => {
 
   const statusOptions = [
     // Insertion order depicts the order in the dropdown
-    { value: 0, label: 'Pending' },
+    { value: 4, label: 'Pending' },
     { value: 2, label: 'In Progress' },
     { value: 1, label: 'Complete' },
     { value: 3, label: 'Cancelled' },

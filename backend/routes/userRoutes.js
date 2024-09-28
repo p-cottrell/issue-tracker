@@ -29,8 +29,11 @@ router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
+    // Validate the provided email and password
     validateEmail(email);
+    validatePassword(password);
 
+    // Check if the email or username is already taken
     if (await isEmailTaken(email)) {
       return res.status(400).json({ error: 'Email already taken' });
     }
@@ -39,45 +42,52 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username already taken' });
     }
 
-    validatePassword(password);
-
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create the new user with default 'user' role
     const user = new User({
       username,
       email,
       password_hash: hashedPassword,
+      role: 'user', // Assign default role as 'user'
     });
 
     const newUser = await user.save();
 
+    // Generate JWT payload
     const payload = {
       id: newUser._id,
       role: newUser.role,
     };
 
-    const token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    // Sign the JWT token
+    const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+    // Generate a refresh token
+    const refreshToken = await generateRefreshToken(newUser._id);
 
     // Set the access token cookie
-    res.cookie('access_token', token, {
+    res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Only secure in production
-      sameSite: 'Strict', // Allows cookies to be sent in all contexts
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
       maxAge: 3600000, // 1 hour
     });
 
     // Set the refresh token cookie
-    res.cookie('refresh_token', refreshToken, {
+    res.cookie('refresh_token', refreshToken.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Only secure in production
-      sameSite: 'Strict', // Allows cookies to be sent in all contexts
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     return res.status(201).json({
       success: true,
       message: 'Registration successful',
+      user: { id: newUser._id, username: newUser.username, email: newUser.email, role: newUser.role },
     });
   } catch (error) {
     console.error('Error saving user:', error);
@@ -101,15 +111,30 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Check if user exists with the given email
     const user = await User.findOne({ email });
 
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-      return res.json({
+    if (!user) {
+      // Specific error for non-existing email
+      return res.status(400).json({
         success: false,
-        message: 'Invalid login credentials'
+        error: 'invalid-email',
+        message: 'No account found with this email address.'
       });
     }
 
+    // Validate password
+    const isPasswordValid = bcrypt.compareSync(password, user.password_hash);
+    if (!isPasswordValid) {
+      // Specific error for incorrect password
+      return res.status(400).json({
+        success: false,
+        error: 'invalid-password',
+        message: 'Incorrect password. Please try again.'
+      });
+    }
+
+    // User is authenticated, generate JWT token
     const payload = {
       id: user._id,
       role: user.role,
@@ -117,30 +142,33 @@ router.post('/login', async (req, res) => {
 
     const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
+    // Set access token cookie
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
-      maxAge: 3600000,
+      maxAge: 3600000, // 1 hour
     });
 
+    // Check or generate refresh token
     let refreshToken = await RefreshToken.findOne({ userId: user._id });
-
     if (!refreshToken) {
       refreshToken = await generateRefreshToken(user._id);
     }
 
+    // Set refresh token cookie
     res.cookie('refresh_token', refreshToken.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    // Respond with success and user data
     res.json({
       success: true,
       message: 'Login successful',
-      user: { id: user._id, username: user.username, email: user.email, role: user.role }, // Include user data
+      user: { id: user._id, username: user.username, email: user.email, role: user.role },
     });
 
   } catch (error) {
@@ -148,6 +176,8 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error during login', details: error.message });
   }
 });
+
+
 
 /**
  * Route to log out a user.
@@ -163,19 +193,18 @@ router.post('/login', async (req, res) => {
 router.post('/logout', authenticateToken, async (req, res) => {
   const { refresh_token: refreshToken } = req.cookies;
 
-  if (!refreshToken) {
-    return res.status(400).send('No refresh token provided');
+  if (refreshToken) {
+    try {
+      await RefreshToken.findOneAndDelete({ token: refreshToken });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      return res.status(500).send('Error during logout');
+    }
   }
 
-  try {
-    await RefreshToken.findOneAndDelete({ token: refreshToken });
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
-    res.status(200).send('Logged out successfully');
-  } catch (error) {
-    console.error('Error during logout:', error);
-    res.status(500).send('Error during logout');
-  }
+  res.clearCookie('access_token');
+  res.clearCookie('refresh_token');
+  return res.status(200).send('Logged out successfully');
 });
 
 /**
