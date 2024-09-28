@@ -101,18 +101,27 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         );
     };
 
+    const [mouseDownPosition, setMouseDownPosition] = useState({ x: 0, y: 0 });
+
     const handleCardClick = (e) => {
+        // Instead of immediately opening the card when we click on it, we want to wait a bit to see if the user is dragging to select text.
         if (e.detail === 1) {
             openIssueModal(data);
         }
     };
 
     const handleMouseDown = (e) => {
+        setMouseDownPosition({ x: e.clientX, y: e.clientY });
         e.currentTarget.dataset.dragging = false;
     };
 
     const handleMouseMove = (e) => {
-        e.currentTarget.dataset.dragging = true;
+        const distance = Math.sqrt(
+            Math.pow(e.clientX - mouseDownPosition.x, 2) + Math.pow(e.clientY - mouseDownPosition.y, 2)
+        );
+        if (distance > 5) { // Threshold, in pixels, before we no longer consider it a click.
+            e.currentTarget.dataset.dragging = true;
+        }
     };
 
     const handleMouseUp = (e) => {
