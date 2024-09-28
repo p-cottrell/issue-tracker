@@ -173,7 +173,7 @@ const Dashboard = () => {
    * @param {Object} changed - Flag to indicate if the object was updated.
    */
   const closeModalCallback = (changed) => {
-    closeModal(null);
+    closeModal();
     if (changed) {
       setUpdateTrigger((prev) => prev + 1);
     }
