@@ -61,8 +61,10 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                 return `${baseClass} bg-yellow-500 text-white`; // In Progress
             case 3:
                 return `${baseClass} bg-red-500 text-white`; // Cancelled
-            default:
+            case 4:
                 return `${baseClass} bg-gray-500 text-white`; // Pending
+            default:
+                return `${baseClass} bg-gray-500 text-white`; // Unknown
         }
     };
 
@@ -76,8 +78,10 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                 return 'In Progress';
             case 3:
                 return 'Cancelled';
-            default:
+            case 4:
                 return 'Pending';
+            default:
+                return 'Unknown';
         }
     };
 

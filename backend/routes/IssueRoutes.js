@@ -45,7 +45,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     // Create a new issue instance with initial status history
-    const initialStatusId = status_id || 2; // Default to '2' if no status_id is provided
+    const initialStatusId = status_id || 4; // Default to '4' if no status_id is provided
     const issue = new Issue({
       reporter_id,
       title,
