@@ -11,7 +11,8 @@ const seedrandom = require('seedrandom');
  */
 export function generateNiceReferenceId(data) {
     // use seeded rng to get three random letters, then four random numbers
-    const rng = seedrandom(data._id);
+    let id = data._id || data;
+    const rng = seedrandom(id);
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const numbers = '0123456789';
     const randomLetter = () => letters[Math.floor(rng() * letters.length)];

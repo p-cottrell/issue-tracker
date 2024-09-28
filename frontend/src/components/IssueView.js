@@ -630,7 +630,7 @@ export default function IssueView({ issue, onClose }) {
                 </p>
                 <p className="text-2xl ml-2">{detailedIssue.charm}</p>
                 <p className="text-sm text-gray-600">
-                  <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue._id)}
+                  <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue)}
                 </p>
               </>
             )}
