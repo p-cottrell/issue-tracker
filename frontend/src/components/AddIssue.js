@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import apiClient from '../api/apiClient';
 import { charmOptions } from '../helpers/IssueHelpers';
+import TiptapEditor from './richtext/TiptapEditor';
 
 /**
  * AddIssue component: This component provides a form for adding a new issue,
@@ -216,12 +217,13 @@ const AddIssue = ({ closeHandler }) => {
         {/* Description Text Area */}
         <div className="mb-6">
           <label className="block text-dark mb-2">Description:</label>
-          <textarea
+          {/* <textarea
             className="bg-white border border-secondary p-2 rounded outline-none w-full resize-y h-52"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe everything about the issue here..."
-          />
+          /> */}
+          <TiptapEditor content={description} setContent={setDescription}/>
         </div>
 
         {/* Attachments Section */}
