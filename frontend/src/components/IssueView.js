@@ -100,9 +100,9 @@ export default function IssueView({ issue, onClose }) {
       setDetailedIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
       setEditedCharm(fetchedIssue.charm); // Update editedCharm
-  
+
       // Set reporter's username
-    
+
       fetchUsername(response.data.reporter_id);
       fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
@@ -542,132 +542,378 @@ export default function IssueView({ issue, onClose }) {
 
   // Render the component
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div className="mt-3">
-          {/* Header with edit, save, cancel buttons */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-              {canEdit && !editMode && (
+    <div className="relative mx-auto p-5 shadow-lg rounded-md bg-white max-h-[calc(100vh-40px)] overflow-y-auto">
+      <div className="mt-3">
+        {/* Header with edit, save, cancel buttons */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex space-x-2">
+            {canEdit && !editMode && (
+              <button
+                onClick={handleEdit}
+                className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                Edit
+              </button>
+            )}
+            {canEdit && editMode && (
+              <>
                 <button
-                  onClick={handleEdit}
-                  className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  onClick={handleSave}
+                  className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
                 >
-                  Edit
+                  Save
                 </button>
-              )}
-              {canEdit && editMode && (
-                <>
-                  <button
-                    onClick={handleSave}
-                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                  >
-                    Cancel
-                  </button>
-                </>
-              )}
-              {isAdmin && (
                 <button
-                  onClick={handleDeleteIssue}
-                  className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                  onClick={handleCancel}
+                  className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
                 >
-                  Delete
+                  Cancel
                 </button>
-              )}
-            </div>
+              </>
+            )}
+            {isAdmin && (
+              <button
+                onClick={handleDeleteIssue}
+                className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-2 px-7 py-3">
+          {/* Issue header section */}
+          <div className="issue-header">
+            {editMode ? (
+              <div className="flex items-center space-x-2">
+                {/* Editable title */}
+                <input
+                  type="text"
+                  value={editedIssue.title}
+                  onChange={(e) =>
+                    setEditedIssue({ ...editedIssue, title: e.target.value })
+                  }
+                  className="text-xl font-bold mb-2 w-full p-2 border rounded h-[42px]"
+                />
+                {/* Status select */}
+                <select
+                  name="status_id"
+                  value={currentStatus || ''}
+                  onChange={handleInputChange}
+                  className="p-2 border rounded h-[42px]"
+                >
+                  <option value={1}>Complete</option>
+                  <option value={2}>In Progress</option>
+                  <option value={3}>Cancelled</option>
+                  <option value={4}>Pending</option>
+                </select>
+                {/* Charm (emoji) select */}
+                <select
+                  value={editedCharm || ''}
+                  onChange={(e) => setEditedCharm(e.target.value)}
+                  className="p-2 border rounded h-[42px]"
+                >
+                  {emojiOptions.map((emoji, index) => (
+                    <option key={index} value={emoji}>
+                      {emoji}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <>
+                {/* Display issue title, status, charm */}
+                <h1 className="text-xl font-bold mb-2">{detailedIssue.title}</h1>
+                <p className="text-sm text-gray-600">
+                  Status: {getStatusText(currentStatus)}
+                </p>
+                <p className="text-2xl ml-2">{detailedIssue.charm}</p>
+                <p className="text-sm text-gray-600">
+                  <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue._id)}
+                </p>
+              </>
+            )}
           </div>
 
-          <div className="mt-2 px-7 py-3">
-            {/* Issue header section */}
-            <div className="issue-header">
+          {/* Issue body section */}
+          <div className="issue-body">
+            <div className="issue-main">
+              {/* Description section */}
+              <h2>Description</h2>
               {editMode ? (
-                <div className="flex items-center space-x-2">
-                  {/* Editable title */}
-                  <input
-                    type="text"
-                    value={editedIssue.title}
-                    onChange={(e) =>
-                      setEditedIssue({ ...editedIssue, title: e.target.value })
-                    }
-                    className="text-xl font-bold mb-2 w-full p-2 border rounded h-[42px]"
-                  />
-                  {/* Status select */}
-                  <select
-                    name="status_id"
-                    value={currentStatus || ''}
-                    onChange={handleInputChange}
-                    className="p-2 border rounded h-[42px]"
-                  >
-                    <option value={1}>Complete</option>
-                    <option value={2}>In Progress</option>
-                    <option value={3}>Cancelled</option>
-                    <option value={4}>Pending</option>
-                  </select>
-                  {/* Charm (emoji) select */}
-                  <select
-                    value={editedCharm || ''}
-                    onChange={(e) => setEditedCharm(e.target.value)}
-                    className="p-2 border rounded h-[42px]"
-                  >
-                    {emojiOptions.map((emoji, index) => (
-                      <option key={index} value={emoji}>
-                        {emoji}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <textarea
+                  name="description"
+                  value={editedIssue.description}
+                  onChange={handleInputChange}
+                  className="issue-description-textarea"
+                />
               ) : (
-                <>
-                  {/* Display issue title, status, charm */}
-                  <h1 className="text-xl font-bold mb-2">{detailedIssue.title}</h1>
-                  <p className="text-sm text-gray-600">
-                    Status: {getStatusText(currentStatus)}
-                  </p>
-                  <p className="text-2xl ml-2">{detailedIssue.charm}</p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue._id)}
-                  </p>
-                </>
+                <p>{detailedIssue.description}</p>
               )}
-            </div>
 
-            {/* Issue body section */}
-            <div className="issue-body">
-              <div className="issue-main">
-                {/* Description section */}
-                <h2>Description</h2>
-                {editMode ? (
-                  <textarea
-                    name="description"
-                    value={editedIssue.description}
-                    onChange={handleInputChange}
-                    className="issue-description-textarea"
-                  />
-                ) : (
-                  <p>{detailedIssue.description}</p>
+              {/* Occurrences section */}
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-xl font-bold">Occurrences</h2>
+                </div>
+                <ul className="occurrences-list">
+                  {(detailedIssue.occurrences || []).map((occurrence) => (
+                    <li
+                      key={occurrence._id}
+                      className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
+                        isAdmin || user.id === occurrence.user_id
+                          ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
+                          : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
+                      }`}
+                      onClick={() => handleSelectOccurrence(occurrence)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm text-gray-600">
+                            <strong>Created at: </strong>
+                            <span
+                              title={
+                                occurrence.created_at
+                                  ? new Date(occurrence.created_at).toLocaleString()
+                                  : ''
+                              }
+                            >
+                              {occurrence.created_at
+                                ? formatSmartDate(occurrence.created_at)
+                                : 'N/A'}
+                            </span>
+                            <br />
+                            <strong>Reported by: </strong>
+                            {occurrence.user_id?.username || 'Unknown'}
+                          </p>
+                          <p className="mt-1">
+                            <strong>Description:</strong> {occurrence.description}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Occurrence edit section */}
+              {selectedOccurrence && (
+                <div className="occurrence-edit mt-4">
+                  {user.id === selectedOccurrence.user_id && (
+                    <>
+                      <textarea
+                        value={editedOccurrence}
+                        onChange={(e) => setEditedOccurrence(e.target.value)}
+                        className="w-full p-2 border rounded mb-2"
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEditOccurrence(selectedOccurrence)}
+                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        >
+                          Save Occurrence
+                        </button>
+                        <button
+                          onClick={() => setSelectedOccurrence(null)}
+                          className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        >
+                          Cancel
+                        </button>
+                        {(isAdmin || user.id === selectedOccurrence.user_id) && (
+                          <button
+                            onClick={() => handleDeleteOccurrence(selectedOccurrence)}
+                            className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                          >
+                            Delete Occurrence
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {user.id !== selectedOccurrence.user_id && (isAdmin || user.id === selectedOccurrence.user_id) && (
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleDeleteOccurrence(selectedOccurrence)}
+                        className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                      >
+                        Delete Occurrence
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* New occurrence input */}
+              <>
+                <textarea
+                  placeholder="Add new occurrence"
+                  value={newOccurrence}
+                  onChange={(e) => setNewOccurrence(e.target.value)}
+                  className="new-occurrence-input"
+                />
+                <button
+                  onClick={handleAddOccurrence}
+                  className="add-occurrence-button"
+                >
+                  Add Occurrence
+                </button>
+              </>
+
+              {/* Attachments section */}
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                {attachmentError && <p className="text-red-500">{attachmentError}</p>}
+                {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {attachments.map((attachment) => (
+                    <div key={attachment._id} className="relative group">
+                      <img
+                        src={attachment.signedUrl}
+                        alt={attachment.title}
+                        className="w-full h-40 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div>
+                          <button
+                            onClick={() => handlePreviewImage(attachment.signedUrl)}
+                            className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                            title="View attachment"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              transform="rotate(-45)"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                              />
+                            </svg>
+                          </button>
+                          {(isAdmin || user.id === attachment.user_id) && (
+                            <button
+                              onClick={() => handleDeleteAttachment(attachment._id)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                              title="Delete attachment"
+                            >
+                              &times;
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {previewImage && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
+                      <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="max-w-full max-h-full"
+                      />
+                      <button
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  </div>
                 )}
 
-                {/* Occurrences section */}
+                {/* File upload input */}
                 <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h2 className="text-xl font-bold">Occurrences</h2>
+                  <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
+                  <div
+                    className={`mb-4 p-4 h-32 border-2 ${
+                      isDragging ? 'border-primary' : 'border-secondary'
+                    } border-dashed rounded cursor-pointer flex justify-center items-center`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('fileInput').click()}
+                  >
+                    <p className="text-sm text-gray-500">
+                      {images.length > 0
+                        ? `${images.length} file(s) selected`
+                        : 'Drag & drop images here, or click to select'}
+                    </p>
                   </div>
-                  <ul className="occurrences-list">
-                    {(detailedIssue.occurrences || []).map((occurrence) => (
-                      <li
-                        key={occurrence._id}
-                        className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
-                          isAdmin || user.id === occurrence.user_id
-                            ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
-                            : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
-                        }`}
-                        onClick={() => handleSelectOccurrence(occurrence)}
+                  <input
+                    id="fileInput"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleImageSelection(Array.from(e.target.files))}
+                    className="hidden"
+                  />
+                  {imagePreviews.length > 0 && (
+                    <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index}`}
+                            className="w-full h-40 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {images.length > 0 && (
+                    <div className="flex justify-start space-x-2">
+                      <button
+                        onClick={handleFileUpload}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      >
+                        Upload Selected Files
+                      </button>
+                      <button
+                        onClick={() => {
+                          setImages([]);
+                          setImagePreviews([]);
+                        }}
+                        className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Comments section */}
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Comments</h2>
+                <ul className="comments-list">
+                  {(detailedIssue.comments || []).map((comment) => (
+                    <li
+                      key={comment._id}
+                      className={`comment-item mb-4 ${
+                        isAdmin || user.id === comment.user_id
+                          ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100'
+                          : 'bg-gray-50 border-l-4 border-gray-300'
+                      }`}
+                    >
+                      <div
+                        className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
+                        onClick={() => handleSelectComment(comment)}
                       >
                         <div className="flex justify-between items-start">
                           <div>
@@ -675,449 +921,193 @@ export default function IssueView({ issue, onClose }) {
                               <strong>Created at: </strong>
                               <span
                                 title={
-                                  occurrence.created_at
-                                    ? new Date(occurrence.created_at).toLocaleString()
+                                  comment.created_at
+                                    ? new Date(comment.created_at).toLocaleString()
                                     : ''
                                 }
                               >
-                                {occurrence.created_at
-                                  ? formatSmartDate(occurrence.created_at)
+                                {comment.created_at
+                                  ? formatSmartDate(comment.created_at)
                                   : 'N/A'}
                               </span>
                               <br />
-                              <strong>Reported by: </strong>
-                              {occurrence.user_id?.username || 'Unknown'}
+                              <strong>Commented by: </strong>
+                              {comment.user_id?.username || 'Unknown User'}
+
                             </p>
                             <p className="mt-1">
-                              <strong>Description:</strong> {occurrence.description}
+                              <strong>Comment:</strong> {comment.comment_text}
                             </p>
                           </div>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                {/* Occurrence edit section */}
-                {selectedOccurrence && (
-                  <div className="occurrence-edit mt-4">
-                    {user.id === selectedOccurrence.user_id && (
-                      <>
-                        <textarea
-                          value={editedOccurrence}
-                          onChange={(e) => setEditedOccurrence(e.target.value)}
-                          className="w-full p-2 border rounded mb-2"
-                        />
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => handleEditOccurrence(selectedOccurrence)}
-                            className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                          >
-                            Save Occurrence
-                          </button>
-                          <button
-                            onClick={() => setSelectedOccurrence(null)}
-                            className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                          >
-                            Cancel
-                          </button>
-                          {(isAdmin || user.id === selectedOccurrence.user_id) && (
-                            <button
-                              onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                              className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                            >
-                              Delete Occurrence
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {user.id !== selectedOccurrence.user_id && (isAdmin || user.id === selectedOccurrence.user_id) && (
+              {/* Comment edit section */}
+              {selectedComment && (
+                <div className="comment-edit mt-4">
+                  {user.id === selectedComment.user_id && (
+                    <>
+                      <textarea
+                        value={editedComment}
+                        onChange={(e) => setEditedComment(e.target.value)}
+                        className="w-full p-2 border rounded mb-2"
+                      />
                       <div className="flex justify-end space-x-2">
                         <button
-                          onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                        >
-                          Delete Occurrence
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* New occurrence input */}
-                <>
-                  <textarea
-                    placeholder="Add new occurrence"
-                    value={newOccurrence}
-                    onChange={(e) => setNewOccurrence(e.target.value)}
-                    className="new-occurrence-input"
-                  />
-                  <button
-                    onClick={handleAddOccurrence}
-                    className="add-occurrence-button"
-                  >
-                    Add Occurrence
-                  </button>
-                </>
-
-                {/* Attachments section */}
-                <div className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">Attachments</h2>
-                  {attachmentError && <p className="text-red-500">{attachmentError}</p>}
-                  {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {attachments.map((attachment) => (
-                      <div key={attachment._id} className="relative group">
-                        <img
-                          src={attachment.signedUrl}
-                          alt={attachment.title}
-                          className="w-full h-40 object-cover rounded-lg"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
-                          <div>
-                            <button
-                              onClick={() => handlePreviewImage(attachment.signedUrl)}
-                              className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                              title="View attachment"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                transform="rotate(-45)"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                                />
-                              </svg>
-                            </button>
-                            {(isAdmin || user.id === attachment.user_id) && (
-                              <button
-                                onClick={() => handleDeleteAttachment(attachment._id)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                                title="Delete attachment"
-                              >
-                                &times;
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {previewImage && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
-                        <img
-                          src={previewImage}
-                          alt="Preview"
-                          className="max-w-full max-h-full"
-                        />
-                        <button
-                          onClick={() => setPreviewImage(null)}
-                          className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* File upload input */}
-                  <div className="mt-4">
-                    <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
-                    <div
-                      className={`mb-4 p-4 h-32 border-2 ${
-                        isDragging ? 'border-primary' : 'border-secondary'
-                      } border-dashed rounded cursor-pointer flex justify-center items-center`}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      onClick={() => document.getElementById('fileInput').click()}
-                    >
-                      <p className="text-sm text-gray-500">
-                        {images.length > 0
-                          ? `${images.length} file(s) selected`
-                          : 'Drag & drop images here, or click to select'}
-                      </p>
-                    </div>
-                    <input
-                      id="fileInput"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => handleImageSelection(Array.from(e.target.files))}
-                      className="hidden"
-                    />
-                    {imagePreviews.length > 0 && (
-                      <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {imagePreviews.map((preview, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index}`}
-                              className="w-full h-40 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                              onClick={() => handleRemoveImage(index)}
-                            >
-                              &times;
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {images.length > 0 && (
-                      <div className="flex justify-start space-x-2">
-                        <button
-                          onClick={handleFileUpload}
+                          onClick={() => handleEditComment(selectedComment)}
                           className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
                         >
-                          Upload Selected Files
+                          Save Comment
                         </button>
                         <button
-                          onClick={() => {
-                            setImages([]);
-                            setImagePreviews([]);
-                          }}
-                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                          onClick={() => setSelectedComment(null)}
+                          className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
                         >
                           Cancel
                         </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Comments section */}
-                <div className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">Comments</h2>
-                  <ul className="comments-list">
-                    {(detailedIssue.comments || []).map((comment) => (
-                      <li
-                        key={comment._id}
-                        className={`comment-item mb-4 ${
-                          isAdmin || user.id === comment.user_id
-                            ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100'
-                            : 'bg-gray-50 border-l-4 border-gray-300'
-                        }`}
-                      >
-                        <div
-                          className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
-                          onClick={() => handleSelectComment(comment)}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm text-gray-600">
-                                <strong>Created at: </strong>
-                                <span
-                                  title={
-                                    comment.created_at
-                                      ? new Date(comment.created_at).toLocaleString()
-                                      : ''
-                                  }
-                                >
-                                  {comment.created_at
-                                    ? formatSmartDate(comment.created_at)
-                                    : 'N/A'}
-                                </span>
-                                <br />
-                                <strong>Commented by: </strong>
-                                {comment.user_id?.username || 'Unknown User'}
-
-                              </p>
-                              <p className="mt-1">
-                                <strong>Comment:</strong> {comment.comment_text}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Comment edit section */}
-                {selectedComment && (
-                  <div className="comment-edit mt-4">
-                    {user.id === selectedComment.user_id && (
-                      <>
-                        <textarea
-                          value={editedComment}
-                          onChange={(e) => setEditedComment(e.target.value)}
-                          className="w-full p-2 border rounded mb-2"
-                        />
-                        <div className="flex justify-end space-x-2">
+                        {(isAdmin || user.id === selectedComment.user_id) && (
                           <button
-                            onClick={() => handleEditComment(selectedComment)}
-                            className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                            onClick={() => handleDeleteComment(selectedComment)}
+                            className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                           >
-                            Save Comment
+                            Delete Comment
                           </button>
-                          <button
-                            onClick={() => setSelectedComment(null)}
-                            className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                          >
-                            Cancel
-                          </button>
-                          {(isAdmin || user.id === selectedComment.user_id) && (
-                            <button
-                              onClick={() => handleDeleteComment(selectedComment)}
-                              className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                            >
-                              Delete Comment
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id) && (
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleDeleteComment(selectedComment)}
-                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                        >
-                          Delete Comment
-                        </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Add new comment section */}
-                <div className="mt-4">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full p-2 border rounded mb-2"
-                    placeholder="Add a new comment..."
-                  />
-                  <button
-                    onClick={handleAddComment}
-                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    Add Comment
-                  </button>
-                </div>
-              </div>
-              {/* Issue sidebar with metadata */}
-              <div className="issue-sidebar">
-                <div className="issue-meta">
-                  <p>
-                  <strong>Reported by:</strong>{" "}
-                  {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
-                  </p>
-                   
-                  
-                  {editMode ? (
-                    <>
-                      <div>
-                        <strong>Created at:</strong>{" "}
-                        <input
-                          type="datetime-local"
-                          value={detailedIssue.created_at ? detailedIssue.created_at.slice(0, 16) : ''}
-                          onChange={(e) => setDetailedIssue({...detailedIssue, created_at: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <strong>Updated at:</strong>{" "}
-                        <input
-                          type="datetime-local"
-                          value={detailedIssue.updated_at ? detailedIssue.updated_at.slice(0, 16) : ''}
-                          onChange={(e) => setDetailedIssue({...detailedIssue, updated_at: e.target.value})}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p>
-                        <strong>Created at:</strong>{" "}
-                        <span
-                          title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
-                        >
-                          {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
-                        </span>
-                      </p>
-                      <p>
-                        <strong>Updated at:</strong>{" "}
-                        <span
-                          title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
-                        >
-                          {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}
-                        </span>
-                      </p>
                     </>
                   )}
+
+                  {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id) && (
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleDeleteComment(selectedComment)}
+                        className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                      >
+                        Delete Comment
+                      </button>
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* Add new comment section */}
+              <div className="mt-4">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="w-full p-2 border rounded mb-2"
+                  placeholder="Add a new comment..."
+                />
+                <button
+                  onClick={handleAddComment}
+                  className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                >
+                  Add Comment
+                </button>
+              </div>
+            </div>
+            {/* Issue sidebar with metadata */}
+            <div className="issue-sidebar">
+              <div className="issue-meta">
+                <p>
+                <strong>Reported by:</strong>{" "}
+                {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
+                </p>
+
+
+                {editMode ? (
+                  <>
+                    <div>
+                      <strong>Created at:</strong>{" "}
+                      <input
+                        type="datetime-local"
+                        value={detailedIssue.created_at ? detailedIssue.created_at.slice(0, 16) : ''}
+                        onChange={(e) => setDetailedIssue({...detailedIssue, created_at: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <strong>Updated at:</strong>{" "}
+                      <input
+                        type="datetime-local"
+                        value={detailedIssue.updated_at ? detailedIssue.updated_at.slice(0, 16) : ''}
+                        onChange={(e) => setDetailedIssue({...detailedIssue, updated_at: e.target.value})}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      <strong>Created at:</strong>{" "}
+                      <span
+                        title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
+                      >
+                        {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Updated at:</strong>{" "}
+                      <span
+                        title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
+                      >
+                        {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}
+                      </span>
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
-          <div className="items-center px-4 py-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            >
-              Close
-            </button>
-          </div>
         </div>
-        {toast && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 max-w-sm w-full">
-              <p
-                className={`text-center mb-4 ${
-                  toast.type === "success"
-                    ? "text-green-600"
-                    : toast.type === "error"
-                    ? "text-red-600"
-                    : toast.type === "warning"
-                    ? "text-yellow-600"
-                    : "text-blue-600"
-                }`}
-              >
-                {toast.message}
-              </p>
-              {toast.onConfirm ? (
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => {
-                      toast.onConfirm();
-                      setToast(null);
-                    }}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    onClick={() => setToast(null)}
-                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
+      </div>
+      {toast && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <p
+              className={`text-center mb-4 ${
+                toast.type === "success"
+                  ? "text-green-600"
+                  : toast.type === "error"
+                  ? "text-red-600"
+                  : toast.type === "warning"
+                  ? "text-yellow-600"
+                  : "text-blue-600"
+              }`}
+            >
+              {toast.message}
+            </p>
+            {toast.onConfirm ? (
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    toast.onConfirm();
+                    setToast(null);
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Confirm
+                </button>
                 <button
                   onClick={() => setToast(null)}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
                 >
-                  OK
+                  Cancel
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setToast(null)}
+                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                OK
+              </button>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

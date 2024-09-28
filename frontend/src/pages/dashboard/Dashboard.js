@@ -165,7 +165,7 @@ const Dashboard = () => {
    * @param {Object} issue - The issue object to be displayed.
    */
   const showIssueViewModal = (issue) => {
-    openModal(<IssueView issue={issue} onClose={() => closeModalCallback(true)} />, false);
+    openModal(<IssueView issue={issue} onClose={() => closeModalCallback(true)} />, true);
   };
 
   /**
