@@ -1,4 +1,4 @@
-import { ArrowLeftEndOnRectangleIcon, ChartBarIcon, CogIcon, HomeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftEndOnRectangleIcon, ChartBarIcon, HomeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';

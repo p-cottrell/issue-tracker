@@ -9,35 +9,41 @@ import PasswordRules from './../../components/PasswordRules';
 import './../../index.css';
 
 /**
- * Register component for handling user registration with validation.
- * It accepts username, email, and password, validates them,
- * and registers the user if all validations pass.
- * Redirects to the dashboard upon successful registration.
+ * Register component for handling user registration.
+ * The user is guided through a multi-step form to enter their email, username,
+ * and password. Client-side validation is implemented for form inputs and 
+ * feedback is provided for errors. Upon successful registration, 
+ * the user is redirected to the dashboard.
  */
 const Register = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
+    const navigate = useNavigate(); // React Router hook for programmatic navigation
+    const location = useLocation(); // Hook to access current location state
 
-    // State for managing user inputs and validation error message
-    const [email, setEmail] = useState(location.state?.email || '');
-    const [username, setName] = useState('');
-    const [password, setPassword] = useState(location.state?.password || '');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [passwordFocused, setPasswordFocused] = useState(false);
-    const [showPasswordRules, setShowPasswordRules] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(!!location.state?.password);
-    const [step, setStep] = useState(1);
-    const { setUser } = useUser();
+    // State hooks for managing user input, validation errors, and form steps
+    const [email, setEmail] = useState(location.state?.email || ''); // Pre-fill email if passed from previous page
+    const [username, setName] = useState(''); // Username input
+    const [password, setPassword] = useState(location.state?.password || ''); // Pre-fill password if passed from previous page
+    const [confirmPassword, setConfirmPassword] = useState(''); // Confirmation password input
+    const [error, setError] = useState(''); // General error state
+    const [emailError, setEmailError] = useState(''); // Email validation error
+    const [passwordFocused, setPasswordFocused] = useState(false); // Track password input focus
+    const [showPasswordRules, setShowPasswordRules] = useState(false); // Toggle password rules display
+    const [showConfirmPassword, setShowConfirmPassword] = useState(!!location.state?.password); // Toggle confirm password field visibility
+    const [step, setStep] = useState(1); // Track current form step (1 or 2)
+    const { setUser } = useUser(); // Hook to set authenticated user in context
 
+    /**
+     * useEffect to check the validity of the email from location state and to manage password focus.
+     * If an email is passed via location, its availability is checked, and the user progresses to step 2.
+     * Additionally, this hook handles the display of password rules when the password input is focused.
+     */
     useEffect(() => {
         const checkEmail = async () => {
             if (location.state?.email) {
                 const emailExists = await checkEmailAvailability(location.state.email);
                 if (!emailExists) {
                     setEmail(location.state.email);
-                    setStep(2);
+                    setStep(2); // Move to next step if email is valid
                 } else {
                     setEmailError('Email is already in use.');
                 }
@@ -46,36 +52,41 @@ const Register = () => {
 
         checkEmail();
 
+        // Toggle password rules display based on input focus
         const handleFocus = passwordFocused;
         const timer = setTimeout(() => {
             setShowPasswordRules(handleFocus);
         }, 200);
 
-        return () => clearTimeout(timer);
+        return () => clearTimeout(timer); // Cleanup timer
     }, [location.state, passwordFocused]);
 
-    const handlePasswordFocus = () => {
-        setPasswordFocused(true);
-    };
+    // Handlers for focusing and blurring the password field, controlling password rules display
+    const handlePasswordFocus = () => setPasswordFocused(true);
+    const handlePasswordBlur = () => setPasswordFocused(false);
 
-    const handlePasswordBlur = () => {
-        setPasswordFocused(false);
-    };
-
+    /**
+     * Handle changes to the email input field and clear any existing email validation errors.
+     * @param {Object} e - The event object from the input change event.
+     */
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
-        setEmailError(''); // Clear email error when the email input changes
+        setEmailError(''); // Clear email error when input changes
     };
 
+    /**
+     * Handle changes to the password input field. Toggle the confirm password field based on input presence.
+     * @param {Object} e - The event object from the input change event.
+     */
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
-        if (e.target.value) {
-            setShowConfirmPassword(true);
-        } else {
-            setShowConfirmPassword(false);
-        }
+        setShowConfirmPassword(!!e.target.value); // Show confirm password if password input exists
     };
 
+    /**
+     * Handle the submission of the email step in the registration form.
+     * Performs validation and checks the availability of the email.
+     */
     const handleEmailSubmit = async () => {
         if (!email.trim()) {
             setEmailError('Email is required.');
@@ -91,10 +102,15 @@ const Register = () => {
         if (emailExists) {
             setEmailError('Email is already in use.');
         } else {
-            setStep(2);
+            setStep(2); // Move to the next step if email is valid
         }
     };
 
+    /**
+     * Validate the email format using a regular expression.
+     * @param {string} email - The email input to validate.
+     * @returns {boolean} - Returns true if the email is valid.
+     */
     const validateEmail = (email) => {
         const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         const valid = re.test(String(email).trim().toLowerCase());
@@ -102,6 +118,15 @@ const Register = () => {
         return valid;
     };
 
+    /**
+     * Validates the user's password against specific rules:
+     * - Minimum length: 8 characters
+     * - At least one uppercase letter, number, and special character
+     * - No spaces allowed
+     * 
+     * @param {string} password - The password to validate.
+     * @returns {boolean} - Returns true if the password passes all validations.
+     */
     const validatePassword = (password) => {
         if (password.length < 8) {
             setError('Password must be at least 8 characters long.');
@@ -126,19 +151,30 @@ const Register = () => {
         return true;
     };
 
+    /**
+     * Check if the email is already in use by querying the API.
+     * @param {string} emailToCheck - The email to check for availability.
+     * @returns {boolean} - Returns true if the email is taken.
+     */
     const checkEmailAvailability = async (emailToCheck) => {
         try {
             const response = await apiClient.post('/api/users/check_email', { email: emailToCheck.trim() });
-            return response.data.taken;
+            return response.data.taken; // Return whether the email is taken
         } catch (error) {
             setEmailError('An error occurred while checking email availability.');
             return true; // Assume email is taken if there's an error
         }
     };
 
+    /**
+     * Handle the full form submission for registration.
+     * Validates username, password, and checks that passwords match before sending data to the API.
+     * On success, the user is navigated to the dashboard.
+     */
     const onSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form behaviour
 
+        // Step 1: Email validation
         if (step === 1) {
             if (!email.trim()) {
                 setEmailError('Email is required.');
@@ -152,6 +188,7 @@ const Register = () => {
 
             await checkEmailAvailability();
         } else {
+            // Step 2: Validate other fields and submit form
             if (!username.trim()) {
                 setError('Username is required.');
                 return;
@@ -172,19 +209,22 @@ const Register = () => {
             }
 
             try {
+                // Submit registration data to the API
                 const response = await apiClient.post('/api/users/register', {
                     username,
                     email: email.trim(),
                     password: password.trim(),
                 });
 
+                // Handle the server response
                 if (response.data.success) {
-                    setUser(response.data.user);
-                    navigate('/dashboard');
+                    setUser(response.data.user); // Set user in context
+                    navigate('/dashboard'); // Redirect to dashboard on success
                 } else if (response.data.error) {
-                    setError(response.data.error);
+                    setError(response.data.error); // Handle specific server errors
                 }
             } catch (error) {
+                // Handle generic or server-side errors
                 if (error.response && error.response.data && error.response.data.error) {
                     setError(error.response.data.error);
                 } else {
@@ -207,9 +247,9 @@ const Register = () => {
             {/* Main Content */}
             <div className="relative z-10 w-full">
                 <motion.div
-                    initial={{ opacity: 0, y: -50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    initial={{ opacity: 0, y: -50 }} // Initial animation state
+                    animate={{ opacity: 1, y: 0 }}   // Final animation state
+                    transition={{ duration: 0.5 }}    // Animation duration
                     className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto"
                 >
                     <div className="text-center my-6">
@@ -217,7 +257,10 @@ const Register = () => {
                         <p className="text-gray-600">Create your account</p>
                     </div>
 
+                    {/* Display general error messages */}
                     {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
+                    {/* Form for registration */}
                     <form onSubmit={onSubmit}>
                         {step === 1 && (
                             <div className="mb-6">
@@ -233,13 +276,14 @@ const Register = () => {
                                     placeholder="example@example.com"
                                     className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
+                                {/* Display email validation errors */}
                                 {emailError && <div className="text-sm text-red-600 mt-2">{emailError}</div>}
                                 <div className="mt-6">
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         type="button"
-                                        onClick={handleEmailSubmit}
+                                        onClick={handleEmailSubmit} // Move to next step on successful email validation
                                         className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
                                     >
                                         Next
@@ -248,6 +292,7 @@ const Register = () => {
                             </div>
                         )}
 
+                        {/* Step 2: User inputs username and password */}
                         {step === 2 && (
                             <>
                                 <div className="mb-6">
@@ -277,10 +322,12 @@ const Register = () => {
                                         onFocus={handlePasswordFocus}
                                         onBlur={handlePasswordBlur}
                                     />
+                                    {/* Password rules are shown when the password field is focused */}
                                     <div className='mt-6'>
                                         {showPasswordRules && <PasswordRules password={password} />}
                                     </div>
                                 </div>
+                                {/* Display confirm password input if password has been entered */}
                                 {showConfirmPassword && (
                                     <div className="mb-6">
                                         <label htmlFor="confirmPassword" className="block mb-2 text-dark">Confirm Password</label>
@@ -296,13 +343,14 @@ const Register = () => {
                                         />
                                     </div>
                                 )}
+                                {/* Navigation buttons for back and submit */}
                                 <div className="mb-6 flex justify-between">
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         type="button"
                                         onClick={() => {
-                                            setStep(1);
+                                            setStep(1); // Go back to email step
                                             setName('');
                                             setPassword('');
                                             setConfirmPassword('');
@@ -325,6 +373,8 @@ const Register = () => {
                             </>
                         )}
                     </form>
+
+                    {/* Link to the sign-in page, only visible during the email step */}
                     {step === 1 && (
                         <p className="text-sm text-center text-gray-600">
                             Already have an account?{' '}

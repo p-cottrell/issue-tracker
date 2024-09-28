@@ -31,24 +31,6 @@ const DataVisualisation = () => {
 
     const [graphType, setGraphType] = useState("added"); // Used for changing which graph is displayed.
 
-  /**
- * Helper function to convert status_id to readable status text.
- * @param {number} status_id - The ID representing the status.
- * @returns {string} - The text representation of the status.
- */
-const getStatusText = (status_id) => {
-  switch (status_id) {
-    case 1:
-      return 'Complete';
-    case 2:
-      return 'In Progress';
-    case 3:
-      return 'Cancelled';
-    default:
-      return 'Pending';
-  }
-};
-
     /**
    * Fetches issues from the API based on the filter type and user context.
    * Uses useCallback to memorize the function, preventing unnecessary re-fetching on re-renders.
@@ -300,7 +282,7 @@ const getStatusText = (status_id) => {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-100">
+        <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
           {/* Header */}
           <header className="relative bg-primary shadow p-4 flex items-center justify-between">
             {/* Left: Logo and Hamburger */}

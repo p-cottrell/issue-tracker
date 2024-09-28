@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import apiClient from "../api/apiClient";
 import { useUser } from "../context/UserContext";
 import { generateNiceReferenceId } from '../helpers/IssueHelpers';
@@ -54,6 +54,7 @@ export default function IssueView({ issue, onClose }) {
   const [editedIssue, setEditedIssue] = useState({ ...issue }); // Copy of issue for editing
   const [editedCharm, setEditedCharm] = useState(issue.charm); // Edited charm (emoji)
   const [currentStatus, setCurrentStatus] = useState(() => {
+  
     // Initialize currentStatus based on the latest status in status_history
     if (issue.status_history && issue.status_history.length > 0) {
       return issue.status_history[issue.status_history.length - 1].status_id;
@@ -80,8 +81,10 @@ export default function IssueView({ issue, onClose }) {
   const [attachmentError, setAttachmentError] = useState(null); // Attachment error message
   const [images, setImages] = useState([]); // Selected images for upload
   const [imagePreviews, setImagePreviews] = useState([]); // Image preview URLs
+  const fileInputRef = useRef(null); // Create a ref for the file input
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
   const [previewImage, setPreviewImage] = useState(null); // Preview image state
+  const [referenceId, setReferenceId] = useState(''); // Stores the static reference ID
 
   // Function to display toast notifications
   const showToast = (message, type, duration = 5000, onConfirm = null) => {
@@ -90,6 +93,14 @@ export default function IssueView({ issue, onClose }) {
       setTimeout(() => setToast(null), duration);
     }
   };
+
+  /**
+  * Generates the reference ID and stores it in the state.
+  */
+  useEffect(() => {
+      const generatedReferenceId = generateNiceReferenceId(issue._id);
+      setReferenceId(generatedReferenceId);
+  }, [issue._id]);
 
 
   // Fetch issue details from the server
@@ -100,9 +111,8 @@ export default function IssueView({ issue, onClose }) {
       setDetailedIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
       setEditedCharm(fetchedIssue.charm); // Update editedCharm
-  
+
       // Set reporter's username
-    
       fetchUsername(response.data.reporter_id);
       fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
@@ -631,7 +641,7 @@ export default function IssueView({ issue, onClose }) {
                   </p>
                   <p className="text-2xl ml-2">{detailedIssue.charm}</p>
                   <p className="text-sm text-gray-600">
-                    <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue._id)}
+                    <strong>Reference ID:</strong> {referenceId}
                   </p>
                 </>
               )}
@@ -841,16 +851,24 @@ export default function IssueView({ issue, onClose }) {
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
-                      onClick={() => document.getElementById('fileInput').click()}
+                      onClick={() => fileInputRef.current.click()} // Use the ref to trigger click
                     >
                       <p className="text-sm text-gray-500">
-                        {images.length > 0
-                          ? `${images.length} file(s) selected`
-                          : 'Drag & drop images here, or click to select'}
+                      {images.length > 0 
+                        ? `${images.length} file(s) selected`
+                        : (
+                          <>
+                            {/* Show this text on small screens */}
+                            <span className="block sm:hidden">Click to select image</span>
+                            {/* Show this text on larger screens */}
+                            <span className="hidden sm:block">Drag & drop images here, or click to select</span>
+                          </>
+                        )}
                       </p>
                     </div>
                     <input
                       id="fileInput"
+                      ref={fileInputRef} // Attach the ref to the file input
                       type="file"
                       accept="image/*"
                       multiple
