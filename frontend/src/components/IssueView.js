@@ -53,7 +53,6 @@ function IssueView({ issue, onClose }, ref) {
   }, [originalIssue]);
 
   const [currentStatus, setCurrentStatus] = useState(() => {
-  
     // Initialize currentStatus based on the latest status in status_history
     if (issue.status_history && issue.status_history.length > 0) {
       return issue.status_history[issue.status_history.length - 1].status_id;
@@ -103,10 +102,7 @@ function IssueView({ issue, onClose }, ref) {
       const fetchedIssue = response.data;
       setOriginalIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
-
-      // Set reporter's username
-
-      fetchUsername(response.data.reporter_id);
+      fetchUsername(response.data.reporter_id); // Fetch reporter's username
       fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
       console.error('Error fetching issue details:', error);
@@ -186,7 +182,6 @@ function IssueView({ issue, onClose }, ref) {
         const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
 
         setOriginalIssue(response.data.updatedIssue);
-        showToast('Issue updated successfully', 'success', 5000);
 
         onClose(response.data.updatedIssue);
       } catch (error) {
@@ -273,6 +268,12 @@ function IssueView({ issue, onClose }, ref) {
   // Function to handle closing the issue view
   // This method is used implicitly by ModalContext when the user clicks outside the modal
   const onUserCloseRequest = useCallback(async () => {
+    // If any field is being edited, deny the close request
+    if (isTitleBeingEdited || isStatusBeingEdited || isCharmBeingEdited || isDescriptionBeingEdited) {
+      return false;
+    }
+
+    // If there are unsaved changes, prompt the user to save them; if the user selects "Cancel", deny the close request
     const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
     const canClose = await promptToSaveChangesIfNecessary(
       'CloseRequest',
@@ -355,7 +356,6 @@ function IssueView({ issue, onClose }, ref) {
         occurrences: [...originalIssue.occurrences, response.data.occurrence],
       });
       setNewOccurrence("");
-      showToast("Occurrence added successfully", "success");
     } catch (error) {
       console.error("Error adding occurrence:", error);
       showToast("Failed to add occurrence", "error");
@@ -424,7 +424,6 @@ function IssueView({ issue, onClose }, ref) {
       setOriginalIssue({ ...originalIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
       setEditedOccurrence(null);
-      showToast("Occurrence updated successfully", "success");
     } catch (error) {
       console.error("Error updating occurrence:", error);
       showToast("Error updating occurrence", "error");
@@ -487,7 +486,6 @@ function IssueView({ issue, onClose }, ref) {
 
       setOriginalIssue({ ...originalIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
-      showToast("Occurrence deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting occurrence:", error);
       showToast("Error deleting occurrence", "error");
@@ -521,7 +519,6 @@ function IssueView({ issue, onClose }, ref) {
         comments: [...originalIssue.comments, response.data.comment],
       });
       setNewComment("");
-      showToast("Comment added successfully", "success");
     } catch (error) {
       console.error("Error adding comment:", error);
       showToast("Error adding comment", "error");
@@ -578,7 +575,6 @@ function IssueView({ issue, onClose }, ref) {
         ),
       }));
       setEditedComment(null);
-      showToast("Comment updated successfully", "success");
     } catch (error) {
       console.error("Error updating comment:", error);
       showToast("Error updating comment", "error");
@@ -635,7 +631,6 @@ function IssueView({ issue, onClose }, ref) {
         ...prevState,
         comments: prevState.comments.filter((c) => c._id !== comment._id),
       }));
-      showToast("Comment deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting comment:", error);
       showToast("Error deleting comment", "error");
@@ -770,7 +765,6 @@ function IssueView({ issue, onClose }, ref) {
     try {
       const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
       if (response.status === 200) {
-        showToast('Attachment deleted successfully', 'success');
         setAttachments(attachments.filter((attachment) => attachment._id !== attachmentId));
       } else {
         throw new Error(response.data.message || 'Error deleting attachment');
@@ -787,7 +781,6 @@ function IssueView({ issue, onClose }, ref) {
     if (window.confirm('Are you sure you want to delete this issue?')) {
       try {
         await apiClient.delete(`/api/issues/${issue._id}`);
-        showToast('Issue deleted successfully', 'success');
         onClose(); // Close the issue view
       } catch (error) {
         console.error('Error deleting issue:', error);
@@ -795,6 +788,26 @@ function IssueView({ issue, onClose }, ref) {
       }
     }
   };
+
+  const charmButtonRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (charmButtonRef.current && !charmButtonRef.current.contains(event.target)) {
+        setIsCharmBeingEdited(false);
+      }
+    };
+
+    if (isCharmBeingEdited) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCharmBeingEdited]);
 
   // Render the component
   return (
@@ -804,7 +817,7 @@ function IssueView({ issue, onClose }, ref) {
           {/* Issue header section */}
           <div className="issue-header flex items-center space-x-4 mb-6">
             {/* Charm Selector */}
-            <div className="relative">
+            <div className="relative" ref={charmButtonRef}>
               <button
                 type="button"
                 onClick={() => setIsCharmBeingEdited(!isCharmBeingEdited)}
@@ -881,7 +894,7 @@ function IssueView({ issue, onClose }, ref) {
                 className="text-sm text-gray-600 cursor-pointer hover:underline"
                 onClick={() => {
                   navigator.clipboard.writeText(generateNiceReferenceId(originalIssue));
-                  showToast('Reference ID copied to clipboard', 'info');
+                  showToast('Reference ID copied to clipboard', 'info', 1000);
                 }}
               >
                 <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
@@ -936,7 +949,7 @@ function IssueView({ issue, onClose }, ref) {
                         <div>
                           <p className="text-sm text-gray-600">
                             <strong>Created at: </strong>
-                            {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id._id === user.id) ? (
+                            {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id?._id === user.id) ? (
                               <input
                                 type="datetime-local"
                                 value={editedOccurrence.time}
@@ -957,7 +970,7 @@ function IssueView({ issue, onClose }, ref) {
                                   : 'N/A'}
                               </span>
                             )}
-                            {(!selectedOccurrence || selectedOccurrence._id !== occurrence._id || selectedOccurrence.user_id._id !== user.id) && (
+                            {(!selectedOccurrence || selectedOccurrence._id !== occurrence._id || selectedOccurrence.user_id?._id !== user.id) && (
                               <>
                                 <br />
                                 <p className="mt-1">
@@ -967,7 +980,7 @@ function IssueView({ issue, onClose }, ref) {
                               </>
                             )}
                           </p>
-                          {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id._id === user.id) ? (
+                          {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id?._id === user.id) ? (
                             <>
                               <p className="mt-1">
                                 <strong>Description:</strong>
@@ -1083,12 +1096,10 @@ function IssueView({ issue, onClose }, ref) {
                           className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleImageClick(attachments[0].signedUrl);
+                            handleImageClick(attachment.signedUrl);
                           }}
                         />
                       </div>
-                      {/* <div className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"> */}
-                      {/* <div className="absolute top-1 right-1 flex space-x-2"> */}
                       <div className="absolute top-1 right-1 flex space-x-2 hover:bg-gray-300 rounded-full p-1 opacity-0 group-hover:opacity-100">
                         <button
                           onClick={() => promptDeleteAttachment(attachment._id)}
