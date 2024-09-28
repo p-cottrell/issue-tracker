@@ -6,7 +6,7 @@ import { generateNiceReferenceId } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
 export default function Issue({ data, openIssueModal, deleteHandler }) {
-    const { openModal } = useModal();
+    const { openModal, closeModal } = useModal();
     const [isLoading, setIsLoading] = useState(true);
     const [isImageError, setIsImageError] = useState(false);
     const [attachments, setAttachments] = useState(data.attachments || []);
@@ -100,33 +100,22 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             </div>
         );
     };
-
-    const [mouseDownPosition, setMouseDownPosition] = useState({ x: 0, y: 0 });
-
-    const handleCardClick = (e) => {
-        // Instead of immediately opening the card when we click on it, we want to wait a bit to see if the user is dragging to select text.
-        if (e.detail === 1) {
-            openIssueModal(data);
-        }
-    };
+    const [mouseDownPosition, setMouseDownPosition] = useState(null);
 
     const handleMouseDown = (e) => {
         setMouseDownPosition({ x: e.clientX, y: e.clientY });
-        e.currentTarget.dataset.dragging = false;
-    };
-
-    const handleMouseMove = (e) => {
-        const distance = Math.sqrt(
-            Math.pow(e.clientX - mouseDownPosition.x, 2) + Math.pow(e.clientY - mouseDownPosition.y, 2)
-        );
-        if (distance > 5) { // Threshold, in pixels, before we no longer consider it a click.
-            e.currentTarget.dataset.dragging = true;
-        }
     };
 
     const handleMouseUp = (e) => {
-        if (e.currentTarget.dataset.dragging === 'false') {
-            handleCardClick(e);
+        const mouseUpPosition = { x: e.clientX, y: e.clientY };
+        const distance = Math.sqrt(
+            Math.pow(mouseUpPosition.x - mouseDownPosition.x, 2) +
+            Math.pow(mouseUpPosition.y - mouseDownPosition.y, 2)
+        );
+
+        // If the distance is less than a threshold, consider it a click
+        if (distance < 5) {
+            openIssueModal();
         }
     };
 
@@ -134,7 +123,6 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         <div
             className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative cursor-pointer"
             onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
         >
             {/* Header Line */}
@@ -190,7 +178,11 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                                     src={attachments[0].signedUrl}
                                     alt="Attachment"
                                     className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
-                                    onClick={() => handleImageClick(attachments[0].signedUrl)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        closeModal();
+                                        handleImageClick(attachments[0].signedUrl);
+                                    }}
                                 />
                             </div>
                         )}

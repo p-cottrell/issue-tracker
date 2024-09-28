@@ -1,5 +1,7 @@
+import { TrashIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "../api/apiClient";
+import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
 import { generateNiceReferenceId } from '../helpers/IssueHelpers';
 import "./IssueView.css";
@@ -47,6 +49,7 @@ const emojiOptions = [
 
 export default function IssueView({ issue, onClose }) {
   const { user } = useUser();
+  const { openModal, closeModal } = useModal();
 
   // State variables
   const [detailedIssue, setDetailedIssue] = useState(issue); // Detailed issue data
@@ -81,7 +84,6 @@ export default function IssueView({ issue, onClose }) {
   const [images, setImages] = useState([]); // Selected images for upload
   const [imagePreviews, setImagePreviews] = useState([]); // Image preview URLs
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
-  const [previewImage, setPreviewImage] = useState(null); // Preview image state
 
   // Function to display toast notifications
   const showToast = (message, type, duration = 5000, onConfirm = null) => {
@@ -474,11 +476,6 @@ export default function IssueView({ issue, onClose }) {
     setImagePreviews(newPreviews);
   };
 
-  // Preview an image
-  const handlePreviewImage = (imageUrl) => {
-    setPreviewImage(imageUrl);
-  };
-
   // Upload selected files
   const handleFileUpload = async () => {
     if (images.length === 0) {
@@ -506,6 +503,15 @@ export default function IssueView({ issue, onClose }) {
       console.error('Error uploading files:', error);
       showToast(`Error uploading files: ${error.response?.data?.details || error.message}`, 'error');
     }
+  };
+
+  // Handle image click to open full preview
+  const handleImageClick = (imageSrc) => {
+    openModal(
+      <div className="relative">
+        <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full" />
+      </div>
+    );
   };
 
   // Delete an attachment
@@ -768,67 +774,33 @@ export default function IssueView({ issue, onClose }) {
                 {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {attachments.map((attachment) => (
-                    <div key={attachment._id} className="relative group">
-                      <img
-                        src={attachment.signedUrl}
-                        alt={attachment.title}
-                        className="w-full h-40 object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div>
-                          <button
-                            onClick={() => handlePreviewImage(attachment.signedUrl)}
-                            className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                            title="View attachment"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              transform="rotate(-45)"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M14 5l7 7m0 0l-7 7m7-7H3"
-                              />
-                            </svg>
-                          </button>
-                          {(isAdmin || user.id === attachment.user_id) && (
-                            <button
-                              onClick={() => handleDeleteAttachment(attachment._id)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                              title="Delete attachment"
-                            >
-                              &times;
-                            </button>
-                          )}
-                        </div>
+                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        <div
+                          className="absolute inset-0 bg-cover bg-center filter blur-lg"
+                          style={{ backgroundImage: `url(${attachment.signedUrl})` }}
+                        ></div>
+                        <img
+                          src={attachment.signedUrl}
+                          alt="Attachment"
+                          className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleImageClick(attachments[0].signedUrl);
+                          }}
+                        />
+                      </div>
+                      <div className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100">
+                        <button
+                          onClick={() => handleDeleteAttachment(attachment._id)}
+                          title="Delete attachment"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {previewImage && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
-                      <img
-                        src={previewImage}
-                        alt="Preview"
-                        className="max-w-full max-h-full"
-                      />
-                      <button
-                        onClick={() => setPreviewImage(null)}
-                        className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 {/* File upload input */}
                 <div className="mt-4">
