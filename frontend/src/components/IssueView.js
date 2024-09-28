@@ -1178,17 +1178,17 @@ function IssueView({ issue, onClose }, ref) {
                   {(originalIssue.comments || []).map((comment) => (
                     <li
                       key={comment._id}
-                      className={`comment-item mb-4 p-4 bg-white border rounded-lg shadow-md flex items-start space-x-4 transition-all duration-200 hover:bg-gray-100`}
+                      className={`comment-item mb-4 p-4 bg-white border rounded-lg shadow-md flex items-start space-x-4 transition-all duration-200`}
                     >
                       {/* User Icon Placeholder */}
                       {/* <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold"> */}
                         {/* {comment.user_id?.username ? comment.user_id.username.charAt(0).toUpperCase() : 'U'} */}
                       {/* </div> */}
 
-                      {/* User Icon - instead uses GetUserAvatar to get the image url */}
+                      {/* User Icon */}
                       <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
                         <img
-                          src={GetUserAvatar(comment.user_id?.username)}
+                          src={GetUserAvatar(comment.user_id?._id)}
                           alt="User Avatar"
                           className="w-10 h-10 rounded-full"
                         />
