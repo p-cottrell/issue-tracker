@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';
-import Logo from '../../components/Logo';
 import apiClient from '../../api/apiClient';
+import Logo from '../../components/Logo';
 import PasswordRules from '../../components/PasswordRules';
+import Sidebar from '../../components/Sidebar';
 import { useUser } from '../../context/UserContext';
+import { GetUserAvatar } from '../../helpers/UserHelpers';
 
 /**
  * Profile component: Displays and manages user profile information,
@@ -250,7 +251,7 @@ const Profile = () => {
             {/* Profile Section */}
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <img
-                src="https://i.pravatar.cc/150"
+                src={GetUserAvatar(user.id)}
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto mb-4"
               />

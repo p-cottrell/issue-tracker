@@ -4,6 +4,7 @@ import apiClient from "../api/apiClient";
 import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
 import { charmOptions, generateNiceReferenceId } from '../helpers/IssueHelpers';
+import { GetUserAvatar } from '../helpers/UserHelpers';
 import "./IssueView.css";
 
 // Helper function to format date in DD/MM/YYYY format
@@ -69,14 +70,13 @@ function IssueView({ issue, onClose }, ref) {
   const [isDescriptionBeingEdited, setIsDescriptionBeingEdited] = useState(false);
 
   // State for occurrences
-  const [newOccurrence, setNewOccurrence] = useState(""); // New occurrence input
+  const [newOccurrence, setNewOccurrence] = useState(null); // New occurrence input
   const [selectedOccurrence, setSelectedOccurrence] = useState(null); // Selected occurrence for editing
-  const [editedOccurrence, setEditedOccurrence] = useState(null); // Edited occurrence text
+  const [editedOccurrence, setEditedOccurrence] = useState(null); // Edited occurrence object
 
   // State for comments
   const [newComment, setNewComment] = useState(""); // New comment input
-  const [selectedComment, setSelectedComment] = useState(null); // Selected comment for editing
-  const [editedComment, setEditedComment] = useState(""); // Edited comment text
+  const [editedComment, setEditedComment] = useState(null); // Edited comment object
 
   // Other states
   const [toast, setToast] = useState(null); // Toast notification state
@@ -328,7 +328,9 @@ function IssueView({ issue, onClose }, ref) {
 
   // Add a new occurrence
   const handleAddOccurrence = async () => {
-    if (!newOccurrence.trim()) return;
+    if (!newOccurrence || !newOccurrence.description?.trim() || !newOccurrence.time) {
+      return;
+    }
 
     const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
     const proceed = await promptToSaveChangesIfNecessary(
@@ -343,7 +345,8 @@ function IssueView({ issue, onClose }, ref) {
 
     try {
       const response = await apiClient.post(`/api/occurrences/${issue._id}`, {
-        description: newOccurrence,
+        description: newOccurrence.description,
+        created_at: newOccurrence.time,
         user_id: user.id,
       });
 
@@ -527,7 +530,7 @@ function IssueView({ issue, onClose }, ref) {
 
   // Select a comment for editing
   const handleSelectComment = async (comment) => {
-    if (isAdmin || user.id === comment.user_id.id) {
+    if (isAdmin || user.id === comment.user_id._id) {
       const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
       const proceed = await promptToSaveChangesIfNecessary(
         'CommentEdit',
@@ -538,11 +541,7 @@ function IssueView({ issue, onClose }, ref) {
         unsavedChangesCheck
       );
       if (!proceed) return;
-
-      setSelectedComment(
-        selectedComment && selectedComment._id === comment._id ? null : comment
-      );
-      setEditedComment(comment.comment_text);
+      setEditedComment({ ...comment });
     }
   };
 
@@ -578,8 +577,7 @@ function IssueView({ issue, onClose }, ref) {
           c._id === comment._id ? response.data.comment : c
         ),
       }));
-      setSelectedComment(null);
-      setEditedComment("");
+      setEditedComment(null);
       showToast("Comment updated successfully", "success");
     } catch (error) {
       console.error("Error updating comment:", error);
@@ -587,13 +585,8 @@ function IssueView({ issue, onClose }, ref) {
     }
   };
 
-  // Delete a comment
-  const handleDeleteComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id.id) {
-      showToast("You do not have permission to delete this comment", "error");
-      return;
-    }
-
+  // Open modal asking if the user wants to delete a comment
+  const promptDeleteComment = async (comment) => {
     const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
     const proceed = await promptToSaveChangesIfNecessary(
       'CommentEdit',
@@ -605,6 +598,36 @@ function IssueView({ issue, onClose }, ref) {
     );
     if (!proceed) return;
 
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this comment?
+        </h2>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={() => handleDeleteComment(comment)}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+      , false);
+  };
+
+  // Delete a comment
+  const handleDeleteComment = async (comment) => {
+    if (!isAdmin && user.id !== comment.user_id._id) {
+      showToast("You do not have permission to delete this comment", "error");
+      return;
+    }
+
     try {
       await apiClient.delete(`/api/comments/${issue._id}/${comment._id}`);
 
@@ -612,7 +635,6 @@ function IssueView({ issue, onClose }, ref) {
         ...prevState,
         comments: prevState.comments.filter((c) => c._id !== comment._id),
       }));
-      setSelectedComment(null);
       showToast("Comment deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting comment:", error);
@@ -855,7 +877,13 @@ function IssueView({ issue, onClose }, ref) {
                   <strong>Status:</strong> {getStatusText(currentStatus)}
                 </p>
               )}
-              <p className="text-sm text-gray-600">
+              <p
+                className="text-sm text-gray-600 cursor-pointer hover:underline"
+                onClick={() => {
+                  navigator.clipboard.writeText(generateNiceReferenceId(originalIssue));
+                  showToast('Reference ID copied to clipboard', 'info');
+                }}
+              >
                 <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
               </p>
             </div>
@@ -908,7 +936,7 @@ function IssueView({ issue, onClose }, ref) {
                         <div>
                           <p className="text-sm text-gray-600">
                             <strong>Created at: </strong>
-                            {selectedOccurrence?._id === occurrence._id ? (
+                            {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id._id === user.id) ? (
                               <input
                                 type="datetime-local"
                                 value={editedOccurrence.time}
@@ -929,31 +957,44 @@ function IssueView({ issue, onClose }, ref) {
                                   : 'N/A'}
                               </span>
                             )}
-                            <br />
-                            <strong>Reported by: </strong>
-                            {occurrence.user_id?.username || 'Unknown'}
+                            {(!selectedOccurrence || selectedOccurrence._id !== occurrence._id || selectedOccurrence.user_id._id !== user.id) && (
+                              <>
+                                <br />
+                                <p className="mt-1">
+                                  <strong>Reported by: </strong>
+                                  {occurrence.user_id?.username || 'Unknown'}
+                                </p>
+                              </>
+                            )}
                           </p>
-                          {selectedOccurrence?._id === occurrence._id ? (
-                            <textarea
-                              value={editedOccurrence.description}
-                              onChange={(e) => setEditedOccurrence({ ...editedOccurrence, description: e.target.value })}
-                              className="w-full p-2 border rounded mb-2"
-                            />
+                          {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id._id === user.id) ? (
+                            <>
+                              <p className="mt-1">
+                                <strong>Description:</strong>
+                              </p>
+                              <textarea
+                                value={editedOccurrence.description}
+                                onChange={(e) => setEditedOccurrence({ ...editedOccurrence, description: e.target.value })}
+                                className="w-full p-2 border rounded mb-2"
+                              />
+                            </>
                           ) : (
                             <p className="mt-1">
                               <strong>Description:</strong> {occurrence.description}
                             </p>
                           )}
                         </div>
-                        {selectedOccurrence?._id === occurrence._id ? (
+                        {(selectedOccurrence && selectedOccurrence._id === occurrence._id) ? (
                           <div className="flex flex-col items-center space-y-2">
-                            <button
-                              onClick={() => handleEditOccurrence(occurrence)}
-                              className="p-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                              title="Save"
-                            >
-                              <CheckIcon className="w-5 h-5" />
-                            </button>
+                            {selectedOccurrence?.user_id === user.id ? (
+                              <button
+                                onClick={() => handleEditOccurrence(occurrence)}
+                                className="p-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                                title="Save"
+                              >
+                                <CheckIcon className="w-5 h-5" />
+                              </button>
+                            ) : null}
                             <button
                               onClick={() => setSelectedOccurrence(null)}
                               className="p-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
@@ -976,23 +1017,52 @@ function IssueView({ issue, onClose }, ref) {
                 </ul>
               </div>
 
-              {/* New occurrence input */}
-              <>
+              {/* Add new occurrence section */}
+              <div className="mt-6 p-4 bg-gray-50 border rounded-lg shadow-md">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Add a New Occurrence</h3>
+
+                {/* Date/Time Picker */}
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Occurrence Date and Time:</label>
+                  <input
+                    type="datetime-local"
+                    value={newOccurrence?.time || ''}
+                    onChange={(e) => setNewOccurrence({ ...newOccurrence, time: e.target.value })}
+                    max={new Date().toISOString().slice(0, 16)}
+                    className="w-full p-2 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-100 transition"
+                  />
+                </div>
+
+                {/* Occurrence Text Area */}
                 <textarea
-                  placeholder="Add new occurrence"
-                  value={newOccurrence}
-                  onChange={(e) => setNewOccurrence(e.target.value)}
-                  className="new-occurrence-input"
+                  value={newOccurrence?.description || ''}
+                  onChange={(e) => setNewOccurrence({ ...newOccurrence, description: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-100 transition"
+                  placeholder="Describe the occurrence..."
                 />
-                {newOccurrence.trim() && (
-                  <button
-                    onClick={handleAddOccurrence}
-                    className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  >
-                    Add Occurrence
-                  </button>
-                )}
-              </>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-2">
+                  {newOccurrence && newOccurrence.description?.trim() && newOccurrence.time && (
+                    <button
+                      onClick={handleAddOccurrence}
+                      className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition"
+                    >
+                      Add Occurrence
+                    </button>
+                  )}
+                  {newOccurrence ? (
+                    <button
+                      onClick={() => {
+                        setNewOccurrence(null);
+                      }}
+                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </div>
+              </div>
 
               {/* Attachments section */}
               <div className="mt-4">
@@ -1106,111 +1176,123 @@ function IssueView({ issue, onClose }, ref) {
                   {(originalIssue.comments || []).map((comment) => (
                     <li
                       key={comment._id}
-                      className={`comment-item mb-4 ${
-                        isAdmin || user.id === comment.user_id
-                          ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100'
-                          : 'bg-gray-50 border-l-4 border-gray-300'
-                      }`}
+                      className={`comment-item mb-4 p-4 bg-white border rounded-lg shadow-md flex items-start space-x-4 transition-all duration-200 hover:bg-gray-100`}
                     >
-                      <div
-                        className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
-                        onClick={() => handleSelectComment(comment)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-sm text-gray-600">
-                              <strong>Created at: </strong>
-                              <span
-                                title={
-                                  comment.created_at
-                                    ? new Date(comment.created_at).toLocaleString()
-                                    : ''
-                                }
-                              >
-                                {comment.created_at
-                                  ? formatSmartDate(comment.created_at)
-                                  : 'N/A'}
-                              </span>
-                              <br />
-                              <strong>Commented by: </strong>
-                              {comment.user_id?.username || 'Unknown User'}
+                      {/* User Icon Placeholder */}
+                      {/* <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold"> */}
+                        {/* {comment.user_id?.username ? comment.user_id.username.charAt(0).toUpperCase() : 'U'} */}
+                      {/* </div> */}
 
-                            </p>
-                            <p className="mt-1">
-                              <strong>Comment:</strong> {comment.comment_text}
-                            </p>
-                          </div>
+                      {/* User Icon - instead uses GetUserAvatar to get the image url */}
+                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                        <img
+                          src={GetUserAvatar(comment.user_id?.username)}
+                          alt="User Avatar"
+                          className="w-10 h-10 rounded-full"
+                        />
+                      </div>
+
+                      {/* Comment Content */}
+                      <div className="flex-grow">
+                        {/* User name and comment date */}
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-800">
+                            {comment.user_id?.username || 'Unknown User'}
+                          </span>
+                          {comment.created_at ? (
+                            <span
+                              className="text-sm text-gray-500"
+                              title={comment.created_at ? new Date(comment.created_at).toLocaleString() : ''}
+                            >
+                              {formatSmartDate(comment.created_at)}
+                            </span>
+                          ) : null}
                         </div>
+
+                        {/* Comment text */}
+                        {editedComment?._id === comment._id ? (
+                          <textarea
+                            value={editedComment.comment_text}
+                            onChange={(e) => setEditedComment({ ...editedComment, comment_text: e.target.value })}
+                            className="w-full p-2 border rounded mb-2"
+                          />
+                        ) : (
+                            <p className="mt-2 text-gray-700">
+                              {comment.comment_text}
+                          </p>
+                        )}
+
+                        {/* Edit/Delete actions for admins or comment owners */}
+                        {(isAdmin || user.id === comment.user_id?._id) && (
+                          <>
+                            {editedComment?._id === comment._id ? (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditComment(comment)}
+                                  className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditedComment(null)}
+                                  className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="mt-2 flex space-x-2">
+                                {(user.id === comment.user_id?._id) && (
+                                  <button
+                                    onClick={() => handleSelectComment(comment)}
+                                    className="text-blue-500 text-sm hover:underline"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => promptDeleteComment(comment)}
+                                  className="text-red-500 text-sm hover:underline"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Comment edit section */}
-              {selectedComment && (
-                <div className="comment-edit mt-4">
-                  {user.id === selectedComment.user_id && (
-                    <>
-                      <textarea
-                        value={editedComment}
-                        onChange={(e) => setEditedComment(e.target.value)}
-                        className="w-full p-2 border rounded mb-2"
-                      />
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleEditComment(selectedComment)}
-                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        >
-                          Save Comment
-                        </button>
-                        <button
-                          onClick={() => setSelectedComment(null)}
-                          className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        >
-                          Cancel
-                        </button>
-                        {(isAdmin || user.id === selectedComment.user_id) && (
-                          <button
-                            onClick={() => handleDeleteComment(selectedComment)}
-                            className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                          >
-                            Delete Comment
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id) && (
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        onClick={() => handleDeleteComment(selectedComment)}
-                        className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                      >
-                        Delete Comment
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Add new comment section */}
-              <div className="mt-4">
+              <div className="mt-6 p-4 bg-gray-50 border rounded-lg shadow-md">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Add a New Comment</h3>
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  className="w-full p-2 border rounded mb-2"
-                  placeholder="Add a new comment..."
+                  className="w-full p-3 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-100 transition"
+                  placeholder="Write your comment here..."
                 />
-                {newComment.trim() && (
-                  <button
-                    onClick={handleAddComment}
-                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    Add Comment
-                  </button>
-                )}
+                <div className="flex justify-end space-x-2">
+                  {newComment.trim() && (
+                    <button
+                      onClick={handleAddComment}
+                      className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition"
+                    >
+                      Add Comment
+                    </button>
+                  )}
+                  {newComment.trim() && (
+                    <button
+                      onClick={() => setNewComment('')}
+                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             {/* Issue sidebar with metadata */}
