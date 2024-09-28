@@ -164,9 +164,15 @@ const Dashboard = () => {
    * Opens the issue view modal to display details of the selected issue.
    * @param {Object} issue - The issue object to be displayed.
    */
-  const showIssueViewModal = (issue) => {
-    openModal(<IssueView issue={issue} onClose={() => closeModalCallback(true)} />, false);
-  };
+  const showIssueViewModal = (issue, referenceId) => {
+    openModal(
+        <IssueView 
+            issue={issue} 
+            onClose={() => closeModalCallback(true)} 
+        />, 
+        false
+    );
+};
 
   /**
    * Triggers a re-fetch of issues when a modal is closed, if the object was updated.

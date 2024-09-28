@@ -15,6 +15,15 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     const [isLoading, setIsLoading] = useState(true); // Tracks loading state for attachments
     const [isImageError, setIsImageError] = useState(false); // Tracks if the attachment image failed to load
     const [attachments, setAttachments] = useState(data.attachments || []); // Stores attachment data
+    const [referenceId, setReferenceId] = useState(''); // Stores the static reference ID
+
+    /**
+     * Generates the reference ID and stores it in the state.
+     */
+    useEffect(() => {
+        const generatedReferenceId = generateNiceReferenceId(data);
+        setReferenceId(generatedReferenceId);
+    }, [data]);
 
     /**
      * Fetches the attachments for the issue if they don't have signed URLs. This is done 
@@ -126,7 +135,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
      */
     const handleCardClick = (e) => {
         if (e.detail === 1) {
-            openIssueModal(data); // Opens the full issue details
+            openIssueModal(data);
         }
     };
 
@@ -178,7 +187,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
 
             {/* Reference */}
             <p className="text-sm text-gray-500 mb-4">
-                <strong>Reference:</strong> {generateNiceReferenceId(data)}
+                <strong>Reference:</strong> {referenceId}
             </p>
 
             {/* Attachments */}
@@ -213,7 +222,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                             </div>
                         )}
                         {attachments.length > 1 && (
-                            <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                            <div className="absolute top-2 right-2 bg-primary text-white text-xs rounded-full w-6 h-6 flex items-center justify-center z-20">
                                 {attachments.length > 9 ? '9+' : attachments.length}
                             </div>
                         )}

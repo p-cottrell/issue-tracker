@@ -84,6 +84,7 @@ export default function IssueView({ issue, onClose }) {
   const fileInputRef = useRef(null); // Create a ref for the file input
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
   const [previewImage, setPreviewImage] = useState(null); // Preview image state
+  const [referenceId, setReferenceId] = useState(''); // Stores the static reference ID
 
   // Function to display toast notifications
   const showToast = (message, type, duration = 5000, onConfirm = null) => {
@@ -92,6 +93,14 @@ export default function IssueView({ issue, onClose }) {
       setTimeout(() => setToast(null), duration);
     }
   };
+
+  /**
+  * Generates the reference ID and stores it in the state.
+  */
+  useEffect(() => {
+      const generatedReferenceId = generateNiceReferenceId(issue._id);
+      setReferenceId(generatedReferenceId);
+  }, [issue._id]);
 
 
   // Fetch issue details from the server
@@ -102,9 +111,8 @@ export default function IssueView({ issue, onClose }) {
       setDetailedIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
       setEditedCharm(fetchedIssue.charm); // Update editedCharm
-  
+
       // Set reporter's username
-    
       fetchUsername(response.data.reporter_id);
       fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
@@ -633,7 +641,7 @@ export default function IssueView({ issue, onClose }) {
                   </p>
                   <p className="text-2xl ml-2">{detailedIssue.charm}</p>
                   <p className="text-sm text-gray-600">
-                    <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue._id)}
+                    <strong>Reference ID:</strong> {referenceId}
                   </p>
                 </>
               )}
