@@ -22,7 +22,7 @@ const DescriptionEditor = ({ description, onChange, canEdit, isEditMode, setIsEd
         <>
             {isEditMode && canEdit ? (
                 <div className="mt-6 p-4 bg-gray-50 border rounded-lg shadow-md">
-                    <TiptapEditor content={localDescription} setContent={setLocalDescription} />
+                    <TiptapEditor content={localDescription} setContent={setLocalDescription}/>
                     <div className="flex justify-end mt-2">
                         <div className="flex space-x-2">
                             <button
@@ -42,7 +42,7 @@ const DescriptionEditor = ({ description, onChange, canEdit, isEditMode, setIsEd
                 </div>
             ) : (
                 <div
-                    className={`tiptap-content text-sm text-gray-600 ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
+                    className={`tiptap-content tiptap-content-inactive text-sm text-gray-600 ${canEdit ? 'cursor-pointer' : ''}`}
                     onClick={() => canEdit && setIsEditMode(true)}
                 >
                     <div dangerouslySetInnerHTML={{ __html: description || 'No description provided.' }} />

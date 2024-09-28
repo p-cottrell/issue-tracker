@@ -822,7 +822,7 @@ function IssueView({ issue, onClose }, ref) {
               <button
                 type="button"
                 onClick={() => setIsCharmBeingEdited(!isCharmBeingEdited)}
-                className="bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-14 h-14 text-4xl"
+                className="bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-14 h-14 text-4xl hover:bg-gray-400"
               >
                 {editedIssue.charm}
               </button>
@@ -859,7 +859,7 @@ function IssueView({ issue, onClose }, ref) {
                 />
               ) : (
                 <h1
-                  className={`text-xl font-bold mb-2 ${canEdit ? 'cursor-pointer' : ''}`}
+                  className={`text-xl font-bold mb-2 ${canEdit ? 'cursor-pointer' : ''} hover:underline`}
                   onClick={() => canEdit && setIsTitleBeingEdited(true)}
                 >
                   {editedIssue.title}
