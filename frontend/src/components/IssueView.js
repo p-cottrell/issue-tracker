@@ -210,20 +210,27 @@ function IssueView({ issue, onClose }, ref) {
     }
   };
 
-  // Function to handle closing the issue view
-  // This method is used implicitly by ModalContext when the user clicks outside the modal
-  const onUserCloseRequest = useCallback(async () => {
-    const hasChanges = editedIssue.title !== originalIssue.title ||
+  // Helper function to check if there are unsaved changes
+  function hasUnsavedChanges(editedIssue, originalIssue) {
+    return (
+      editedIssue.title !== originalIssue.title ||
       editedIssue.description !== originalIssue.description ||
-      JSON.stringify(editedIssue.status_history) !== JSON.stringify(originalIssue.status_history);
-    console.log(`User is trying to close the issue view. Has changes: ${hasChanges}\n`, editedIssue, originalIssue);
+      JSON.stringify(editedIssue.status_history) !== JSON.stringify(originalIssue.status_history)
+    );
+  }
 
-    if (hasChanges) {
+  // Helper function to prompt the user to save changes
+  async function promptToSaveChangesIfNecessary(messageType, openModal, closeModal, handleSave, handleCancel, unsavedChangesCheck) {
+    if (unsavedChangesCheck) {
       return new Promise((resolve) => {
         openModal(
-          // Show Yes/No/Cancel dialog (Yes=Save, No=Discard, Cancel=Stay on page)
           <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
-            <h2 className="text-lg text-dark font-semibold mb-4">You have unsaved changes. What would you like to do?</h2>
+            <h2 className="text-lg text-dark font-semibold mb-4">
+              {messageType === 'CloseRequest' && 'You have unsaved changes. Do you want to save them before proceeding?'}
+              {messageType === 'OccurrenceEdit' && 'Before editing occurrences, you must finalise your changes to the issue.'}
+              {messageType === 'CommentEdit' && 'Before editing comments, you must finalise your changes to the issue.'}
+              {messageType === 'AttachmentEdit' && 'Before managing attachments, you must finalise your changes to the issue.'}
+            </h2>
             <div className="flex justify-center">
               <button
                 className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
@@ -255,11 +262,27 @@ function IssueView({ issue, onClose }, ref) {
                 Cancel
               </button>
             </div>
-          </div>
-          , false);
+          </div>,
+          false
+        );
       });
     }
     return true;
+  }
+
+  // Function to handle closing the issue view
+  // This method is used implicitly by ModalContext when the user clicks outside the modal
+  const onUserCloseRequest = useCallback(async () => {
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const canClose = await promptToSaveChangesIfNecessary(
+      'CloseRequest',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    return canClose;
   }, [editedIssue, originalIssue, openModal]);
 
   useImperativeHandle(ref, () => ({
@@ -307,6 +330,17 @@ function IssueView({ issue, onClose }, ref) {
   const handleAddOccurrence = async () => {
     if (!newOccurrence.trim()) return;
 
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'OccurrenceEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.post(`/api/occurrences/${issue._id}`, {
         description: newOccurrence,
@@ -326,20 +360,29 @@ function IssueView({ issue, onClose }, ref) {
   };
 
   // Select an occurrence for editing
-  const handleSelectOccurrence = (occurrence) => {
+  const handleSelectOccurrence = async (occurrence) => {
     if (selectedOccurrence && selectedOccurrence._id === occurrence._id) {
-      // If the occurrence is already selected, do nothing
       return;
     }
+
     if (isAdmin || user.id === occurrence.user_id) {
+      const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+      const proceed = await promptToSaveChangesIfNecessary(
+        'OccurrenceEdit',
+        openModal,
+        closeModal,
+        handleSave,
+        handleCancel,
+        unsavedChangesCheck
+      );
+      if (!proceed) return;
+
       setSelectedOccurrence(
-        selectedOccurrence && selectedOccurrence._id === occurrence._id
-          ? null
-          : occurrence
+        selectedOccurrence && selectedOccurrence._id === occurrence._id ? null : occurrence
       );
       setEditedOccurrence({
         description: occurrence.description,
-        time: occurrence.created_at ? new Date(occurrence.created_at).toISOString().slice(0, 16) : ''
+        time: occurrence.created_at ? new Date(occurrence.created_at).toISOString().slice(0, 16) : '',
       });
     }
   };
@@ -350,6 +393,18 @@ function IssueView({ issue, onClose }, ref) {
       showToast("You do not have permission to edit this occurrence", "error");
       return;
     }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'OccurrenceEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.put(
         `/api/occurrences/${issue._id}/${occurrence._id}`,
@@ -375,6 +430,17 @@ function IssueView({ issue, onClose }, ref) {
 
   // Open modal asking if the user wants to delete an occurrence
   const promptDeleteOccurrence = async (occurrence) => {
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'OccurrenceEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     openModal(
       <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
         <h2 className="text-lg text-dark font-semibold mb-4">
@@ -408,6 +474,7 @@ function IssueView({ issue, onClose }, ref) {
       showToast("You do not have permission to delete this occurrence", "error");
       return;
     }
+
     try {
       await apiClient.delete(`/api/occurrences/${issue._id}/${occurrence._id}`);
 
@@ -430,6 +497,17 @@ function IssueView({ issue, onClose }, ref) {
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'CommentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.post(`/api/comments/${issue._id}`, {
         comment_text: newComment,
@@ -448,8 +526,19 @@ function IssueView({ issue, onClose }, ref) {
   };
 
   // Select a comment for editing
-  const handleSelectComment = (comment) => {
+  const handleSelectComment = async (comment) => {
     if (isAdmin || user.id === comment.user_id.id) {
+      const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+      const proceed = await promptToSaveChangesIfNecessary(
+        'CommentEdit',
+        openModal,
+        closeModal,
+        handleSave,
+        handleCancel,
+        unsavedChangesCheck
+      );
+      if (!proceed) return;
+
       setSelectedComment(
         selectedComment && selectedComment._id === comment._id ? null : comment
       );
@@ -463,6 +552,18 @@ function IssueView({ issue, onClose }, ref) {
       showToast("You do not have permission to edit this comment", "error");
       return;
     }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'CommentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.put(
         `/api/comments/${issue._id}/${comment._id}`,
@@ -492,6 +593,18 @@ function IssueView({ issue, onClose }, ref) {
       showToast("You do not have permission to delete this comment", "error");
       return;
     }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'CommentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       await apiClient.delete(`/api/comments/${issue._id}/${comment._id}`);
 
@@ -552,6 +665,17 @@ function IssueView({ issue, onClose }, ref) {
       return;
     }
 
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'AttachmentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     const formData = new FormData();
     images.forEach((file) => {
       formData.append('file', file);
@@ -585,6 +709,17 @@ function IssueView({ issue, onClose }, ref) {
 
   // Open modal asking if the user wants to delete an attachment
   const promptDeleteAttachment = async (attachmentId) => {
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'AttachmentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     openModal(
       <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
         <h2 className="text-lg text-dark font-semibold mb-4">
@@ -849,12 +984,14 @@ function IssueView({ issue, onClose }, ref) {
                   onChange={(e) => setNewOccurrence(e.target.value)}
                   className="new-occurrence-input"
                 />
-                <button
-                  onClick={handleAddOccurrence}
-                  className="add-occurrence-button"
-                >
-                  Add Occurrence
-                </button>
+                {newOccurrence.trim() && (
+                  <button
+                    onClick={handleAddOccurrence}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  >
+                    Add Occurrence
+                  </button>
+                )}
               </>
 
               {/* Attachments section */}
@@ -1066,12 +1203,14 @@ function IssueView({ issue, onClose }, ref) {
                   className="w-full p-2 border rounded mb-2"
                   placeholder="Add a new comment..."
                 />
-                <button
-                  onClick={handleAddComment}
-                  className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                >
-                  Add Comment
-                </button>
+                {newComment.trim() && (
+                  <button
+                    onClick={handleAddComment}
+                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                  >
+                    Add Comment
+                  </button>
+                )}
               </div>
             </div>
             {/* Issue sidebar with metadata */}
