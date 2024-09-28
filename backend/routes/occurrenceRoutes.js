@@ -38,7 +38,6 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
   const { description } = req.body;
   const issueId = req.params.issueId;
   const userId = req.user ? req.user.id : null;
-  console.log('User ID:', userId);
 
 
   if (!userId) {

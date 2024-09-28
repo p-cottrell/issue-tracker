@@ -1,5 +1,5 @@
 import { CheckIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
@@ -52,6 +52,7 @@ function IssueView({ issue, onClose }, ref) {
   }, [originalIssue]);
 
   const [currentStatus, setCurrentStatus] = useState(() => {
+  
     // Initialize currentStatus based on the latest status in status_history
     if (issue.status_history && issue.status_history.length > 0) {
       return issue.status_history[issue.status_history.length - 1].status_id;
@@ -84,6 +85,7 @@ function IssueView({ issue, onClose }, ref) {
   const [attachmentError, setAttachmentError] = useState(null); // Attachment error message
   const [images, setImages] = useState([]); // Selected images for upload
   const [imagePreviews, setImagePreviews] = useState([]); // Image preview URLs
+  const fileInputRef = useRef(null); // Create a ref for the file input
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
 
   // Function to display toast notifications
@@ -93,7 +95,6 @@ function IssueView({ issue, onClose }, ref) {
       setTimeout(() => setToast(null), duration);
     }
   };
-
 
   // Fetch issue details from the server
   const fetchIssueDetails = useCallback(async () => {
@@ -345,7 +346,7 @@ function IssueView({ issue, onClose }, ref) {
 
   // Edit an occurrence
   const handleEditOccurrence = async (occurrence) => {
-    if (!isAdmin && user.id !== occurrence.user_id) {
+    if (!isAdmin && user.id !== occurrence.user_id._id) {
       showToast("You do not have permission to edit this occurrence", "error");
       return;
     }
@@ -448,7 +449,7 @@ function IssueView({ issue, onClose }, ref) {
 
   // Select a comment for editing
   const handleSelectComment = (comment) => {
-    if (isAdmin || user.id === comment.user_id) {
+    if (isAdmin || user.id === comment.user_id.id) {
       setSelectedComment(
         selectedComment && selectedComment._id === comment._id ? null : comment
       );
@@ -458,7 +459,7 @@ function IssueView({ issue, onClose }, ref) {
 
   // Edit a comment
   const handleEditComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (!isAdmin && user.id !== comment.user_id._id) {
       showToast("You do not have permission to edit this comment", "error");
       return;
     }
@@ -487,7 +488,7 @@ function IssueView({ issue, onClose }, ref) {
 
   // Delete a comment
   const handleDeleteComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id) {
+    if (!isAdmin && user.id !== comment.user_id.id) {
       showToast("You do not have permission to delete this comment", "error");
       return;
     }

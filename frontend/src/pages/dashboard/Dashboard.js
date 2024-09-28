@@ -270,14 +270,14 @@ const Dashboard = () => {
 
   const statusOptions = [
     // Insertion order depicts the order in the dropdown
-    { value: 0, label: 'Pending' },
+    { value: 4, label: 'Pending' },
     { value: 2, label: 'In Progress' },
     { value: 1, label: 'Complete' },
     { value: 3, label: 'Cancelled' },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         {/* Left: Logo and Hamburger */}
@@ -294,7 +294,7 @@ const Dashboard = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-64 max-w-md sm:w-full px-4">
           <input
             type="text"
             placeholder="Search issues..."
@@ -307,7 +307,7 @@ const Dashboard = () => {
 
         {/* Right: New Issue Button and Layout Toggle */}
         <div className="flex items-center space-x-4">
-          <div className="relative layout-dropdown">
+          <div className="relative layout-dropdown hidden md:block">
             <button
               onClick={toggleLayoutDropdown}
               className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
@@ -358,26 +358,25 @@ const Dashboard = () => {
           <div className="flex space-x-4 items-center mb-4">
             {/* Filter Dropdown */}
 
-            <div className="bg-white px-2 py-2 rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+            <div className="bg-white rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
               <Select
+                id="filter-select"
                 options={filterOptions}
-                value={filterOptions.filter(option => filterType.includes(option.value))}
+                value={filterOptions.find(option => filterType === option.value) || null}
                 onChange={handleFilterChange}
                 className="text-primary-600 font-semibold focus:outline-none"
-                placeholder="Filter by Owner"
-              />
+                placeholder="Filter by Owner"/>
             </div>
 
-            {/* Status Filter */}
-            <div className="bg-white px-2 py-2 rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+            <div className="bg-white rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
               <Select
+                id="status-filter-select"
                 isMulti
                 options={statusOptions}
-                value={statusOptions.filter(option => statusFilter.includes(option.value))}
+                value={statusOptions.filter(option => statusFilter.includes(option.value)) || []}
                 onChange={handleStatusFilterChange}
                 className="text-primary-600 font-semibold focus:outline-none"
-                placeholder="Filter by Status"
-              />
+                placeholder="Filter by Status"/>
             </div>
           </div>
           {/* Display message if no issues found */}

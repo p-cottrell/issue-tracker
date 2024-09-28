@@ -46,6 +46,7 @@ export const UserProvider = ({ children }) => {
     if (user) {
       // If user is present, store it in localStorage
       localStorage.setItem('user', JSON.stringify(user));
+
     } else {
       // If user is null, remove the user from localStorage
       localStorage.removeItem('user');

@@ -247,7 +247,6 @@ const Profile = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
         <main className="flex-grow p-4 sm:p-6 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
             {/* Profile Section */}
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <img
@@ -256,6 +255,9 @@ const Profile = () => {
                 className="w-32 h-32 rounded-full mx-auto mb-4"
               />
               <h2 className="text-2xl font-bold">{userData.username}</h2>
+              {userData.role === 'admin' && (
+                <p className="text-lg mb-2">({userData.role})</p>
+              )}
               <p className="text-lg mb-2">{userData.email}</p>
               <ul className="mt-4 space-y-2 text-center">
                 <li className="text-gray-700">Issues in progress: <span className="text-green-500">{issuesInProgress}</span></li>
