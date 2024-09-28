@@ -3,13 +3,15 @@ const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const Issue = require('../models/Issue'); 
+const User = require('../models/User'); 
+const mongoose = require('mongoose');
 
 /**
- * Occurrence Management Routes
+ * Comment Management Routes
  *
- * This module defines routes for creating, retrieving, and deleting occurrences
+ * This module defines routes for creating, retrieving, and deleting comments
  * associated with specific issues. Each route uses JWT-based authentication to 
- * ensure that only authorized users can interact with the occurrences.
+ * ensure that only authorized users can interact with the comments.
  *
  * IMPORTANT: `authenticateToken` middleware authenticates using cookies, so when 
  * calling the API from the front-end, you must use `{ withCredentials: true }` to 
@@ -17,52 +19,61 @@ const Issue = require('../models/Issue');
  */
 
 /**
- * Route to create a new occurrence for a specific issue
+ * Route to create a new comment for a specific issue
  *
- * This route allows an authenticated user to add a new occurrence to an existing issue.
- * The issue is identified by `issueId`, and the occurrence details are provided in the request body.
- * The occurrence is associated with the authenticated user's ID and appended to the issue's 
- * `occurrences` array.
+ * This route allows an authenticated user to add a new comment to an existing issue.
+ * The issue is identified by `issueId`, and the comment details are provided in the request body.
+ * The comment is associated with the authenticated user's ID and appended to the issue's 
+ * `comments` array.
  *
  * @name POST /:issueId
  * @function
- * @memberof module:routes/occurrences
- * @param {Object} req.body - The occurrence data (description).
+ * @memberof module:routes/comments
+ * @param {Object} req.body - The comment data (description).
  * @param {Object} res - The response object.
  * @throws {404} - If the issue is not found.
- * @throws {500} - If an error occurs while creating the occurrence.
+ * @throws {500} - If an error occurs while creating the comment.
  */
 router.post('/:issueId', authenticateToken, async (req, res) => {
- 
-  
   const { comment_text } = req.body;
   const issueId = req.params.issueId;
   const userId = req.user ? req.user.id : null;
-
 
   if (!userId) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
 
   try {
-    const newComment = {
-      user_id: userId,
-      comment_text,
-    };
+    // Fetch the issue document
+    const issue = await Issue.findById(issueId);
 
-    
-
-    const updatedIssue = await Issue.findByIdAndUpdate(
-      issueId,
-      { $push: { comments: newComment } },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedIssue) {
+    if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    const addedComment = updatedIssue.comments[updatedIssue.comments.length - 1];
+    // Create a new comment with an _id and created_at timestamp
+    const newComment = {
+      _id: new mongoose.Types.ObjectId(), // Assign a new ObjectId
+      user_id: userId,
+      comment_text,
+      created_at: new Date(),
+    };
+
+    // Push the new comment into the comments array
+    issue.comments.push(newComment);
+
+    // Save the issue document
+    await issue.save();
+
+    // Populate the user_id field of the newly added comment
+    await issue.populate({
+      path: 'comments.user_id',
+      select: 'username',
+      match: { _id: userId }, // Only populate the comments added by this user
+    });
+
+    // Find the newly added comment with populated user_id
+    const addedComment = issue.comments.id(newComment._id);
 
     res.status(201).json({ message: 'Comment added', comment: addedComment });
   } catch (error) {
@@ -89,13 +100,14 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
 router.get('/issues/:id/comments', authenticateToken, async (req, res) => {
   try {
     const issueID = req.params.id;
-    const issue = await Issue.findById(issueID);
+
+    // Find the issue and populate comments.user_id
+    const issue = await Issue.findById(issueID)
 
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-   
     res.status(200).json(issue.comments);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching comments', details: error.message });
@@ -125,7 +137,7 @@ router.delete("/:issueId/:commentId", authenticateToken, async (req, res) => {
     // Find the issue and remove the occurrence
     const updatedIssue = await Issue.findByIdAndUpdate(
       issueId,
-      { $pull: { comments: { _id: commentId } } },
+      { $pull: { comments: { _id: commentId } } } ,
       { new: true } // This option returns the updated document
     );
 

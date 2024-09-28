@@ -29,7 +29,7 @@ export const BarGraph = ({graphData}) => {
             },
             title: {
                 display: true,
-                text: "# issues added per month"
+                text: "Number of issues added per month",
             }
         }
     };

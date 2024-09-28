@@ -30,7 +30,7 @@ export const LineGraph = ({graphData}) => {
             },
             title: {
                 display: true,
-                text: "# completed issues per month"
+                text: "Number of completed issues per month"
             }
         },
         scales: {
