@@ -777,16 +777,60 @@ function IssueView({ issue, onClose }, ref) {
     }
   };
 
-  // Function to handle deleting the issue (if needed)
+  // Open modal asking if the user wants to delete the issue
+  const promptDeleteIssue = async () => {
+    // const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    // const proceed = await promptToSaveChangesIfNecessary(
+    //   'CloseRequest',
+    //   openModal,
+    //   closeModal,
+    //   handleSave,
+    //   handleCancel,
+    //   unsavedChangesCheck
+    // );
+    // if (!proceed) return; // If we're deleting the issue, we don't need to save changes
+
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this issue?
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          This action cannot be undone.
+          <br />
+          All occurrences, comments, and attachments will be permanently deleted.
+        </p>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={async () => {
+              await handleDeleteIssue();
+              closeModal();
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+      , false);
+  };
+
+  // Function to handle deleting the issue
   const handleDeleteIssue = async () => {
-    if (window.confirm('Are you sure you want to delete this issue?')) {
-      try {
-        await apiClient.delete(`/api/issues/${issue._id}`);
-        onClose(); // Close the issue view
-      } catch (error) {
-        console.error('Error deleting issue:', error);
-        showToast('Error deleting issue', 'error');
-      }
+    try {
+      await apiClient.delete(`/api/issues/${issue._id}`);
+      onClose(); // Close the issue view
+    } catch (error) {
+      console.error('Error deleting issue:', error);
+      showToast('Error deleting issue', 'error');
+    } finally {
+      closeModal();
     }
   };
 
@@ -901,6 +945,17 @@ function IssueView({ issue, onClose }, ref) {
                 <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
               </p>
             </div>
+
+            {/* Delete Issue Button */}
+            {(isAdmin || user.id === originalIssue.reporter_id) && (
+              <button
+                onClick={promptDeleteIssue}
+                className="p-2 bg-gray-300 text-gray-600 hover:text-red-500 rounded hover:bg-red-100 focus:outline-none"
+                title="Delete Issue"
+              >
+                <TrashIcon className="w-5 h-5" /> {/* Icon for Delete Button */}
+              </button>
+            )}
           </div>
 
           {/* Issue body section */}
