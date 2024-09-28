@@ -33,6 +33,9 @@ const Profile = () => {
   const [isUsernameEditVisible, setUsernameEditVisible] = useState(false);
   const [isPasswordEditVisible, setPasswordEditVisible] = useState(false);
 
+  // State to store the edited username (used to separate from userData, so we aren't updating the username in the side panel in real-time)
+  const [editedUsername, setEditedUsername] = useState('');
+
   // State to handle the sidebar's open/close status
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -44,7 +47,7 @@ const Profile = () => {
   // Password-related states for rules and validation
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  // New state for dark mode setting
+  // State for dark mode setting
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch user data from the global UserContext
@@ -56,6 +59,7 @@ const Profile = () => {
       try {
         const response = await apiClient.get('api/users/me');
         setUserData(response.data);
+        setEditedUsername(response.data.username);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -93,18 +97,19 @@ const Profile = () => {
    * Validates the username and sends the new username to the API.
    */
   const handleUsernameChange = async () => {
-    if (!userData.username.trim()) {
+    if (!editedUsername.trim()) {
       setErrors({ username: 'Username cannot be empty.' });
       return;
     }
 
     try {
-      const response = await apiClient.put('api/users/update-username', { username: userData.username });
+      const response = await apiClient.put('api/users/update-username', { username: editedUsername });
 
       if (response.data.success) {
         setSuccessMessage('Username updated successfully.');
         setErrors({});
-        setUsernameEditVisible(false); // Hide the username edit form
+        setUserData({ ...userData, username: editedUsername });
+        setUsernameEditVisible(false);
       } else {
         setErrors({ username: 'Failed to update username.' });
       }
@@ -172,6 +177,7 @@ const Profile = () => {
 
   const toggleUsernameEdit = () => {
     setUsernameEditVisible((prev) => !prev); // Switch between showing and hiding the form
+    setEditedUsername(userData.username);
   };
 
   const togglePasswordEdit = () => {
@@ -179,6 +185,7 @@ const Profile = () => {
   };
 
   const cancelUsernameEdit = () => {
+    setEditedUsername(userData.username);
     setUsernameEditVisible(false); // Simply hides the form
   };
 
@@ -227,7 +234,7 @@ const Profile = () => {
   }, [user.id]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-dark">
+    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
         <div>
@@ -277,18 +284,18 @@ const Profile = () => {
                   <label className="block text-gray-700 px-2">Username</label>
                   <input
                     type="text"
-                    value={userData.username}
+                    value={editedUsername}
                     className="w-full mt-1 p-2 border rounded-lg"
-                    onChange={(e) => setUserData({ ...userData, username: e.target.value })}
+                    onChange={(e) => setEditedUsername(e.target.value)}
                   />
                   <div className="grid grid-cols-2 gap-4 mt-4">
-                    <button onClick={handleUsernameChange} className="bg-primary text-white py-2 rounded-lg w-full">Save</button>
-                    <button onClick={cancelUsernameEdit} className="bg-red-500 text-white py-2 rounded-lg w-full">Cancel</button>
+                    <button onClick={handleUsernameChange} className="bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Save</button>
+                    <button onClick={cancelUsernameEdit} className="bg-red-500 text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <div className="w-full sm:w-2/3">
-                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full">Update Username</button>
+                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Username</button>
                 </div>
               )}
 
@@ -327,13 +334,13 @@ const Profile = () => {
                     </div>
 
                     <div className="col-span-1 sm:col-span-2 flex justify-center mt-2 space-x-4">
-                      <button onClick={handlePasswordChange} className="bg-primary text-white py-2 px-6 rounded-lg w-1/2">Save</button>
-                      <button onClick={cancelPasswordEdit} className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2">Cancel</button>
+                      <button onClick={handlePasswordChange} className="bg-primary text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Save</button>
+                      <button onClick={cancelPasswordEdit} className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full">
-                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary text-white py-2 rounded-lg w-full">Update Password</button>
+                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Password</button>
                   </div>
                 )}
               </div>
@@ -341,7 +348,7 @@ const Profile = () => {
               {/* Theme Settings */}
               <div className="w-full sm:w-2/3 mt-8">
               <h3 className="text-2xl font-bold mb-6 text-center">Theme Settings</h3>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between transition-transform transform hover:scale-105">
                   <span className="text-dark dark:text-neutral">Dark Mode</span>
                   <button
                     onClick={handleThemeToggle}

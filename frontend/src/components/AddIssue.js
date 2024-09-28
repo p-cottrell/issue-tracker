@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import apiClient from '../api/apiClient';
+import { useModal } from '../context/ModalContext';
 import { charmOptions } from '../helpers/IssueHelpers';
 import TiptapEditor from './richtext/TiptapEditor';
 
@@ -9,6 +10,8 @@ import TiptapEditor from './richtext/TiptapEditor';
  * It supports drag-and-drop functionality for images and displays a preview of selected images.
  */
 const AddIssue = ({ closeHandler }) => {
+  const { closeModal } = useModal();
+
   // State for form fields
   const [title, setTitle] = useState(''); // Title of the issue
   const [description, setDescription] = useState(''); // Description of the issue
@@ -19,7 +22,6 @@ const AddIssue = ({ closeHandler }) => {
   const [images, setImages] = useState([]); // Array of selected image files
   const [imagePreviews, setImagePreviews] = useState([]); // Array of image preview URLs
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
-
 
   // State for displaying a preview modal
   const [previewImage, setPreviewImage] = useState(null); // Selected image to preview in modal
@@ -302,15 +304,18 @@ const AddIssue = ({ closeHandler }) => {
             type="submit"
             className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
           >
-            Create Issue
+            + Add
           </button>
-          {/* <button
+          <button
             type="button"
             className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
-            onClick={() => closeHandler(false)}
+            onClick={() => {
+              closeHandler(false);
+              closeModal();
+            }}
           >
             Cancel
-          </button> */}
+          </button>
         </div>
       </form>
 
