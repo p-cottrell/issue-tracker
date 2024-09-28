@@ -164,7 +164,10 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
             </div>
 
             {/* Description */}
-            <p className="text-gray-700 mb-4 line-clamp-5 text-clip">{data.description}</p>
+            <div
+                className="text-gray-700 mb-4 line-clamp-5 text-clip"
+                dangerouslySetInnerHTML={{ __html: data.description }}
+            ></div>
 
             {/* Reference */}
             <p className="text-sm text-gray-500 mb-4">

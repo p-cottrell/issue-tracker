@@ -1,0 +1,30 @@
+.tiptap-toolbar {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+}
+
+.tiptap-toolbar .btn {
+    padding: 5px 10px;
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.tiptap-toolbar .btn:hover {
+    background: #e0e0e0;
+}
+
+.tiptap-toolbar .btn-active {
+    background: #0070f3;
+    color: white;
+}
+
+.tiptap-content {
+    padding: 10px;
+    min-height: 150px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}

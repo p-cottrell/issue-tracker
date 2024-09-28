@@ -5,6 +5,7 @@ import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
 import { charmOptions, generateNiceReferenceId } from '../helpers/IssueHelpers';
 import { GetUserAvatar } from '../helpers/UserHelpers';
+import DescriptionEditor from './DescriptionEditor';
 import "./IssueView.css";
 
 // Helper function to format date in DD/MM/YYYY format
@@ -908,23 +909,13 @@ function IssueView({ issue, onClose }, ref) {
               {/* Description section */}
               <div className="mt-4">
                 <h2 className="text-xl font-bold mb-2">Description</h2>
-                {isDescriptionBeingEdited && canEdit ? (
-                  <textarea
-                    value={editedIssue.description}
-                    onChange={(e) => setEditedIssue({ ...editedIssue, description: e.target.value })}
-                    onBlur={() => setIsDescriptionBeingEdited(false)}
-                    autoFocus
-                    className="w-full p-2 border rounded"
-                    placeholder="Issue Description"
-                  />
-                ) : (
-                  <p
-                    className={`text-sm text-gray-600 ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
-                    onClick={() => canEdit && setIsDescriptionBeingEdited(true)}
-                    >
-                      {editedIssue.description}
-                  </p>
-                )}
+                <DescriptionEditor
+                  description={editedIssue.description}
+                  onChange={(newDescription) => setEditedIssue({ ...editedIssue, description: newDescription })}
+                  canEdit={canEdit}
+                  isEditMode={isDescriptionBeingEdited}
+                  setIsEditMode={setIsDescriptionBeingEdited}
+                />
               </div>
 
               {/* Occurrences section */}
