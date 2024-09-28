@@ -603,7 +603,10 @@ function IssueView({ issue, onClose }, ref) {
         <div className="flex justify-center">
           <button
             className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
-            onClick={() => handleDeleteComment(comment)}
+            onClick={async () => {
+              await handleDeleteComment(comment);
+              closeModal();
+            }}
           >
             Yes
           </button>
@@ -746,7 +749,10 @@ function IssueView({ issue, onClose }, ref) {
         <div className="flex justify-center">
           <button
             className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
-            onClick={() => handleDeleteAttachment(attachmentId)}
+            onClick={async () => {
+              await handleDeleteAttachment(attachmentId);
+              closeModal();
+            }}
           >
             Yes
           </button>
@@ -769,8 +775,6 @@ function IssueView({ issue, onClose }, ref) {
     } catch (error) {
       console.error('Error deleting attachment:', error);
       showToast('Error deleting attachment', 'error');
-    } finally {
-      closeModal();
     }
   };
 
@@ -1136,7 +1140,7 @@ function IssueView({ issue, onClose }, ref) {
                         <img
                           src={attachment.signedUrl}
                           alt="Attachment"
-                          className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
+                          className="relative rounded-md object-contain max-h-full max-w-full cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleImageClick(attachment.signedUrl);
