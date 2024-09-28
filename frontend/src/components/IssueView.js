@@ -720,7 +720,7 @@ function IssueView({ issue, onClose }, ref) {
   const handleImageClick = (imageSrc) => {
     openModal(
       <div className="relative">
-        <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full" />
+        <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full mx-auto" />
       </div>
     );
   };

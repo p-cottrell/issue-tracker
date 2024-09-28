@@ -103,7 +103,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     };
 
     /**
-     * Utility function to determine if a character is a letter, used to conditionally style 
+     * Utility function to determine if a character is a letter, used to conditionally style
      * the charm icon differently depending on whether it's a letter or a symbol.
      */
     const isLetter = (char) => {
@@ -116,7 +116,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     const handleImageClick = (imageSrc) => {
         openModal(
             <div className="relative">
-                <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full" />
+                <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full mx-auto" />
             </div>
         );
     };
