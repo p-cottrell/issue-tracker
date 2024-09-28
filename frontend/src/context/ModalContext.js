@@ -6,6 +6,7 @@ const ModalContext = createContext();
 export const ModalProvider = ({ children }) => {
     const [modals, setModals] = useState([]);
     const modalRef = useRef(null);
+    const buttonRef = useRef(null);
     const [closeButtonStyle, setCloseButtonStyle] = useState({});
 
     const openModal = (content, showCloseButton = true) => {
@@ -29,15 +30,19 @@ export const ModalProvider = ({ children }) => {
         }
     };
 
+    // Position the close button in the top-right corner of the modal
     useEffect(() => {
-        if (modalRef.current) {
-            const { offsetWidth, offsetHeight } = modalRef.current;
+        if (modalRef.current && buttonRef.current) {
+            const modalRect = modalRef.current.getBoundingClientRect();
+            const buttonRect = buttonRef.current.getBoundingClientRect();
+            const padding = 10;
+
             setCloseButtonStyle({
-                top: '10px', // Customize the top margin as needed
-                left: `${offsetWidth - 20}px`, // Adjust left based on modal width
+                top: `${padding}px`,
+                left: `${modalRect.width - buttonRect.width - padding}px`,
             });
         }
-    }, [modals]); // Recalculate on modal changes
+    }, [modals]); // Recalculate when modals change
 
     return (
         <ModalContext.Provider value={{ openModal, closeModal }}>
@@ -55,8 +60,9 @@ export const ModalProvider = ({ children }) => {
                             {modal.content}
                             {modal.showCloseButton && (
                                 <button
+                                    ref={buttonRef}
                                     onClick={closeModal}
-                                    style={closeButtonStyle} // Apply dynamic positioning
+                                    style={closeButtonStyle}
                                     className="absolute text-white bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-75 focus:outline-none"
                                 >
                                     <XMarkIcon className="w-6 h-6" />

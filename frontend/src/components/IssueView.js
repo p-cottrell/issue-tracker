@@ -514,21 +514,45 @@ export default function IssueView({ issue, onClose }) {
     );
   };
 
-  // Delete an attachment
+  // Open modal asking if the user wants to delete an attachment
+  const promptDeleteAttachment = async (attachmentId) => {
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this attachment?
+        </h2>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={() => handleDeleteAttachment(attachmentId)}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+    , false);
+  };
+
+  // Function to handle deleting an attachment
   const handleDeleteAttachment = async (attachmentId) => {
-    if (window.confirm('Are you sure you want to delete this attachment?')) {
-      try {
-        const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
-        if (response.status === 200) {
-          showToast('Attachment deleted successfully', 'success');
-          setAttachments(attachments.filter((attachment) => attachment._id !== attachmentId));
-        } else {
-          throw new Error(response.data.message || 'Error deleting attachment');
-        }
-      } catch (error) {
-        console.error('Error deleting attachment:', error);
-        showToast(`Error deleting attachment: ${error.message}`, 'error');
+    try {
+      const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
+      if (response.status === 200) {
+        showToast('Attachment deleted successfully', 'success');
+        setAttachments(attachments.filter((attachment) => attachment._id !== attachmentId));
+      } else {
+        throw new Error(response.data.message || 'Error deleting attachment');
       }
+      closeModal();
+    } catch (error) {
+      console.error('Error deleting attachment:', error);
+      showToast(`Error deleting attachment: ${error.message}`, 'error');
     }
   };
 
@@ -774,12 +798,12 @@ export default function IssueView({ issue, onClose }) {
                 {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {attachments.map((attachment) => (
-                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
+                    <div className="hover:bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden group">
                       <div className="relative w-full h-full flex items-center justify-center">
-                        <div
-                          className="absolute inset-0 bg-cover bg-center filter blur-lg"
+                        {/* <div
+                          className="absolute inset-0 bg-cover bg-center filter blur-lg opacity-0 group-hover:opacity-100"
                           style={{ backgroundImage: `url(${attachment.signedUrl})` }}
-                        ></div>
+                        ></div> */}
                         <img
                           src={attachment.signedUrl}
                           alt="Attachment"
@@ -790,9 +814,11 @@ export default function IssueView({ issue, onClose }) {
                           }}
                         />
                       </div>
-                      <div className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100">
+                      {/* <div className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"> */}
+                      {/* <div className="absolute top-1 right-1 flex space-x-2"> */}
+                      <div className="absolute top-1 right-1 flex space-x-2 hover:bg-gray-300 rounded-full p-1 opacity-0 group-hover:opacity-100">
                         <button
-                          onClick={() => handleDeleteAttachment(attachment._id)}
+                          onClick={() => promptDeleteAttachment(attachment._id)}
                           title="Delete attachment"
                         >
                           <TrashIcon className="w-4 h-4" />
