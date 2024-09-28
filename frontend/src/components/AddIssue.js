@@ -18,6 +18,7 @@ const AddIssue = ({ closeHandler }) => {
   const [imagePreviews, setImagePreviews] = useState([]); // Array of image preview URLs
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
 
+
   // State for displaying a preview modal
   const [previewImage, setPreviewImage] = useState(null); // Selected image to preview in modal
 
@@ -166,7 +167,7 @@ const AddIssue = ({ closeHandler }) => {
   };
 
   return (
-    <div className="bg-white p-8 rounded shadow-lg max-w-3xl mx-auto">
+    <div className="bg-white p-8 rounded shadow-lg max-w-3xl mx-auto max-h-screen overflow-auto">
       {/* Form Title */}
       <h2 className="text-2xl text-dark font-semibold mb-6 text-center">Add New Issue</h2>
   
@@ -240,7 +241,16 @@ const AddIssue = ({ closeHandler }) => {
         >
           {/* Attachment Prompt */}
           <p className="text-sm text-gray-500">
-            {images.length > 0 ? `${images.length} file(s) selected` : 'Drag & drop images here, or click to select'}
+            {images.length > 0 
+              ? `${images.length} file(s) selected`
+              : (
+                <>
+                  {/* Show this text on small screens */}
+                  <span className="block sm:hidden">Click to select image</span>
+                  {/* Show this text on larger screens */}
+                  <span className="hidden sm:block">Drag & drop images here, or click to select</span>
+                </>
+              )}
           </p>
         </div>
   

@@ -846,9 +846,16 @@ export default function IssueView({ issue, onClose }) {
                       onClick={() => fileInputRef.current.click()} // Use the ref to trigger click
                     >
                       <p className="text-sm text-gray-500">
-                        {images.length > 0
-                          ? `${images.length} file(s) selected`
-                          : 'Drag & drop images here, or click to select'}
+                      {images.length > 0 
+                        ? `${images.length} file(s) selected`
+                        : (
+                          <>
+                            {/* Show this text on small screens */}
+                            <span className="block sm:hidden">Click to select image</span>
+                            {/* Show this text on larger screens */}
+                            <span className="hidden sm:block">Drag & drop images here, or click to select</span>
+                          </>
+                        )}
                       </p>
                     </div>
                     <input
