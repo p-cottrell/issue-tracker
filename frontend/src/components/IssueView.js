@@ -712,7 +712,7 @@ function IssueView({ issue, onClose }, ref) {
       fetchIssueDetails(); // Refresh the issue view
     } catch (error) {
       console.error('Error uploading files:', error);
-      showToast(`Error uploading files: ${error.response?.data?.details || error.message}`, 'error');
+      showToast('Error uploading files', 'error');
     }
   };
 
@@ -764,16 +764,13 @@ function IssueView({ issue, onClose }, ref) {
   // Function to handle deleting an attachment
   const handleDeleteAttachment = async (attachmentId) => {
     try {
-      const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
-      if (response.status === 200) {
-        setAttachments(attachments.filter((attachment) => attachment._id !== attachmentId));
-      } else {
-        throw new Error(response.data.message || 'Error deleting attachment');
-      }
-      closeModal();
+      await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
+      fetchAttachments(); // Refresh the attachments list
     } catch (error) {
       console.error('Error deleting attachment:', error);
-      showToast(`Error deleting attachment: ${error.message}`, 'error');
+      showToast('Error deleting attachment', 'error');
+    } finally {
+      closeModal();
     }
   };
 
