@@ -20,3 +20,9 @@ export function generateNiceReferenceId(data) {
     const niceReferenceId = `${randomLetter()}${randomLetter()}${randomLetter()}-${randomNumber()}${randomNumber()}${randomNumber()}${randomNumber()}`;
     return niceReferenceId;
 }
+
+export const charmOptions = [
+    '⚠️', '🚀', '🐞', '💻', '📅', '🌐', '🏆', '🏠', '🐈', '🐕', '⏱️', '🎵',
+    '⭐', '🔎', '📸', '💾', '❤️', '🎬', '📖', '🎂', '🖥️', '🔥', '🎫', '🔧',
+    '🚫', '💥', '🎓', '📚'
+];

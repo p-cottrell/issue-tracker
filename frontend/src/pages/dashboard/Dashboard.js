@@ -1,6 +1,6 @@
 import { Bars3Icon, InformationCircleIcon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import Fuse from 'fuse.js';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
@@ -160,12 +160,13 @@ const Dashboard = () => {
     openModal(<DeleteIssuePopup closeHandler={() => closeModalCallback(true)} issue={data} />, false);
   };
 
+  const issueViewRef = useRef();
   /**
    * Opens the issue view modal to display details of the selected issue.
    * @param {Object} issue - The issue object to be displayed.
    */
   const showIssueViewModal = (issue) => {
-    openModal(<IssueView issue={issue} onClose={() => closeModalCallback(true)} />, true);
+    openModal(<IssueView ref={issueViewRef} issue={issue} onClose={() => closeModalCallback(true)} />, true);
   };
 
   /**

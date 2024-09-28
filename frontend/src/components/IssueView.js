@@ -1,9 +1,9 @@
 import { CheckIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
-import { generateNiceReferenceId } from '../helpers/IssueHelpers';
+import { charmOptions, generateNiceReferenceId } from '../helpers/IssueHelpers';
 import "./IssueView.css";
 
 // Helper function to format date in DD/MM/YYYY format
@@ -40,22 +40,17 @@ function formatSmartDate(dateString) {
   }
 }
 
-// Array of emoji options for the charm selector
-const emojiOptions = [
-  '⚠️', '🚀', '🐞', '💻', '📅', '🌐', '🏆', '🏠', '🐈', '🐕', '⏱️', '🎵',
-  '⭐', '🔎', '📸', '💾', '❤️', '🎬', '📖', '🎂', '🖥️', '🔥', '🎫', '🔧',
-  '🚫', '💥', '🎓', '📚'
-];
-
-export default function IssueView({ issue, onClose }) {
+function IssueView({ issue, onClose }, ref) {
   const { user } = useUser();
   const { openModal, closeModal } = useModal();
 
   // State variables
-  const [detailedIssue, setDetailedIssue] = useState(issue); // Detailed issue data
-  const [editMode, setEditMode] = useState(false); // Toggle for edit mode
+  const [originalIssue, setOriginalIssue] = useState(issue); // Detailed issue data
   const [editedIssue, setEditedIssue] = useState({ ...issue }); // Copy of issue for editing
-  const [editedCharm, setEditedCharm] = useState(issue.charm); // Edited charm (emoji)
+  useEffect(() => { // when the originalIssue changes, update the editedIssue
+    setEditedIssue({ ...originalIssue });
+  }, [originalIssue]);
+
   const [currentStatus, setCurrentStatus] = useState(() => {
     // Initialize currentStatus based on the latest status in status_history
     if (issue.status_history && issue.status_history.length > 0) {
@@ -65,6 +60,12 @@ export default function IssueView({ issue, onClose }) {
   });
   const [canEdit, setCanEdit] = useState(false); // Permission to edit
   const [isAdmin, setIsAdmin] = useState(false); // Check if user is admin
+
+  // State for header fields
+  const [isTitleBeingEdited, setIsTitleBeingEdited] = useState(false);
+  const [isStatusBeingEdited, setIsStatusBeingEdited] = useState(false);
+  const [isCharmBeingEdited, setIsCharmBeingEdited] = useState(false);
+  const [isDescriptionBeingEdited, setIsDescriptionBeingEdited] = useState(false);
 
   // State for occurrences
   const [newOccurrence, setNewOccurrence] = useState(""); // New occurrence input
@@ -99,9 +100,8 @@ export default function IssueView({ issue, onClose }) {
     try {
       const response = await apiClient.get(`/api/issues/${issue._id}`);
       const fetchedIssue = response.data;
-      setDetailedIssue(fetchedIssue);
+      setOriginalIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
-      setEditedCharm(fetchedIssue.charm); // Update editedCharm
 
       // Set reporter's username
 
@@ -150,40 +150,21 @@ export default function IssueView({ issue, onClose }) {
 
   // useEffect to update currentStatus when detailedIssue changes
   useEffect(() => {
-    if (detailedIssue.status_history && detailedIssue.status_history.length > 0) {
+    if (originalIssue.status_history && originalIssue.status_history.length > 0) {
       setCurrentStatus(
-        detailedIssue.status_history[detailedIssue.status_history.length - 1].status_id
+        originalIssue.status_history[originalIssue.status_history.length - 1].status_id
       );
     } else {
       setCurrentStatus(null); // Or set to a default status ID if desired
     }
-  }, [detailedIssue]);
-
-  // Function to handle entering edit mode
-  const handleEdit = () => {
-    if (canEdit) {
-      setEditMode(true);
-      setEditedIssue({ ...detailedIssue }); // Set editedIssue to current detailedIssue
-      setEditedCharm(detailedIssue.charm); // Set editedCharm to current charm
-      // Set currentStatus to the latest status_id from detailedIssue
-      if (detailedIssue.status_history && detailedIssue.status_history.length > 0) {
-        setCurrentStatus(
-          detailedIssue.status_history[detailedIssue.status_history.length - 1].status_id
-        );
-      } else {
-        setCurrentStatus(null); // Or a default status if needed
-      }
-    }
-  };
+  }, [originalIssue]);
 
   // Function to handle saving edits
   const handleSave = async () => {
     if (canEdit) {
       try {
-        // Prepare updated issue data
         const updatedIssue = {
           ...editedIssue,
-          charm: editedCharm,
           status_id: currentStatus,
           status_history: [
             ...editedIssue.status_history,
@@ -201,14 +182,12 @@ export default function IssueView({ issue, onClose }) {
           })),
         };
 
-        // Send PUT request to update the issue
         const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
 
-        setDetailedIssue(response.data.updatedIssue); // Update detailedIssue with response
-        setEditMode(false); // Exit edit mode
+        setOriginalIssue(response.data.updatedIssue);
         showToast('Issue updated successfully', 'success', 5000);
 
-        onClose(response.data.updatedIssue); // Close the issue view with updated data
+        onClose(response.data.updatedIssue);
       } catch (error) {
         console.error('Error updating issue:', error);
         showToast('Error updating issue', 'error');
@@ -219,19 +198,72 @@ export default function IssueView({ issue, onClose }) {
   // Function to handle canceling edits
   const handleCancel = () => {
     if (canEdit) {
-      setEditMode(false);
-      setEditedIssue(detailedIssue); // Revert changes
-      setEditedCharm(detailedIssue.charm); // Revert charm
-      // Reset currentStatus to match detailedIssue
-      if (detailedIssue.status_history && detailedIssue.status_history.length > 0) {
+      setEditedIssue(originalIssue);
+      if (originalIssue.status_history && originalIssue.status_history.length > 0) {
         setCurrentStatus(
-          detailedIssue.status_history[detailedIssue.status_history.length - 1].status_id
+          originalIssue.status_history[originalIssue.status_history.length - 1].status_id
         );
       } else {
         setCurrentStatus(null);
       }
     }
   };
+
+  // Function to handle closing the issue view
+  // This method is used implicitly by ModalContext when the user clicks outside the modal
+  const onUserCloseRequest = useCallback(async () => {
+    const hasChanges = editedIssue.title !== originalIssue.title ||
+      editedIssue.description !== originalIssue.description ||
+      JSON.stringify(editedIssue.status_history) !== JSON.stringify(originalIssue.status_history);
+    console.log(`User is trying to close the issue view. Has changes: ${hasChanges}\n`, editedIssue, originalIssue);
+
+    if (hasChanges) {
+      return new Promise((resolve) => {
+        openModal(
+          // Show Yes/No/Cancel dialog (Yes=Save, No=Discard, Cancel=Stay on page)
+          <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+            <h2 className="text-lg text-dark font-semibold mb-4">You have unsaved changes. What would you like to do?</h2>
+            <div className="flex justify-center">
+              <button
+                className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+                onClick={async () => {
+                  closeModal();
+                  await handleSave();
+                  resolve(true);
+                }}
+              >
+                Save
+              </button>
+              <button
+                className="mr-4 px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+                onClick={() => {
+                  closeModal();
+                  handleCancel();
+                  resolve(true);
+                }}
+              >
+                Discard
+              </button>
+              <button
+                className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+                onClick={() => {
+                  closeModal();
+                  resolve(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          , false);
+      });
+    }
+    return true;
+  }, [editedIssue, originalIssue, openModal]);
+
+  useImperativeHandle(ref, () => ({
+    onUserCloseRequest,
+  }));
 
   // Function to handle input changes in edit mode
   const handleInputChange = (e) => {
@@ -280,9 +312,9 @@ export default function IssueView({ issue, onClose }) {
         user_id: user.id,
       });
 
-      setDetailedIssue({
-        ...detailedIssue,
-        occurrences: [...detailedIssue.occurrences, response.data.occurrence],
+      setOriginalIssue({
+        ...originalIssue,
+        occurrences: [...originalIssue.occurrences, response.data.occurrence],
       });
       setNewOccurrence("");
       showToast("Occurrence added successfully", "success");
@@ -326,11 +358,11 @@ export default function IssueView({ issue, onClose }) {
         }
       );
 
-      const updatedOccurrences = detailedIssue.occurrences.map((occ) =>
+      const updatedOccurrences = originalIssue.occurrences.map((occ) =>
         occ._id === occurrence._id ? response.data.occurrence : occ
       );
 
-      setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
+      setOriginalIssue({ ...originalIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
       setEditedOccurrence(null);
       showToast("Occurrence updated successfully", "success");
@@ -378,11 +410,11 @@ export default function IssueView({ issue, onClose }) {
     try {
       await apiClient.delete(`/api/occurrences/${issue._id}/${occurrence._id}`);
 
-      const updatedOccurrences = detailedIssue.occurrences.filter(
+      const updatedOccurrences = originalIssue.occurrences.filter(
         (occ) => occ._id !== occurrence._id
       );
 
-      setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
+      setOriginalIssue({ ...originalIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
       showToast("Occurrence deleted successfully", "success");
     } catch (error) {
@@ -402,9 +434,9 @@ export default function IssueView({ issue, onClose }) {
         comment_text: newComment,
       });
 
-      setDetailedIssue({
-        ...detailedIssue,
-        comments: [...detailedIssue.comments, response.data.comment],
+      setOriginalIssue({
+        ...originalIssue,
+        comments: [...originalIssue.comments, response.data.comment],
       });
       setNewComment("");
       showToast("Comment added successfully", "success");
@@ -438,7 +470,7 @@ export default function IssueView({ issue, onClose }) {
         }
       );
 
-      setDetailedIssue((prevState) => ({
+      setOriginalIssue((prevState) => ({
         ...prevState,
         comments: prevState.comments.map((c) =>
           c._id === comment._id ? response.data.comment : c
@@ -462,7 +494,7 @@ export default function IssueView({ issue, onClose }) {
     try {
       await apiClient.delete(`/api/comments/${issue._id}/${comment._id}`);
 
-      setDetailedIssue((prevState) => ({
+      setOriginalIssue((prevState) => ({
         ...prevState,
         comments: prevState.comments.filter((c) => c._id !== comment._id),
       }));
@@ -610,113 +642,113 @@ export default function IssueView({ issue, onClose }) {
   return (
     <div className="relative mx-auto p-5 shadow-lg rounded-md bg-white max-h-[calc(100vh-40px)] overflow-y-auto">
       <div className="mt-3">
-        {/* Header with edit, save, cancel buttons */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-2">
-            {canEdit && !editMode && (
-              <button
-                onClick={handleEdit}
-                className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              >
-                Edit
-              </button>
-            )}
-            {canEdit && editMode && (
-              <>
-                <button
-                  onClick={handleSave}
-                  className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-            {isAdmin && (
-              <button
-                onClick={handleDeleteIssue}
-                className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-              >
-                Delete
-              </button>
-            )}
-          </div>
-        </div>
-
         <div className="mt-2 px-7 py-3">
           {/* Issue header section */}
-          <div className="issue-header">
-            {editMode ? (
-              <div className="flex items-center space-x-2">
-                {/* Editable title */}
+          <div className="issue-header flex items-center space-x-4 mb-6">
+            {/* Charm Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsCharmBeingEdited(!isCharmBeingEdited)}
+                className="bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-14 h-14 text-4xl"
+              >
+                {editedIssue.charm}
+              </button>
+
+              {isCharmBeingEdited && (
+                <div className="absolute left-0 mt-2 p-2 bg-white border border-gray-200 shadow-lg rounded grid grid-cols-4 gap-2 overflow-visible z-10 w-80">
+                  {charmOptions.map((charmOption, index) => (
+                    <div
+                      key={index}
+                      className={`cursor-pointer p-1 rounded-lg text-xl flex justify-center items-center ${editedIssue.charm === charmOption ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                      onClick={() => {
+                        setEditedIssue({ ...editedIssue, charm: charmOption });
+                        setIsCharmBeingEdited(false);
+                      }}
+                    >
+                      {charmOption}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Title Input/Display */}
+            <div className="flex-grow">
+              {isTitleBeingEdited && canEdit ? (
                 <input
                   type="text"
                   value={editedIssue.title}
-                  onChange={(e) =>
-                    setEditedIssue({ ...editedIssue, title: e.target.value })
-                  }
-                  className="text-xl font-bold mb-2 w-full p-2 border rounded h-[42px]"
+                  onChange={(e) => setEditedIssue({ ...editedIssue, title: e.target.value })}
+                  onBlur={() => setIsTitleBeingEdited(false)}
+                  autoFocus
+                  className="text-xl font-bold mb-2 w-full p-2 border border-gray-300 rounded"
+                  placeholder="Issue Title"
                 />
-                {/* Status select */}
+              ) : (
+                <h1
+                  className={`text-xl font-bold mb-2 ${canEdit ? 'cursor-pointer' : ''}`}
+                  onClick={() => canEdit && setIsTitleBeingEdited(true)}
+                >
+                  {editedIssue.title}
+                </h1>
+              )}
+            </div>
+
+            {/* Status Selector */}
+            <div>
+              {isStatusBeingEdited && canEdit ? (
                 <select
                   name="status_id"
                   value={currentStatus || ''}
                   onChange={handleInputChange}
-                  className="p-2 border rounded h-[42px]"
+                  onBlur={() => setIsStatusBeingEdited(false)}
+                  className="p-2 border border-gray-300 rounded h-[42px]"
+                  autoFocus
                 >
                   <option value={1}>Complete</option>
                   <option value={2}>In Progress</option>
                   <option value={3}>Cancelled</option>
                   <option value={4}>Pending</option>
                 </select>
-                {/* Charm (emoji) select */}
-                <select
-                  value={editedCharm || ''}
-                  onChange={(e) => setEditedCharm(e.target.value)}
-                  className="p-2 border rounded h-[42px]"
+              ) : (
+                <p
+                  className={`text-sm text-gray-600 cursor-pointer ${canEdit ? 'hover:underline' : ''}`}
+                  onClick={() => canEdit && setIsStatusBeingEdited(true)}
                 >
-                  {emojiOptions.map((emoji, index) => (
-                    <option key={index} value={emoji}>
-                      {emoji}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <>
-                {/* Display issue title, status, charm */}
-                <h1 className="text-xl font-bold mb-2">{detailedIssue.title}</h1>
-                <p className="text-sm text-gray-600">
-                  Status: {getStatusText(currentStatus)}
+                  <strong>Status:</strong> {getStatusText(currentStatus)}
                 </p>
-                <p className="text-2xl ml-2">{detailedIssue.charm}</p>
-                <p className="text-sm text-gray-600">
-                  <strong>Reference:</strong> {generateNiceReferenceId(detailedIssue)}
-                </p>
-              </>
-            )}
+              )}
+              <p className="text-sm text-gray-600">
+                <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
+              </p>
+            </div>
           </div>
 
           {/* Issue body section */}
           <div className="issue-body">
             <div className="issue-main">
               {/* Description section */}
-              <h2 className="text-xl font-bold">Description</h2>
-              {editMode ? (
-                <textarea
-                  name="description"
-                  value={editedIssue.description}
-                  onChange={handleInputChange}
-                  className="issue-description-textarea"
-                />
-              ) : (
-                <p>{detailedIssue.description}</p>
-              )}
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Description</h2>
+                {isDescriptionBeingEdited && canEdit ? (
+                  <textarea
+                    value={editedIssue.description}
+                    onChange={(e) => setEditedIssue({ ...editedIssue, description: e.target.value })}
+                    onBlur={() => setIsDescriptionBeingEdited(false)}
+                    autoFocus
+                    className="w-full p-2 border rounded"
+                    placeholder="Issue Description"
+                  />
+                ) : (
+                  <p
+                    className={`text-sm text-gray-600 ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
+                    onClick={() => canEdit && setIsDescriptionBeingEdited(true)}
+                    >
+                      {editedIssue.description}
+                  </p>
+                )}
+              </div>
 
               {/* Occurrences section */}
               <div className="mt-4">
@@ -724,7 +756,7 @@ export default function IssueView({ issue, onClose }) {
                   <h2 className="text-xl font-bold">Occurrences</h2>
                 </div>
                 <ul className="occurrences-list">
-                  {(detailedIssue.occurrences || []).map((occurrence) => (
+                  {(originalIssue.occurrences || []).map((occurrence) => (
                     <li
                       key={occurrence._id}
                       className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200
@@ -933,7 +965,7 @@ export default function IssueView({ issue, onClose }) {
               <div className="mt-4">
                 <h2 className="text-xl font-bold mb-2">Comments</h2>
                 <ul className="comments-list">
-                  {(detailedIssue.comments || []).map((comment) => (
+                  {(originalIssue.comments || []).map((comment) => (
                     <li
                       key={comment._id}
                       className={`comment-item mb-4 ${
@@ -1045,50 +1077,31 @@ export default function IssueView({ issue, onClose }) {
             <div className="issue-sidebar">
               <div className="issue-meta">
                 <p>
-                <strong>Reported by:</strong>{" "}
-                {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
+                  <strong>Reported by: </strong>
+                  <br/>
+                  {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
                 </p>
 
-
-                {editMode ? (
-                  <>
-                    <div>
-                      <strong>Created at:</strong>{" "}
-                      <input
-                        type="datetime-local"
-                        value={detailedIssue.created_at ? detailedIssue.created_at.slice(0, 16) : ''}
-                        onChange={(e) => setDetailedIssue({...detailedIssue, created_at: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <strong>Updated at:</strong>{" "}
-                      <input
-                        type="datetime-local"
-                        value={detailedIssue.updated_at ? detailedIssue.updated_at.slice(0, 16) : ''}
-                        onChange={(e) => setDetailedIssue({...detailedIssue, updated_at: e.target.value})}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p>
-                      <strong>Created at:</strong>{" "}
-                      <span
-                        title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
-                      >
-                        {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
-                      </span>
-                    </p>
-                    <p>
-                      <strong>Updated at:</strong>{" "}
-                      <span
-                        title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
-                      >
-                        {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}
-                      </span>
-                    </p>
-                  </>
-                )}
+                <>
+                  <br />
+                  <p>
+                    <strong>Created at:</strong>{" "}
+                    <span
+                      title={originalIssue.created_at ? new Date(originalIssue.created_at).toLocaleString() : ''}
+                    >
+                      {originalIssue.created_at ? formatSmartDate(originalIssue.created_at) : 'N/A'}
+                    </span>
+                  </p>
+                  <br />
+                  <p>
+                    <strong>Updated at:</strong>{" "}
+                    <span
+                      title={originalIssue.updated_at ? new Date(originalIssue.updated_at).toLocaleString() : ''}
+                    >
+                      {originalIssue.updated_at ? formatSmartDate(originalIssue.updated_at) : 'N/A'}
+                    </span>
+                  </p>
+                </>
               </div>
             </div>
           </div>
@@ -1142,3 +1155,5 @@ export default function IssueView({ issue, onClose }) {
     </div>
   );
 }
+
+export default forwardRef(IssueView);

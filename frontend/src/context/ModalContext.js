@@ -21,8 +21,19 @@ export const ModalProvider = ({ children }) => {
         }
     };
 
-    const closeModal = () => {
-        setModals((prevModals) => prevModals.slice(0, -1));
+    const closeModal = async (force = true) => { // When called in code, we always want to close the modal; but when called by user interaction, we want to check if the modal can be closed
+        if (modals.length > 0) {
+            const currentModal = modals[modals.length - 1];
+            const modalContent = currentModal.content;
+
+            // Check if content has an onUserCloseRequest method and if it returns true
+            if (!force && modalContent && modalContent.ref?.current?.onUserCloseRequest) {
+                const canClose = await modalContent.ref.current.onUserCloseRequest();
+                if (!canClose) return;
+            }
+
+            setModals((prevModals) => prevModals.slice(0, -1)); // Close modal if onUserCloseRequest is not present or returns true
+        }
     };
 
     const handleMouseDown = (e) => {
@@ -31,7 +42,7 @@ export const ModalProvider = ({ children }) => {
 
     const handleBackgroundClick = (e, index) => {
         if (mouseDownTarget === e.currentTarget && e.target === e.currentTarget && index === modals.length - 1) {
-            closeModal();
+            closeModal(false);
         }
     };
 
@@ -67,7 +78,7 @@ export const ModalProvider = ({ children }) => {
                             {modal.showCloseButton && (
                                 <button
                                     ref={buttonRef}
-                                    onClick={closeModal}
+                                    onClick={() => closeModal(false)}
                                     style={closeButtonStyle}
                                     className="absolute text-white bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-75 focus:outline-none"
                                 >
