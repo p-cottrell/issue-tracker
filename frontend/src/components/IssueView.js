@@ -358,16 +358,16 @@ function formatSmartDate(dateString) {
 
   const getStatusText = (statusId) => {
     switch (statusId) {
-      case 0:
-        return "Pending";
       case 1:
-        return "Complete";
+        return 'Complete';
       case 2:
-        return "In Progress";
+        return 'In Progress';
       case 3:
-        return "Cancelled";
+          return 'Cancelled';
+      case 4:
+          return 'Pending';
       default:
-        return "Unknown";
+          return 'Unknown';
     }
   };
 
@@ -515,10 +515,10 @@ function formatSmartDate(dateString) {
                     }
                     className="p-2 border rounded h-[42px]"
                   >
-                    <option value={0}>Pending</option>
                     <option value={1}>Complete</option>
                     <option value={2}>In Progress</option>
                     <option value={3}>Cancelled</option>
+                    <option value={4}>Pending</option>
                   </select>
                   <select
                     value={editedCharm}
