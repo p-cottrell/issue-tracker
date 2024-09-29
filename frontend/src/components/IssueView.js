@@ -1242,32 +1242,27 @@ function IssueView({ issue, onClose }, ref) {
                   {(originalIssue.comments || []).map((comment) => (
                     <li
                       key={comment._id}
-                      className={`comment-item mb-4 p-4 bg-white border rounded-lg shadow-md flex items-start space-x-4 transition-all duration-200`}
+                      className="comment-item mb-4 p-4 bg-white border rounded-lg shadow-md flex items-start space-x-4 transition-all duration-200"
                     >
-                      {/* User Icon Placeholder */}
-                      {/* <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold"> */}
-                        {/* {comment.user_id?.username ? comment.user_id.username.charAt(0).toUpperCase() : 'U'} */}
-                      {/* </div> */}
-
                       {/* User Icon */}
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 flex-shrink-0">
                         <img
                           src={GetUserAvatar(comment.user_id?._id)}
                           alt="User Avatar"
-                          className="w-10 h-10 rounded-full"
+                          className="w-10 h-10 rounded-full object-cover"
                         />
                       </div>
 
                       {/* Comment Content */}
                       <div className="flex-grow">
                         {/* User name and comment date */}
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-800">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                          <span className="font-semibold text-gray-800 truncate">
                             {comment.user_id?.username || 'Unknown User'}
                           </span>
                           {comment.created_at ? (
                             <span
-                              className="text-sm text-gray-500"
+                              className="text-sm text-gray-500 truncate sm:ml-2"
                               title={comment.created_at ? new Date(comment.created_at).toLocaleString() : ''}
                             >
                               {formatSmartDate(comment.created_at)}
@@ -1283,8 +1278,8 @@ function IssueView({ issue, onClose }, ref) {
                             className="w-full p-2 border rounded mb-2"
                           />
                         ) : (
-                            <p className="mt-2 text-gray-700">
-                              {comment.comment_text}
+                          <p className="mt-2 text-gray-700">
+                            {comment.comment_text}
                           </p>
                         )}
 
@@ -1308,7 +1303,7 @@ function IssueView({ issue, onClose }, ref) {
                               </div>
                             ) : (
                               <div className="mt-2 flex space-x-2">
-                                {(user.id === comment.user_id?._id) && (
+                                {user.id === comment.user_id?._id && (
                                   <button
                                     onClick={() => handleSelectComment(comment)}
                                     className="text-blue-500 text-sm hover:underline"
