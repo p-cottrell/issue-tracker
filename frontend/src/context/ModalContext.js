@@ -53,7 +53,7 @@ export const ModalProvider = ({ children }) => {
     };
 
     // Position the close button in the top-right corner of the modal
-    useEffect(() => {
+    const updateCloseButtonPosition = () => {
         if (modalRef.current && buttonRef.current) {
             const modalRect = modalRef.current.getBoundingClientRect();
             const buttonRect = buttonRef.current.getBoundingClientRect();
@@ -64,9 +64,29 @@ export const ModalProvider = ({ children }) => {
                 left: `${modalRect.width - buttonRect.width - padding}px`,
             });
         }
-    }, [modals]); // Recalculate when modals change
+    };
 
-        // Close all modals that should close on navigation
+    useEffect(() => {
+        updateCloseButtonPosition();
+    }, [modals]);
+
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver(() => {
+            updateCloseButtonPosition();
+        });
+
+        if (modalRef.current) {
+            resizeObserver.observe(modalRef.current);
+        }
+
+        return () => {
+            if (modalRef.current) {
+                resizeObserver.unobserve(modalRef.current);
+            }
+        };
+    }, [modals]);
+
+    // Close all modals that should close on navigation
     useEffect(() => {
         setModals(modals.filter(modal => !modal.closeOnNavigate));
     }, [location]);
