@@ -1182,7 +1182,12 @@ function IssueView({ issue, onClose }, ref) {
                     <p className="text-sm text-gray-500">
                       {images.length > 0
                         ? `${images.length} file(s) selected`
-                        : 'Drag & drop images here, or click to select'}
+                        : (
+                          <>
+                            <span className="block sm:hidden">Tap to select files</span>
+                            <span className="hidden sm:block">Drag & drop images here, or click to select</span>
+                          </>
+                        )}
                     </p>
                   </div>
                   <input
