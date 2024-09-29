@@ -323,6 +323,13 @@ const DataVisualisation = () => {
     }
   }
 
+  // Utility function to generate a default filename
+  const generateDefaultFilename = (filterType, graphType) => {
+    const now = new Date();
+    const dateTime = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+    return `${dateTime}_${filterType}_${graphType}`;
+  };
+
   // Function to export the chart as PNG
   const exportToPNG = async () => {
     if (isExporting) {
@@ -335,14 +342,20 @@ const DataVisualisation = () => {
 
     let fileHandle;
     try {
+      const defaultFilename = generateDefaultFilename(filterType, graphType);
       fileHandle = await window.showSaveFilePicker({
-        suggestedName: 'chart.png',
+        suggestedName: `${defaultFilename}.png`,
         types: [{
           description: 'PNG Image',
           accept: { 'image/png': ['.png'] }
         }]
       });
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('File save operation was canceled by the user.');
+        setIsExporting(false);
+        return;
+      }
       console.error('Error getting file handle:', err);
       setIsExporting(false);
       return;
@@ -377,14 +390,20 @@ const DataVisualisation = () => {
 
     let fileHandle;
     try {
+      const defaultFilename = generateDefaultFilename(filterType, graphType);
       fileHandle = await window.showSaveFilePicker({
-        suggestedName: 'chart.pdf',
+        suggestedName: `${defaultFilename}.pdf`,
         types: [{
           description: 'PDF Document',
           accept: { 'application/pdf': ['.pdf'] }
         }]
       });
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('File save operation was canceled by the user.');
+        setIsExporting(false);
+        return;
+      }
       console.error('Error getting file handle:', err);
       setIsExporting(false);
       return;
@@ -439,14 +458,20 @@ const DataVisualisation = () => {
 
     let fileHandle;
     try {
+      const defaultFilename = generateDefaultFilename(filterType, graphType);
       fileHandle = await window.showSaveFilePicker({
-        suggestedName: 'issues.xlsx',
+        suggestedName: `${defaultFilename}.xlsx`,
         types: [{
           description: 'Excel Spreadsheet',
           accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
         }]
       });
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('File save operation was canceled by the user.');
+        setIsExporting(false);
+        return;
+      }
       console.error('Error getting file handle:', err);
       setIsExporting(false);
       return;
