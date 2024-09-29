@@ -960,7 +960,7 @@ function IssueView({ issue, onClose }, ref) {
           </div>
 
           {/* Issue body section */}
-          <div className="issue-body">
+          <div className="issue-body flex flex-col md:flex-row">
             <div className="issue-main">
               {/* Description section */}
               <div className="mt-4">
@@ -1361,34 +1361,35 @@ function IssueView({ issue, onClose }, ref) {
               </div>
             </div>
             {/* Issue sidebar with metadata */}
-            <div className="issue-sidebar">
+            <div className="issue-sidebar mt-4 md:mt-0 md:ml-4">
               <div className="issue-meta">
-                <p>
-                  <strong>Reported by: </strong>
-                  <br/>
-                  {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
+                <p className="md:mb-4">
+                  <strong>Reported by: </strong>{" "}
+                  <span className="inline md:block">
+                    {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
+                  </span>
                 </p>
 
-                <>
-                  <br />
-                  <p>
+                <div>
+                  <p className="md:mb-4">
                     <strong>Created at:</strong>{" "}
                     <span
                       title={originalIssue.created_at ? new Date(originalIssue.created_at).toLocaleString() : ''}
+                      className="inline md:block"
                     >
                       {originalIssue.created_at ? formatSmartDate(originalIssue.created_at) : 'N/A'}
                     </span>
                   </p>
-                  <br />
-                  <p>
+                  <p className="md:mb-4">
                     <strong>Updated at:</strong>{" "}
                     <span
                       title={originalIssue.updated_at ? new Date(originalIssue.updated_at).toLocaleString() : ''}
+                      className="inline md:block"
                     >
                       {originalIssue.updated_at ? formatSmartDate(originalIssue.updated_at) : 'N/A'}
                     </span>
                   </p>
-                </>
+                </div>
               </div>
             </div>
           </div>
