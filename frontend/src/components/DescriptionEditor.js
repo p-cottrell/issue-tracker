@@ -42,7 +42,7 @@ const DescriptionEditor = ({ description, onChange, canEdit, isEditMode, setIsEd
                 </div>
             ) : (
                 <div
-                    className={`tiptap-content tiptap-content-inactive text-sm text-gray-600 ${canEdit ? 'cursor-pointer' : ''}`}
+                    className={`tiptap-content tiptap-content-inactive text-sm text-gray-600 ${canEdit ? 'cursor-pointer can-edit' : ''}`}
                     onClick={() => canEdit && setIsEditMode(true)}
                 >
                     <div dangerouslySetInnerHTML={{ __html: description || 'No description provided.' }} />

@@ -1,4 +1,4 @@
-import { CheckIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, PaperAirplaneIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useModal } from '../context/ModalContext';
@@ -983,12 +983,12 @@ function IssueView({ issue, onClose }, ref) {
                   {(originalIssue.occurrences || []).map((occurrence) => (
                     <li
                       key={occurrence._id}
-                      className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200
+                      className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm transition-all duration-200
                         ${isAdmin || user.id === occurrence.user_id
                           ? selectedOccurrence?._id === occurrence._id
-                            ? "bg-green-50 hover:bg-green-100 border-l-4 border-green-500"
-                            : "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
-                          : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
+                            ? "bg-green-50 hover:bg-green-100 border-l-4 cursor-pointer border-green-500"
+                            : "bg-blue-50 hover:bg-blue-100 border-l-4 cursor-pointer border-blue-500"
+                          : "bg-gray-50 border-l-4 border-gray-300"
                         }`}
                       onClick={() => handleSelectOccurrence(occurrence)}
                     >
@@ -1106,8 +1106,9 @@ function IssueView({ issue, onClose }, ref) {
                   {newOccurrence && newOccurrence.description?.trim() && newOccurrence.time && (
                     <button
                       onClick={handleAddOccurrence}
-                      className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition"
+                      className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition flex items-center"
                     >
+                      <CheckIcon className="w-4 h-4 mr-1" />
                       Add Occurrence
                     </button>
                   )}
@@ -1116,9 +1117,10 @@ function IssueView({ issue, onClose }, ref) {
                       onClick={() => {
                         setNewOccurrence(null);
                       }}
-                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition"
+                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition flex items-center"
                     >
-                      Cancel
+                      <XMarkIcon className="w-4 h-4 mr-1" />
+                      Discard
                     </button>
                   ) : null}
                 </div>
@@ -1126,9 +1128,10 @@ function IssueView({ issue, onClose }, ref) {
 
               {/* Attachments section */}
               <div className="mt-4">
-                <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                {attachmentError || attachments.length > 0 ? (
+                  <h2 className="text-xl font-bold mb-2">Attachments</h2>
+                ) : null}
                 {attachmentError && <p className="text-red-500">{attachmentError}</p>}
-                {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {attachments.map((attachment) => (
                     <div className="hover:bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden group">
@@ -1147,21 +1150,23 @@ function IssueView({ issue, onClose }, ref) {
                           }}
                         />
                       </div>
-                      <div className="absolute top-1 right-1 flex space-x-2 bg-gray-300 bg-opacity-0 rounded-full p-1 group-hover:bg-opacity-50 hover:bg-opacity-100">
-                        <button
-                          onClick={() => promptDeleteAttachment(attachment._id)}
-                          title="Delete attachment"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {(isAdmin || user.id === attachment.user_id) && (
+                        <div className="absolute top-1 right-1 flex space-x-2 bg-gray-300 bg-opacity-0 rounded-full p-1 group-hover:bg-opacity-50 hover:bg-opacity-100">
+                          <button
+                            onClick={() => promptDeleteAttachment(attachment._id)}
+                            title="Delete attachment"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
 
                 {/* File upload input */}
                 <div className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
+                  <h2 className="text-lg font-bold mb-2">Upload Attachments</h2>
                   <div
                     className={`mb-4 p-4 h-32 border-2 ${
                       isDragging ? 'border-primary' : 'border-secondary'
@@ -1337,17 +1342,19 @@ function IssueView({ issue, onClose }, ref) {
                   {newComment.trim() && (
                     <button
                       onClick={handleAddComment}
-                      className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition"
+                      className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition flex items-center"
                     >
-                      Add Comment
+                      <PaperAirplaneIcon className="w-5 h-5 mr-2" />
+                      Send
                     </button>
                   )}
                   {newComment.trim() && (
                     <button
                       onClick={() => setNewComment('')}
-                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition"
+                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition flex items-center"
                     >
-                      Cancel
+                      <XMarkIcon className="w-5 h-5 mr-2" />
+                      Discard
                     </button>
                   )}
                 </div>

@@ -63,7 +63,7 @@
     transition: border 0.3s ease;
 }
 
-.tiptap-content.tiptap-content-inactive:hover {
+.tiptap-content.tiptap-content-inactive.can-edit:hover {
     border: 1px solid #ddd;
 }
 
