@@ -135,9 +135,9 @@ const Login = () => {
             {/* Main container for the login form */}
             <div className="relative z-10 w-full">
                 <motion.div
-                    initial={{ opacity: 0, y: -50 }}  // Animation starting position
-                    animate={{ opacity: 1, y: 0 }}    // Final animation state
-                    transition={{ duration: 0.5 }}     // Duration of the animation
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
                     className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto"
                 >
                     <h2 className="text-2xl font-semibold text-center text-dark mb-6">Login</h2>
@@ -176,11 +176,11 @@ const Login = () => {
 
                         {/* Submit button for login */}
                         <motion.button
-                            whileHover={{ scale: 1.05 }} // Animation effect on hover
-                            whileTap={{ scale: 0.95 }}   // Animation effect on click
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
-                            type="button" // Changed to button for debugging
-                            onClick={onSubmit}  // Attach directly to button click for testing
+                            type="submit"
+                            onClick={onSubmit}
                         >
                             Login
                         </motion.button>
@@ -188,7 +188,7 @@ const Login = () => {
 
                     {/* Link to the registration page for users who do not have an account */}
                     <p className="text-center text-dark mt-4">
-                        Don't have an account yet? <Link to="/register" className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
+                        Don't have an account yet? <Link to="/register" state={{ email }} className="font-semibold text-primary focus:outline-none focus:underline">Sign up</Link>.
                     </p>
                 </motion.div>
             </div>

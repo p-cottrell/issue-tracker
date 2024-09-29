@@ -11,8 +11,8 @@ import './../../index.css';
 /**
  * Register component for handling user registration.
  * The user is guided through a multi-step form to enter their email, username,
- * and password. Client-side validation is implemented for form inputs and 
- * feedback is provided for errors. Upon successful registration, 
+ * and password. Client-side validation is implemented for form inputs and
+ * feedback is provided for errors. Upon successful registration,
  * the user is redirected to the dashboard.
  */
 const Register = () => {
@@ -26,6 +26,7 @@ const Register = () => {
     const [confirmPassword, setConfirmPassword] = useState(''); // Confirmation password input
     const [error, setError] = useState(''); // General error state
     const [emailError, setEmailError] = useState(''); // Email validation error
+    const [isEmailValid, setIsEmailValid] = useState(false); // Track email validation
     const [passwordFocused, setPasswordFocused] = useState(false); // Track password input focus
     const [showPasswordRules, setShowPasswordRules] = useState(false); // Toggle password rules display
     const [showConfirmPassword, setShowConfirmPassword] = useState(!!location.state?.password); // Toggle confirm password field visibility
@@ -40,13 +41,7 @@ const Register = () => {
     useEffect(() => {
         const checkEmail = async () => {
             if (location.state?.email) {
-                const emailExists = await checkEmailAvailability(location.state.email);
-                if (!emailExists) {
-                    setEmail(location.state.email);
-                    setStep(2); // Move to next step if email is valid
-                } else {
-                    setEmailError('Email is already in use.');
-                }
+                await handleEmailSubmit();
             }
         };
 
@@ -86,23 +81,30 @@ const Register = () => {
     /**
      * Handle the submission of the email step in the registration form.
      * Performs validation and checks the availability of the email.
+     * If the email is valid and available, the user progresses to step 2.
+     * @returns {boolean} - Returns true if the email is valid and available.
      */
     const handleEmailSubmit = async () => {
         if (!email.trim()) {
             setEmailError('Email is required.');
-            return;
+            return false;
         }
 
         if (!validateEmail(email.trim())) {
             setEmailError('Please enter a valid email address.');
-            return;
+            return false;
         }
 
-        const emailExists = await checkEmailAvailability(email);
-        if (emailExists) {
+        const result = await isEmailTaken(email);
+        if (result instanceof Error) {
+            setEmailError('An error occurred while checking email availability.');
+            return false;
+        } else if (result) {
             setEmailError('Email is already in use.');
+            return false;
         } else {
             setStep(2); // Move to the next step if email is valid
+            return true;
         }
     };
 
@@ -114,7 +116,6 @@ const Register = () => {
     const validateEmail = (email) => {
         const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         const valid = re.test(String(email).trim().toLowerCase());
-        console.log('Email validation:', valid);
         return valid;
     };
 
@@ -123,7 +124,7 @@ const Register = () => {
      * - Minimum length: 8 characters
      * - At least one uppercase letter, number, and special character
      * - No spaces allowed
-     * 
+     *
      * @param {string} password - The password to validate.
      * @returns {boolean} - Returns true if the password passes all validations.
      */
@@ -156,13 +157,14 @@ const Register = () => {
      * @param {string} emailToCheck - The email to check for availability.
      * @returns {boolean} - Returns true if the email is taken.
      */
-    const checkEmailAvailability = async (emailToCheck) => {
+    const isEmailTaken = async (emailToCheck) => {
+        if (!emailToCheck) return true;
         try {
             const response = await apiClient.post('/api/users/check_email', { email: emailToCheck.trim() });
-            return response.data.taken; // Return whether the email is taken
+            return response.data.taken;
         } catch (error) {
-            setEmailError('An error occurred while checking email availability.');
-            return true; // Assume email is taken if there's an error
+            console.error('Error checking email availability:', error);
+            return error;
         }
     };
 
@@ -176,17 +178,7 @@ const Register = () => {
 
         // Step 1: Email validation
         if (step === 1) {
-            if (!email.trim()) {
-                setEmailError('Email is required.');
-                return;
-            }
-
-            if (!validateEmail(email.trim())) {
-                setEmailError('Please enter a valid email address.');
-                return;
-            }
-
-            await checkEmailAvailability();
+            await handleEmailSubmit();
         } else {
             // Step 2: Validate other fields and submit form
             if (!username.trim()) {
@@ -247,9 +239,9 @@ const Register = () => {
             {/* Main Content */}
             <div className="relative z-10 w-full">
                 <motion.div
-                    initial={{ opacity: 0, y: -50 }} // Initial animation state
-                    animate={{ opacity: 1, y: 0 }}   // Final animation state
-                    transition={{ duration: 0.5 }}    // Animation duration
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
                     className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-auto"
                 >
                     <div className="text-center my-6">
@@ -283,8 +275,9 @@ const Register = () => {
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         type="button"
-                                        onClick={handleEmailSubmit} // Move to next step on successful email validation
-                                        className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200"
+                                        onClick={handleEmailSubmit}
+                                        className={`w-full bg-primary text-white py-2 rounded transition duration-200 ${!email.trim() || emailError ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-primaryHover'}`}
+                                        disabled={!email.trim() || emailError}
                                     >
                                         Next
                                     </motion.button>
@@ -350,7 +343,7 @@ const Register = () => {
                                         whileTap={{ scale: 0.95 }}
                                         type="button"
                                         onClick={() => {
-                                            setStep(1); // Go back to email step
+                                            setStep(1);
                                             setName('');
                                             setPassword('');
                                             setConfirmPassword('');
@@ -365,7 +358,8 @@ const Register = () => {
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         type="submit"
-                                        className="w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200 ml-2"
+                                        className={`w-full bg-primary text-white py-2 rounded hover:bg-primaryHover transition duration-200 ml-2 ${!username.trim() || !password.trim() || !confirmPassword.trim() ? 'bg-gray-400 cursor-not-allowed' : ''}`}
+                                        disabled={!username.trim() || !password.trim() || !confirmPassword.trim()}
                                     >
                                         Register
                                     </motion.button>
