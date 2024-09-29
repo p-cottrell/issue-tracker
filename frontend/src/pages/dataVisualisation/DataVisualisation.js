@@ -93,6 +93,21 @@ const DataVisualisation = () => {
   }, [fetchIssues, updateTrigger]);
 
   /**
+   * useEffect hook to fix the issue with the chart not resizing when the window is resized.
+   */
+  useEffect(() => {
+    const handleResize = () => {
+      setUpdateTrigger(prev => prev + 1); // This will cause a re-render and update the chart.
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  /**
   * Handles changes in the filter type dropdown.
   * Saves the selected filter type to localStorage for persistence across sessions.
   * @param {Object} event - The event object from the filter dropdown.
