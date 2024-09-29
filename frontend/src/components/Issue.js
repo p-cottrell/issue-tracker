@@ -2,7 +2,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';
-import { generateNiceReferenceId } from '../helpers/IssueHelpers';
+import { generateNiceReferenceId, getStatusClass, getStatusText } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
 /**
@@ -65,44 +65,6 @@ export default function Issue({ data, openIssueModal }) {
         : undefined;
 
     /**
-     * Returns a CSS class based on the issue's latest status, allowing for dynamic
-     * background and text colours that indicate the status (e.g., Complete, In Progress).
-     */
-    const getStatusClass = () => {
-        const baseClass = 'whitespace-nowrap px-3 py-1 rounded-full text-sm font-semibold'; // Prevents wrapping
-        switch (latestStatus) {
-            case 1:
-                return `${baseClass} bg-green-500 text-white`; // Complete status
-            case 2:
-                return `${baseClass} bg-yellow-500 text-white`; // In Progress status
-            case 3:
-                return `${baseClass} bg-red-500 text-white`; // Cancelled status
-            case 4:
-                return `${baseClass} bg-gray-500 text-white`; // Pending status
-            default:
-                return `${baseClass} bg-gray-500 text-white`; // Fallback for unknown statuses
-        }
-    };
-
-    /**
-     * Converts the status ID into a human-readable text label for display.
-     */
-    const getStatusText = () => {
-        switch (latestStatus) {
-            case 1:
-                return 'Complete';
-            case 2:
-                return 'In Progress';
-            case 3:
-                return 'Cancelled';
-            case 4:
-                return 'Pending';
-            default:
-                return 'Unknown';
-        }
-    };
-
-    /**
      * Utility function to determine if a character is a letter, used to conditionally style
      * the charm icon differently depending on whether it's a letter or a symbol.
      */
@@ -161,8 +123,8 @@ export default function Issue({ data, openIssueModal }) {
                     </h3>
                 </div>
                 {/* Status Indicator */}
-                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass()} flex-shrink-0`}>
-                    {getStatusText()}
+                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass(latestStatus)} flex-shrink-0`}>
+                    {getStatusText(latestStatus)}
                 </div>
             </div>
 

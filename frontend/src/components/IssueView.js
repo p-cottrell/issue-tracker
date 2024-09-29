@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import apiClient from "../api/apiClient";
 import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
-import { charmOptions, generateNiceReferenceId } from '../helpers/IssueHelpers';
+import { charmOptions, generateNiceReferenceId, getStatusClass } from '../helpers/IssueHelpers';
 import { GetUserAvatar } from '../helpers/UserHelpers';
 import DescriptionEditor from './DescriptionEditor';
 import "./IssueView.css";
@@ -931,29 +931,30 @@ function IssueView({ issue, onClose }, ref) {
                     <option value={4}>Pending</option>
                   </select>
                 ) : (
-                  <p
-                    className={`text-sm text-gray-600 ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
+                  <span
+                    className={`text-sm ${getStatusClass(currentStatus)} ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
                     onClick={() => canEdit && setIsStatusBeingEdited(true)}
                   >
-                    <strong>Status:</strong> {getStatusText(currentStatus)}
-                  </p>
+                    {getStatusText(currentStatus)}
+                  </span>
                 )}
                 <p
-                  className="text-sm text-gray-600 cursor-pointer hover:underline"
+                  className="text-sm text-gray-600 cursor-pointer hover:underline text-center"
                   onClick={() => {
                     navigator.clipboard.writeText(generateNiceReferenceId(originalIssue));
                     showToast('Reference ID copied to clipboard', 'info', 1000);
                   }}
                 >
-                  <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
+                  {generateNiceReferenceId(originalIssue)}
                 </p>
               </div>
+
 
               {/* Delete Issue Button */}
               {(isAdmin || user.id === originalIssue.reporter_id) && (
                 <button
                   onClick={promptDeleteIssue}
-                  className="p-2 bg-gray-300 text-gray-600 hover:text-red-500 rounded hover:bg-red-100 focus:outline-none"
+                  className="p-4 bg-gray-300 text-gray-600 hover:text-red-500 rounded-full hover:bg-red-100 focus:outline-none"
                   title="Delete Issue"
                 >
                   <TrashIcon className="w-5 h-5" /> {/* Icon for Delete Button */}
