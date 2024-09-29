@@ -1147,7 +1147,7 @@ function IssueView({ issue, onClose }, ref) {
                           }}
                         />
                       </div>
-                      <div className="absolute top-1 right-1 flex space-x-2 hover:bg-gray-300 rounded-full p-1 opacity-0 group-hover:opacity-100">
+                      <div className="absolute top-1 right-1 flex space-x-2 bg-gray-300 bg-opacity-0 rounded-full p-1 group-hover:bg-opacity-50 hover:bg-opacity-100">
                         <button
                           onClick={() => promptDeleteAttachment(attachment._id)}
                           title="Delete attachment"
