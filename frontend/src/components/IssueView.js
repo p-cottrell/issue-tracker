@@ -857,9 +857,9 @@ function IssueView({ issue, onClose }, ref) {
 
   // Render the component
   return (
-    <div className="relative mx-auto p-5 shadow-lg rounded-md bg-white max-h-[calc(100vh-40px)] overflow-y-auto">
+    <div className="relative mx-auto md:p-5 shadow-lg rounded-md bg-white max-h-[calc(100vh-40px)] overflow-y-auto">
       <div className="mt-3">
-        <div className="mt-2 px-7 py-3">
+        <div className="mt-2 pl-7 pr-3 lg:pr-7 py-3">
           {/* Issue header section */}
           <div className="issue-header flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4 mb-6">
             {/* Charm Selector */}
