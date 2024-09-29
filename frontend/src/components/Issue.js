@@ -6,18 +6,18 @@ import { generateNiceReferenceId } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
 /**
- * Issue Component: Renders an individual issue card with details like charm, title, status, description, 
- * reference ID, and attachments (if available). Handles image loading, fallback on errors, 
+ * Issue Component: Renders an individual issue card with details like charm, title, status, description,
+ * reference ID, and attachments (if available). Handles image loading, fallback on errors,
  * and opening modals for full image previews.
  */
-export default function Issue({ data, openIssueModal, deleteHandler }) {
+export default function Issue({ data, openIssueModal }) {
     const { openModal, closeModal } = useModal();
     const [isLoading, setIsLoading] = useState(true);
     const [isImageError, setIsImageError] = useState(false);
     const [attachments, setAttachments] = useState(data.attachments || []);
 
     /**
-     * Fetches the attachments for the issue if they don't have signed URLs. This is done 
+     * Fetches the attachments for the issue if they don't have signed URLs. This is done
      * via an API call to retrieve the correct URLs for image attachments.
      */
     const fetchAttachments = useCallback(async () => {
@@ -40,7 +40,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     }, [attachments, fetchAttachments]);
 
     /**
-     * useEffect hook to handle image loading. Once the attachments are fetched, this 
+     * useEffect hook to handle image loading. Once the attachments are fetched, this
      * attempts to load the first image and handle success or failure with appropriate states.
      */
     useEffect(() => {
@@ -65,7 +65,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         : undefined;
 
     /**
-     * Returns a CSS class based on the issue's latest status, allowing for dynamic 
+     * Returns a CSS class based on the issue's latest status, allowing for dynamic
      * background and text colours that indicate the status (e.g., Complete, In Progress).
      */
     const getStatusClass = () => {
@@ -147,18 +147,21 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         >
             {/* Header Line */}
             <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
+                <div className="flex items-center flex-grow min-w-0">
                     {/* Charm Icon */}
                     <div className={`flex-shrink-0 w-8 h-8 ${isLetter(data.charm) ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
                         {data.charm}
                     </div>
                     {/* Issue Title */}
-                    <h3 className="ml-2 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
+                    <h3
+                        className="ml-2 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis flex-grow min-w-0"
+                        title={data.title}
+                    >
                         {data.title}
                     </h3>
                 </div>
                 {/* Status Indicator */}
-                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass()}`}>
+                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass()} flex-shrink-0`}>
                     {getStatusText()}
                 </div>
             </div>

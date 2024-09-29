@@ -1,12 +1,11 @@
 import { Bars3Icon, InformationCircleIcon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import Fuse from 'fuse.js';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Masonry from 'react-masonry-css';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssue';
-import DeleteIssuePopup from '../../components/DeleteIssuePopup';
+import FluentLayout from '../../components/FluentLayout';
 import Issue from '../../components/Issue';
 import IssueView from '../../components/IssueView';
 import Logo from '../../components/Logo';
@@ -150,14 +149,6 @@ const Dashboard = () => {
   const showAddIssueModal = () => {
     setPopupHandler(() => addHandler);
     openModal(<AddIssuePopup closeHandler={(changed) => closeModalCallback(changed)} />, false);
-  };
-
-  /**
-   * Handler for deleting an issue.
-   * @param {Object} data - Issue data to be deleted.
-   */
-  const showDeleteIssueModal = (data) => {
-    openModal(<DeleteIssuePopup closeHandler={() => closeModalCallback(true)} issue={data} />, false);
   };
 
   const issueViewRef = useRef();
@@ -390,52 +381,21 @@ const Dashboard = () => {
               No issues found. Try changing the search term or filters
             </div>
           )}
-          {layoutType === 'masonry' ? (
-            <Masonry
-              breakpointCols={breakpointColumnsObj}
-              className="masonry-grid"
-              columnClassName="masonry-grid_column"
-            >
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => showDeleteIssueModal(issue)}
-                  openIssueModal={() => showIssueViewModal(issue)}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
-            </Masonry>
-          ) : layoutType === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => showDeleteIssueModal(issue)}
-                  openIssueModal={() => showIssueViewModal(issue)}
-                  closeIssueModal={closeModalCallback}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col space-y-4 max-w-[600px] mx-auto">
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => showDeleteIssueModal(issue)}
-                  openIssueModal={() => showIssueViewModal(issue)}
-                  closeIssueModal={closeModalCallback}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
-            </div>
-          )}
+          <FluentLayout
+            layoutType={layoutType}
+            items={filteredIssues}
+            breakpointColumnsObj={breakpointColumnsObj}
+            renderItem={(issue, index) => (
+              <Issue
+                key={issue._id}
+                index={index}
+                data={issue}
+                openIssueModal={() => showIssueViewModal(issue)}
+                closeIssueModal={closeModalCallback}
+                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+              />
+            )}
+          />
         </main>
       </div>
     </div>
