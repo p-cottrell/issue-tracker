@@ -332,15 +332,32 @@ const DataVisualisation = () => {
 
     setIsExporting(true);
     setIsExportDropdownOpen(false);
+
+    let fileHandle;
+    try {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'chart.png',
+        types: [{
+          description: 'PNG Image',
+          accept: { 'image/png': ['.png'] }
+        }]
+      });
+    } catch (err) {
+      console.error('Error getting file handle:', err);
+      setIsExporting(false);
+      return;
+    }
+
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
 
     try {
       const dataUrl = await toPng(chartElement);
-      const link = document.createElement('a');
-      link.download = 'chart.png';
-      link.href = dataUrl;
-      link.click();
+      const blob = await (await fetch(dataUrl)).blob();
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      alert('Chart exported successfully!');
     } catch (err) {
       console.error('Error exporting to PNG:', err);
     } finally {
@@ -357,6 +374,22 @@ const DataVisualisation = () => {
 
     setIsExporting(true);
     setIsExportDropdownOpen(false);
+
+    let fileHandle;
+    try {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'chart.pdf',
+        types: [{
+          description: 'PDF Document',
+          accept: { 'application/pdf': ['.pdf'] }
+        }]
+      });
+    } catch (err) {
+      console.error('Error getting file handle:', err);
+      setIsExporting(false);
+      return;
+    }
+
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
 
@@ -368,7 +401,11 @@ const DataVisualisation = () => {
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
       pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
-      pdf.save('chart.pdf');
+      const blob = pdf.output('blob');
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      alert('Chart exported successfully!');
     } catch (err) {
       console.error('Error exporting to PDF:', err);
     } finally {
@@ -377,7 +414,7 @@ const DataVisualisation = () => {
   };
 
   // Function to export data as Excel
-  const exportToXLSX = () => {
+  const exportToXLSX = async () => {
     if (isExporting) {
       console.warn('Export already in progress. Please wait for the current export to complete.');
       return;
@@ -385,11 +422,31 @@ const DataVisualisation = () => {
 
     setIsExporting(true);
     setIsExportDropdownOpen(false);
+
+    let fileHandle;
+    try {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'issues.xlsx',
+        types: [{
+          description: 'Excel Spreadsheet',
+          accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+        }]
+      });
+    } catch (err) {
+      console.error('Error getting file handle:', err);
+      setIsExporting(false);
+      return;
+    }
+
     try {
       const worksheet = XLSX.utils.json_to_sheet(filteredIssues);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues');
-      XLSX.writeFile(workbook, 'issues.xlsx');
+      const blob = new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/octet-stream' });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      alert('Issues exported successfully!');
     } catch (err) {
       console.error('Error exporting to XLSX:', err);
     } finally {
@@ -461,7 +518,7 @@ const DataVisualisation = () => {
                   ) : (
                     <DocumentArrowDownIcon className="w-6 h-6 lg:mr-2" />
                   )}
-                  <span className="hidden lg:inline">{isExporting ? 'Exporting...' : 'Save to...'}</span>
+                  <span className="hidden lg:inline">{isExporting ? 'Exporting...' : 'Export to...'}</span>
                 </button>
                 {isExportDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10">
@@ -470,21 +527,21 @@ const DataVisualisation = () => {
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
                       <PhotoIcon className="w-5 h-5 mr-2" />
-                      Save to PNG
+                      Export to PNG
                     </button>
                     <button
                       onClick={exportToPDF}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
                       <DocumentChartBarIcon className="w-5 h-5 mr-2" />
-                      Save to PDF
+                      Export to PDF
                     </button>
                     <button
                       onClick={exportToXLSX}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
                       <TableCellsIcon className="w-5 h-5 mr-2" />
-                      Save to XLSX
+                      Export to XLSX
                     </button>
                   </div>
                 )}
