@@ -1,3 +1,4 @@
+import { Bars3Icon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
@@ -255,12 +256,13 @@ const Profile = () => {
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
+        {/* Left: Logo and Hamburger */}
         <div>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden"
           >
-            <span className="text-lg font-bold">☰</span>
+            <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
             <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
