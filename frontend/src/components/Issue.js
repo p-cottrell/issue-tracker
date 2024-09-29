@@ -183,7 +183,14 @@ export default function Issue({ data, openIssueModal }) {
                     <p className="text-sm text-gray-500 mb-4">
                         <strong>Attachment(s):</strong>
                     </p>
-                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
+                    <div
+                        className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            closeModal();
+                            handleImageClick(attachments[0].signedUrl);
+                        }}
+                    >
                         {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="loader"></div>
@@ -203,12 +210,7 @@ export default function Issue({ data, openIssueModal }) {
                                 <img
                                     src={attachments[0].signedUrl}
                                     alt="Attachment"
-                                    className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        closeModal();
-                                        handleImageClick(attachments[0].signedUrl);
-                                    }}
+                                    className="relative z-10 object-contain max-h-full max-w-full"
                                 />
                             </div>
                         )}
