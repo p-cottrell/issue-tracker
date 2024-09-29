@@ -17,25 +17,6 @@ import { generateNiceReferenceId } from '../../helpers/IssueHelpers';
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
-
-// Constants for card width and screen widths
-const CARD_WIDTH = 450; // Width of each card in pixels
-const MIN_SCREEN_WIDTH = 640; // Minimum screen width in pixels
-const MAX_SCREEN_WIDTH = 7680; // Maximum screen width in pixels
-
-// Utility function to generate breakpoint columns object
-const generateBreakpointColumns = (cardWidth, minScreenWidth, maxScreenWidth) => {
-  const breakpoints = {};
-  for (let width = minScreenWidth; width <= maxScreenWidth; width += cardWidth) {
-    const columns = Math.floor(width / cardWidth);
-    breakpoints[width] = columns;
-  }
-  return breakpoints;
-};
-
-// Generate the breakpoint columns object
-const breakpointColumnsObj = generateBreakpointColumns(CARD_WIDTH, MIN_SCREEN_WIDTH, MAX_SCREEN_WIDTH);
-
 /**
  * Dashboard component for displaying and managing issues.
  * Includes functionalities such as adding, deleting, searching, and filtering issues.
@@ -346,7 +327,7 @@ const Dashboard = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main Content */}
-        <main className="flex-grow p-6">
+        <main className="flex-grow p-4 overflow-y-auto">
           <div className="flex space-x-4 items-center mb-4">
             {/* Filter Dropdown */}
 
@@ -384,7 +365,6 @@ const Dashboard = () => {
           <FluentLayout
             layoutType={layoutType}
             items={filteredIssues}
-            breakpointColumnsObj={breakpointColumnsObj}
             renderItem={(issue, index) => (
               <Issue
                 key={issue._id}
