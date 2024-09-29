@@ -1,17 +1,16 @@
+import { Bars3Icon } from '@heroicons/react/24/outline';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
 import Logo from '../../components/Logo';
 import Sidebar from '../../components/Sidebar';
-import apiClient from '../../api/apiClient';
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bars3Icon } from '@heroicons/react/24/outline';
-import React from 'react';
 import { useUser } from '../../context/UserContext';
 
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
 
-import { LineGraph } from '../../components/graphs/Line';
 import { BarGraph } from '../../components/graphs/Bar';
+import { LineGraph } from '../../components/graphs/Line';
 import { PieChart } from '../../components/graphs/Pie';
 
 const DataVisualisation = () => {
@@ -162,7 +161,7 @@ const DataVisualisation = () => {
       addedIssuesPerMonth[issueMonth] += 1 // ... and count the issue's occurrence in that month.
 
       last = issue.status_history.length - 1 // Used to get the last item in the status_history array.
-      
+
       // For counting issue statuses.
       switch(issue.status_history[last].status_id) { // Gets the most recent status_id for the given issue.
         case 1:
@@ -206,7 +205,7 @@ const DataVisualisation = () => {
               borderWidth: 1,
           },
       ]
-    }  
+    }
 
     // Puts the solved issue per month data into a format Chart.JS is happy with.
     const lineData = {
@@ -231,7 +230,7 @@ const DataVisualisation = () => {
               borderColor: ["#185D78"],
           },
       ]
-    }  
+    }
 
     // Puts the issue status data into a format Chart.JS is happy with.
     var pieData = [];
@@ -245,10 +244,10 @@ const DataVisualisation = () => {
           label: "Issue Status",
           data: pieData,
           backgroundColor: [
-            "#2ECC71",
-            "#FFFC48",
-            "#FF4848",
-            "#ADADAD",
+            "#FFCDB2",
+            "#FFB4A2",
+            "#E5989B",
+            "#B5838D",
           ],
           hoverOffset: 4,
         }
@@ -295,10 +294,10 @@ const DataVisualisation = () => {
               </span>
             </div>
           </header>
-    
+
           <div className="flex flex-grow">
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
-    
+
             {/* Main Content */}
             <main className="flex-grow p-6">
 
@@ -327,7 +326,7 @@ const DataVisualisation = () => {
                       <option value="status">Status of current issues</option>
                   </select>
                 </div>
-                
+
               </div>
 
               {/* Graph display */}
