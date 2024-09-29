@@ -1,7 +1,7 @@
 import { Bars3Icon, DocumentArrowDownIcon, DocumentChartBarIcon, PhotoIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import apiClient from '../../api/apiClient';
@@ -20,6 +20,7 @@ const DataVisualisation = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Used for loading the issues.
   const [fetched, setFetched] = useState(false);
@@ -106,6 +107,29 @@ const DataVisualisation = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Ref to track the dropdown element
+  const exportDropdownRef = useRef(null);
+
+  // Function to toggle export dropdown
+  const toggleExportDropdown = () => {
+    setIsExportDropdownOpen((prev) => !prev);
+  };
+
+  // Close dropdown if clicked outside of it
+  const handleClickOutside = useCallback((event) => {
+    if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target)) {
+      setIsExportDropdownOpen(false);
+    }
+  }, []);
+
+  // Attach the event listener on component mount and cleanup on unmount
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleClickOutside]);
 
   /**
   * Handles changes in the filter type dropdown.
@@ -300,49 +324,78 @@ const DataVisualisation = () => {
   }
 
   // Function to export the chart as PNG
-  const exportToPNG = () => {
+  const exportToPNG = async () => {
+    if (isExporting) {
+      console.warn('Export already in progress. Please wait for the current export to complete.');
+      return;
+    }
+
+    setIsExporting(true);
+    setIsExportDropdownOpen(false);
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
 
-    toPng(chartElement)
-      .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = 'chart.png';
-        link.href = dataUrl;
-        link.click();
-      })
-      .catch((err) => {
-        console.error('Error exporting to PNG:', err);
-      });
+    try {
+      const dataUrl = await toPng(chartElement);
+      const link = document.createElement('a');
+      link.download = 'chart.png';
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Error exporting to PNG:', err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Function to export the chart as PDF
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    if (isExporting) {
+      console.warn('Export already in progress. Please wait for the current export to complete.');
+      return;
+    }
+
+    setIsExporting(true);
+    setIsExportDropdownOpen(false);
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
 
-    toPng(chartElement)
-      .then((dataUrl) => {
-        const pdf = new jsPDF();
-        pdf.addImage(dataUrl, 'PNG', 10, 10, 180, 160);
-        pdf.save('chart.pdf');
-      })
-      .catch((err) => {
-        console.error('Error exporting to PDF:', err);
-      });
+    try {
+      const dataUrl = await toPng(chartElement);
+      const pdf = new jsPDF();
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+      pdf.save('chart.pdf');
+    } catch (err) {
+      console.error('Error exporting to PDF:', err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Function to export data as Excel
   const exportToXLSX = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredIssues);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues');
-    XLSX.writeFile(workbook, 'issues.xlsx');
-  };
+    if (isExporting) {
+      console.warn('Export already in progress. Please wait for the current export to complete.');
+      return;
+    }
 
-  const toggleExportDropdown = () => {
-    setIsExportDropdownOpen(!isExportDropdownOpen);
-  }
+    setIsExporting(true);
+    setIsExportDropdownOpen(false);
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(filteredIssues);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues');
+      XLSX.writeFile(workbook, 'issues.xlsx');
+    } catch (err) {
+      console.error('Error exporting to XLSX:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
@@ -395,20 +448,23 @@ const DataVisualisation = () => {
               </div>
 
               {/* Export Button */}
-              <div
-                className="relative"
-                onBlur={() => setIsExportDropdownOpen(false)}
-              >
+              <div className="relative" ref={exportDropdownRef}>
                 <button
                   onClick={toggleExportDropdown}
-                  className="bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center"
+                  className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isExporting}
                 >
-                  <DocumentArrowDownIcon className="w-6 h-6 lg:mr-2" />
-                  <span className="hidden lg:inline">Save to... </span>
+                  {isExporting ? (
+                    <div className="inline-block lg:mr-2 inset-0 flex items-center justify-center">
+                      <div className="loader"></div>
+                    </div>
+                  ) : (
+                    <DocumentArrowDownIcon className="w-6 h-6 lg:mr-2" />
+                  )}
+                  <span className="hidden lg:inline">{isExporting ? 'Exporting...' : 'Save to...'}</span>
                 </button>
                 {isExportDropdownOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10">
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10">
                     <button
                       onClick={exportToPNG}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
