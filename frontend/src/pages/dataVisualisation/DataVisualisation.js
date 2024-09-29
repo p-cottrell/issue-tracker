@@ -1,4 +1,4 @@
-import { Bars3Icon } from '@heroicons/react/24/outline';
+import { Bars3Icon, DocumentArrowDownIcon, DocumentChartBarIcon, PhotoIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -19,6 +19,7 @@ import { PieChart } from '../../components/graphs/Pie';
 const DataVisualisation = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
 
   // Used for loading the issues.
   const [fetched, setFetched] = useState(false);
@@ -317,13 +318,16 @@ const DataVisualisation = () => {
   };
 
   // Function to export data as Excel
-  const exportToExcel = () => {
+  const exportToXLSX = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredIssues);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues');
     XLSX.writeFile(workbook, 'issues.xlsx');
   };
 
+  const toggleExportDropdown = () => {
+    setIsExportDropdownOpen(!isExportDropdownOpen);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
@@ -347,53 +351,74 @@ const DataVisualisation = () => {
         <main className="flex-grow p-6">
 
           {/* Drop down menus */}
-          <div className="flex space-x-4 justify-center mb-4">
+          <div className="flex flex-col space-y-4">
 
-            {/* Filter Dropdown */}
-            <div>
-              <select
-                onChange={handleFilterChange}
-                value={filterType}
-                className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
-                <option value="all">All Issues</option>
-                <option value="myIssues">My Issues</option>
-              </select>
+            {/* Filters and Export Button */}
+            <div className="flex justify-between items-center mb-4">
+              {/* Filters Parent */}
+              <div className="flex-grow flex space-x-4 justify-center mx-auto">
+                {/* Filter Dropdown */}
+                <select
+                  onChange={handleFilterChange}
+                  value={filterType}
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                >
+                  <option value="all">All Issues</option>
+                  <option value="myIssues">My Issues</option>
+                </select>
+
+                {/* "Sort by category" dropdown */}
+                <select
+                  onChange={(e) => setGraphType(e.target.value)}
+                  value={graphType}
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                >
+                  <option value="added">Added issues / month</option>
+                  <option value="solved">Completed issues / month</option>
+                  <option value="status">Status of current issues</option>
+                </select>
+              </div>
+
+              {/* Export Button */}
+              <div
+                className="relative"
+                onBlur={() => setIsExportDropdownOpen(false)}
+              >
+                <button
+                  onClick={toggleExportDropdown}
+                  className="bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center"
+                >
+                  <DocumentArrowDownIcon className="w-6 h-6 lg:mr-2" />
+                  <span className="hidden lg:inline">Save to... </span>
+                </button>
+                {isExportDropdownOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10">
+                    <button
+                      onClick={exportToPNG}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <PhotoIcon className="w-5 h-5 mr-2" />
+                      Save to PNG
+                    </button>
+                    <button
+                      onClick={exportToPDF}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <DocumentChartBarIcon className="w-5 h-5 mr-2" />
+                      Save to PDF
+                    </button>
+                    <button
+                      onClick={exportToXLSX}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <TableCellsIcon className="w-5 h-5 mr-2" />
+                      Save to XLSX
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* "Sort by category" dropdown */}
-            <div>
-              <select
-                onChange={(e) => setGraphType(e.target.value)}
-                value={graphType}
-                className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg">
-                <option value="added">Added issues / month</option>
-                <option value="solved">Completed issues / month</option>
-                <option value="status">Status of current issues</option>
-              </select>
-            </div>
-
-          </div>
-
-          {/* Export buttons */}
-          <div className="flex justify-end mb-4 space-x-2">
-            <button
-              onClick={exportToPNG}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600"
-            >
-              Export to PNG
-            </button>
-            <button
-              onClick={exportToPDF}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600"
-            >
-              Export to PDF
-            </button>
-            <button
-              onClick={exportToExcel}
-              className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600"
-            >
-              Export to Excel
-            </button>
           </div>
 
           {/* Graph display */}
