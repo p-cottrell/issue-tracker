@@ -861,18 +861,19 @@ function IssueView({ issue, onClose }, ref) {
       <div className="mt-3">
         <div className="mt-2 px-7 py-3">
           {/* Issue header section */}
-          <div className="issue-header flex items-center space-x-4 mb-6">
+          <div className="issue-header flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4 mb-6">
             {/* Charm Selector */}
             <div className="relative" ref={charmButtonRef}>
               <button
                 type="button"
                 onClick={() => setIsCharmBeingEdited(!isCharmBeingEdited)}
-                className="bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-14 h-14 text-4xl hover:bg-gray-400"
+                className={`bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-14 h-14 text-4xl ${canEdit ? 'hover:bg-gray-400 cursor-pointer' : ''}`}
+                disabled={!canEdit}
               >
                 {editedIssue.charm}
               </button>
 
-              {isCharmBeingEdited && (
+              {isCharmBeingEdited && canEdit ? (
                 <div className="absolute left-0 mt-2 p-2 bg-white border border-gray-200 shadow-lg rounded grid grid-cols-4 gap-2 overflow-visible z-10 w-80">
                   {charmOptions.map((charmOption, index) => (
                     <div
@@ -887,7 +888,7 @@ function IssueView({ issue, onClose }, ref) {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Title Input/Display */}
@@ -904,7 +905,7 @@ function IssueView({ issue, onClose }, ref) {
                 />
               ) : (
                 <h1
-                  className={`text-xl font-bold mb-2 ${canEdit ? 'cursor-pointer' : ''} hover:underline`}
+                  className={`text-xl font-bold mb-2 ${canEdit ? 'hover:underline cursor-pointer' : ''}`}
                   onClick={() => canEdit && setIsTitleBeingEdited(true)}
                 >
                   {editedIssue.title}
@@ -912,51 +913,53 @@ function IssueView({ issue, onClose }, ref) {
               )}
             </div>
 
-            {/* Status Selector */}
-            <div>
-              {isStatusBeingEdited && canEdit ? (
-                <select
-                  name="status_id"
-                  value={currentStatus || ''}
-                  onChange={handleInputChange}
-                  onBlur={() => setIsStatusBeingEdited(false)}
-                  className="p-2 border border-gray-300 rounded h-[42px]"
-                  autoFocus
-                >
-                  <option value={1}>Complete</option>
-                  <option value={2}>In Progress</option>
-                  <option value={3}>Cancelled</option>
-                  <option value={4}>Pending</option>
-                </select>
-              ) : (
+            {/* Status and Reference ID Section */}
+            <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
+              <div className="flex flex-col space-y-2">
+                {isStatusBeingEdited && canEdit ? (
+                  <select
+                    name="status_id"
+                    value={currentStatus || ''}
+                    onChange={handleInputChange}
+                    onBlur={() => setIsStatusBeingEdited(false)}
+                    className="p-2 border border-gray-300 rounded h-[42px]"
+                    autoFocus
+                  >
+                    <option value={1}>Complete</option>
+                    <option value={2}>In Progress</option>
+                    <option value={3}>Cancelled</option>
+                    <option value={4}>Pending</option>
+                  </select>
+                ) : (
+                  <p
+                    className={`text-sm text-gray-600 ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
+                    onClick={() => canEdit && setIsStatusBeingEdited(true)}
+                  >
+                    <strong>Status:</strong> {getStatusText(currentStatus)}
+                  </p>
+                )}
                 <p
-                  className={`text-sm text-gray-600 cursor-pointer ${canEdit ? 'hover:underline' : ''}`}
-                  onClick={() => canEdit && setIsStatusBeingEdited(true)}
+                  className="text-sm text-gray-600 cursor-pointer hover:underline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generateNiceReferenceId(originalIssue));
+                    showToast('Reference ID copied to clipboard', 'info', 1000);
+                  }}
                 >
-                  <strong>Status:</strong> {getStatusText(currentStatus)}
+                  <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
                 </p>
-              )}
-              <p
-                className="text-sm text-gray-600 cursor-pointer hover:underline"
-                onClick={() => {
-                  navigator.clipboard.writeText(generateNiceReferenceId(originalIssue));
-                  showToast('Reference ID copied to clipboard', 'info', 1000);
-                }}
-              >
-                <strong>Reference ID:</strong> {generateNiceReferenceId(originalIssue)}
-              </p>
-            </div>
+              </div>
 
-            {/* Delete Issue Button */}
-            {(isAdmin || user.id === originalIssue.reporter_id) && (
-              <button
-                onClick={promptDeleteIssue}
-                className="p-2 bg-gray-300 text-gray-600 hover:text-red-500 rounded hover:bg-red-100 focus:outline-none"
-                title="Delete Issue"
-              >
-                <TrashIcon className="w-5 h-5" /> {/* Icon for Delete Button */}
-              </button>
-            )}
+              {/* Delete Issue Button */}
+              {(isAdmin || user.id === originalIssue.reporter_id) && (
+                <button
+                  onClick={promptDeleteIssue}
+                  className="p-2 bg-gray-300 text-gray-600 hover:text-red-500 rounded hover:bg-red-100 focus:outline-none"
+                  title="Delete Issue"
+                >
+                  <TrashIcon className="w-5 h-5" /> {/* Icon for Delete Button */}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Issue body section */}
