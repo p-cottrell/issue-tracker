@@ -2,31 +2,22 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
 import { useModal } from '../context/ModalContext';
-import { generateNiceReferenceId } from '../helpers/IssueHelpers';
+import { generateNiceReferenceId, getStatusClass, getStatusText } from '../helpers/IssueHelpers';
 import '../styles/loader.css';
 
 /**
- * Issue Component: Renders an individual issue card with details like charm, title, status, description, 
- * reference ID, and attachments (if available). Handles image loading, fallback on errors, 
+ * Issue Component: Renders an individual issue card with details like charm, title, status, description,
+ * reference ID, and attachments (if available). Handles image loading, fallback on errors,
  * and opening modals for full image previews.
  */
-export default function Issue({ data, openIssueModal, deleteHandler }) {
-    const { openModal } = useModal();
-    const [isLoading, setIsLoading] = useState(true); // Tracks loading state for attachments
-    const [isImageError, setIsImageError] = useState(false); // Tracks if the attachment image failed to load
-    const [attachments, setAttachments] = useState(data.attachments || []); // Stores attachment data
-    const [referenceId, setReferenceId] = useState(''); // Stores the static reference ID
+export default function Issue({ data, openIssueModal }) {
+    const { openModal, closeModal } = useModal();
+    const [isLoading, setIsLoading] = useState(true);
+    const [isImageError, setIsImageError] = useState(false);
+    const [attachments, setAttachments] = useState(data.attachments || []);
 
     /**
-     * Generates the reference ID and stores it in the state.
-     */
-    useEffect(() => {
-        const generatedReferenceId = generateNiceReferenceId(data);
-        setReferenceId(generatedReferenceId);
-    }, [data]);
-
-    /**
-     * Fetches the attachments for the issue if they don't have signed URLs. This is done 
+     * Fetches the attachments for the issue if they don't have signed URLs. This is done
      * via an API call to retrieve the correct URLs for image attachments.
      */
     const fetchAttachments = useCallback(async () => {
@@ -49,7 +40,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     }, [attachments, fetchAttachments]);
 
     /**
-     * useEffect hook to handle image loading. Once the attachments are fetched, this 
+     * useEffect hook to handle image loading. Once the attachments are fetched, this
      * attempts to load the first image and handle success or failure with appropriate states.
      */
     useEffect(() => {
@@ -74,45 +65,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         : undefined;
 
     /**
-     * Returns a CSS class based on the issue's latest status, allowing for dynamic 
-     * background and text colours that indicate the status (e.g., Complete, In Progress).
-     */
-    const getStatusClass = () => {
-        const baseClass = 'whitespace-nowrap px-3 py-1 rounded-full text-sm font-semibold'; // Prevents wrapping
-        switch (latestStatus) {
-            case 1:
-                return `${baseClass} bg-green-500 text-white`; // Complete status
-            case 2:
-                return `${baseClass} bg-yellow-500 text-white`; // In Progress status
-            case 3:
-                return `${baseClass} bg-red-500 text-white`; // Cancelled status
-            case 4:
-                return `${baseClass} bg-gray-500 text-white`; // Pending status
-            default:
-                return `${baseClass} bg-gray-500 text-white`; // Fallback for unknown statuses
-        }
-    };
-
-    /**
-     * Converts the status ID into a human-readable text label for display.
-     */
-    const getStatusText = () => {
-        switch (latestStatus) {
-            case 1:
-                return 'Complete';
-            case 2:
-                return 'In Progress';
-            case 3:
-                return 'Cancelled';
-            case 4:
-                return 'Pending';
-            default:
-                return 'Unknown';
-        }
-    };
-
-    /**
-     * Utility function to determine if a character is a letter, used to conditionally style 
+     * Utility function to determine if a character is a letter, used to conditionally style
      * the charm icon differently depending on whether it's a letter or a symbol.
      */
     const isLetter = (char) => {
@@ -125,35 +78,26 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
     const handleImageClick = (imageSrc) => {
         openModal(
             <div className="relative">
-                <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full" />
+                <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full mx-auto" />
             </div>
         );
     };
+    const [mouseDownPosition, setMouseDownPosition] = useState(null);
 
-    /**
-     * Handles the click event on the card, ensuring that clicking opens the issue modal.
-     */
-    const handleCardClick = (e) => {
-        if (e.detail === 1) {
-            openIssueModal(data);
-        }
-    };
-
-    /**
-     * Handlers for mouse events to distinguish between drag-and-drop vs. simple click on the issue card.
-     * These handlers ensure drag actions don't trigger click events on the card.
-     */
     const handleMouseDown = (e) => {
-        e.currentTarget.dataset.dragging = false; // Initialise dragging state
-    };
-
-    const handleMouseMove = (e) => {
-        e.currentTarget.dataset.dragging = true; // Set dragging to true when the mouse moves
+        setMouseDownPosition({ x: e.clientX, y: e.clientY });
     };
 
     const handleMouseUp = (e) => {
-        if (e.currentTarget.dataset.dragging === 'false') {
-            handleCardClick(e); // Trigger the card click if it wasn't a drag action
+        const mouseUpPosition = { x: e.clientX, y: e.clientY };
+        const distance = Math.sqrt(
+            Math.pow(mouseUpPosition.x - mouseDownPosition.x, 2) +
+            Math.pow(mouseUpPosition.y - mouseDownPosition.y, 2)
+        );
+
+        // If the distance is less than a threshold, consider it a click
+        if (distance < 5) {
+            openIssueModal();
         }
     };
 
@@ -161,33 +105,38 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
         <div
             className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative cursor-pointer"
             onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
         >
             {/* Header Line */}
             <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
+                <div className="flex items-center flex-grow min-w-0">
                     {/* Charm Icon */}
                     <div className={`flex-shrink-0 w-8 h-8 ${isLetter(data.charm) ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'} rounded-full flex justify-center items-center text-lg`}>
                         {data.charm}
                     </div>
                     {/* Issue Title */}
-                    <h3 className="ml-2 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis">
+                    <h3
+                        className="ml-2 text-lg font-semibold text-gray-800 line-clamp-2 overflow-hidden text-ellipsis flex-grow min-w-0"
+                        title={data.title}
+                    >
                         {data.title}
                     </h3>
                 </div>
                 {/* Status Indicator */}
-                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass()}`}>
-                    {getStatusText()}
+                <div className={`px-2 py-1 rounded-full text-sm font-semibold ${getStatusClass(latestStatus)} flex-shrink-0`}>
+                    {getStatusText(latestStatus)}
                 </div>
             </div>
 
             {/* Description */}
-            <p className="text-gray-700 mb-4 line-clamp-5 text-clip">{data.description}</p>
+            <div
+                className="text-gray-700 mb-4 line-clamp-5 text-clip"
+                dangerouslySetInnerHTML={{ __html: data.description }}
+            ></div>
 
             {/* Reference */}
             <p className="text-sm text-gray-500 mb-4">
-                <strong>Reference:</strong> {referenceId}
+                <strong>Reference:</strong> {generateNiceReferenceId(data)}
             </p>
 
             {/* Attachments */}
@@ -196,7 +145,14 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                     <p className="text-sm text-gray-500 mb-4">
                         <strong>Attachment(s):</strong>
                     </p>
-                    <div className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden">
+                    <div
+                        className="bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            closeModal();
+                            handleImageClick(attachments[0].signedUrl);
+                        }}
+                    >
                         {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="loader"></div>
@@ -216,8 +172,7 @@ export default function Issue({ data, openIssueModal, deleteHandler }) {
                                 <img
                                     src={attachments[0].signedUrl}
                                     alt="Attachment"
-                                    className="relative z-10 rounded-md object-contain max-h-full max-w-full cursor-pointer"
-                                    onClick={() => handleImageClick(attachments[0].signedUrl)}
+                                    className="relative z-10 object-contain max-h-full max-w-full"
                                 />
                             </div>
                         )}

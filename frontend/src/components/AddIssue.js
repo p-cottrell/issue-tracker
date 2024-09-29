@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import apiClient from '../api/apiClient';
+import { useModal } from '../context/ModalContext';
+import { charmOptions } from '../helpers/IssueHelpers';
+import TiptapEditor from './richtext/TiptapEditor';
 
 /**
  * AddIssue component: This component provides a form for adding a new issue,
@@ -7,6 +10,8 @@ import apiClient from '../api/apiClient';
  * It supports drag-and-drop functionality for images and displays a preview of selected images.
  */
 const AddIssue = ({ closeHandler }) => {
+  const { closeModal } = useModal();
+
   // State for form fields
   const [title, setTitle] = useState(''); // Title of the issue
   const [description, setDescription] = useState(''); // Description of the issue
@@ -18,16 +23,8 @@ const AddIssue = ({ closeHandler }) => {
   const [imagePreviews, setImagePreviews] = useState([]); // Array of image preview URLs
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
 
-
   // State for displaying a preview modal
   const [previewImage, setPreviewImage] = useState(null); // Selected image to preview in modal
-
-  // List of available charms for selection
-  const charms = [
-    '⚠️', '🚀', '🐞', '💻', '📅', '🌐', '🏆', '🏠', '🐈', '🐕', '⏱️', '🎵',
-    '⭐', '🔎', '📸', '💾', '❤️', '🎬', '📖', '🎂', '🖥️', '🔥', '🎫', '🔧',
-    '🚫', '💥', '🎓', '📚'
-  ];
 
   /**
    * Handles form submission for creating a new issue.
@@ -36,7 +33,7 @@ const AddIssue = ({ closeHandler }) => {
    */
   const addHandler = (e) => {
     e.preventDefault(); // Prevent default form submission behaviour
-    closeHandler(); // Close the popup after submission
+    closeHandler(true); // Close the popup after submission
 
     const createIssue = async () => {
       const issueData = {
@@ -170,7 +167,7 @@ const AddIssue = ({ closeHandler }) => {
     <div className="bg-white p-8 rounded shadow-lg max-w-3xl mx-auto max-h-screen overflow-auto">
       {/* Form Title */}
       <h2 className="text-2xl text-dark font-semibold mb-6 text-center">Add New Issue</h2>
-  
+
       {/* Form for adding a new issue */}
       <form onSubmit={addHandler}>
         {/* Title Input */}
@@ -185,14 +182,14 @@ const AddIssue = ({ closeHandler }) => {
             >
               {charm}
             </button>
-  
+
             {/* Charm Dropdown Menu */}
             {isDropdownOpen && (
               <div className="absolute left-0 mt-2 p-2 bg-white border border-gray-200 shadow-lg rounded grid grid-cols-4 gap-2 overflow-visible z-10 w-80">
-                {charms.map((charmOption, index) => (
+                {charmOptions.map((charmOption, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer p-1 rounded-lg text-xl flex justify-center items-center 
+                    className={`cursor-pointer p-1 rounded-lg text-xl flex justify-center items-center
                     ${charm === charmOption ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
                     onClick={() => {
                       setCharm(charmOption); // Set selected charm
@@ -205,7 +202,7 @@ const AddIssue = ({ closeHandler }) => {
               </div>
             )}
           </div>
-  
+
           {/* Title Input Field */}
           <div className="flex-grow">
             <input
@@ -218,18 +215,19 @@ const AddIssue = ({ closeHandler }) => {
             />
           </div>
         </div>
-  
+
         {/* Description Text Area */}
         <div className="mb-6">
           <label className="block text-dark mb-2">Description:</label>
-          <textarea
+          {/* <textarea
             className="bg-white border border-secondary p-2 rounded outline-none w-full resize-y h-52"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe everything about the issue here..."
-          />
+          /> */}
+          <TiptapEditor content={description} setContent={setDescription}/>
         </div>
-  
+
         {/* Attachments Section */}
         <label className="block text-dark mb-2">Attachments:</label>
         <div
@@ -253,7 +251,7 @@ const AddIssue = ({ closeHandler }) => {
               )}
           </p>
         </div>
-  
+
         {/* Hidden File Input */}
         <input
           id="fileInput" // Assign an id to the input for manual trigger
@@ -263,7 +261,7 @@ const AddIssue = ({ closeHandler }) => {
           onChange={handleFileChange} // Handle file input change
           className="hidden" // Hidden input
         />
-  
+
         {/* Image Previews */}
         {imagePreviews.length > 0 && (
           <div className="mb-6 grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -275,7 +273,7 @@ const AddIssue = ({ closeHandler }) => {
                   alt={`Preview ${index}`}
                   className="w-full h-40 object-cover rounded"
                 />
-  
+
                 {/* Preview Button */}
                 <button
                   type="button"
@@ -286,7 +284,7 @@ const AddIssue = ({ closeHandler }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </button>
-  
+
                 {/* Remove Image Button */}
                 <button
                   type="button"
@@ -299,8 +297,8 @@ const AddIssue = ({ closeHandler }) => {
             ))}
           </div>
         )}
-  
-        {/* Form Submit and Cancel Buttons */}
+
+        {/* Form Submit Button */}
         <div className="flex justify-center">
           <button
             type="submit"
@@ -311,20 +309,23 @@ const AddIssue = ({ closeHandler }) => {
           <button
             type="button"
             className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
-            onClick={closeHandler}
+            onClick={() => {
+              closeHandler(false);
+              closeModal();
+            }}
           >
             Cancel
           </button>
         </div>
       </form>
-  
+
       {/* Image Preview Modal */}
       {previewImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
             {/* Display preview image */}
             <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
-  
+
             {/* Close Button for Modal */}
             <button
               onClick={() => setPreviewImage(null)}

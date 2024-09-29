@@ -22,8 +22,8 @@
   z-index: 1000;
   border-radius: 8px;
   padding: 20px;
-  overflow-y: auto; /* Enables scrolling if content overflows */
-  max-height: 80vh; /* Ensures the modal doesn't exceed viewport height */
+  overflow-y: auto;
+  max-height: 80vh;
 }
 
 .issue-header h1.issue-title {
@@ -206,4 +206,12 @@
   outline: none;
   border-color: #2196F3;
   box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.group:hover .group-hover\:bg-opacity-50 {
+  background-color: rgba(220, 220, 220, 0.5);
+}
+
+.group:hover .hover\:bg-opacity-100:hover {
+  background-color: rgba(220, 220, 220, 1);
 }

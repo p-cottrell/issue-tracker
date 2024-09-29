@@ -1,12 +1,11 @@
 import { Bars3Icon, InformationCircleIcon, PlusIcon, QueueListIcon, RectangleGroupIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import Fuse from 'fuse.js';
-import React, { useCallback, useEffect, useState } from 'react';
-import Masonry from 'react-masonry-css';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import apiClient from '../../api/apiClient';
 import AddIssuePopup from '../../components/AddIssue';
-import DeleteIssuePopup from '../../components/DeleteIssuePopup';
+import FluentLayout from '../../components/FluentLayout';
 import Issue from '../../components/Issue';
 import IssueView from '../../components/IssueView';
 import Logo from '../../components/Logo';
@@ -17,25 +16,6 @@ import { useUser } from '../../context/UserContext';
 import { generateNiceReferenceId } from '../../helpers/IssueHelpers';
 import '../../styles/base.css';
 import '../../styles/loadingRing.css';
-
-
-// Constants for card width and screen widths
-const CARD_WIDTH = 450; // Width of each card in pixels
-const MIN_SCREEN_WIDTH = 640; // Minimum screen width in pixels
-const MAX_SCREEN_WIDTH = 7680; // Maximum screen width in pixels
-
-// Utility function to generate breakpoint columns object
-const generateBreakpointColumns = (cardWidth, minScreenWidth, maxScreenWidth) => {
-  const breakpoints = {};
-  for (let width = minScreenWidth; width <= maxScreenWidth; width += cardWidth) {
-    const columns = Math.floor(width / cardWidth);
-    breakpoints[width] = columns;
-  }
-  return breakpoints;
-};
-
-// Generate the breakpoint columns object
-const breakpointColumnsObj = generateBreakpointColumns(CARD_WIDTH, MIN_SCREEN_WIDTH, MAX_SCREEN_WIDTH);
 
 /**
  * Dashboard component for displaying and managing issues.
@@ -53,7 +33,7 @@ const Dashboard = () => {
   const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
   const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
   const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
-  const [statusFilter, setStatusFilter] = useState([]); // State for the status filter
+  const [statusFilter, setStatusFilter] = useState(JSON.parse(localStorage.getItem('statusFilter')) || []); // State for the status filter
   const { user } = useUser(); // Fetch authenticated user data from the context
   const [layoutType, setLayoutType] = useState(localStorage.getItem('layoutType') || 'masonry'); // Layout type for displaying issues - masonry, grid, or list
   const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false); // State to control visibility of the layout dropdown
@@ -149,37 +129,24 @@ const Dashboard = () => {
    */
   const showAddIssueModal = () => {
     setPopupHandler(() => addHandler);
-    openModal(<AddIssuePopup closeHandler={() => closeModalCallback(true)} />, false);
+    openModal(<AddIssuePopup closeHandler={(changed) => closeModalCallback(changed)} />, false);
   };
 
-  /**
-   * Handler for deleting an issue.
-   * @param {Object} data - Issue data to be deleted.
-   */
-  const showDeleteIssueModal = (data) => {
-    openModal(<DeleteIssuePopup closeHandler={() => closeModalCallback(true)} issue={data} />, false);
-  };
-
+  const issueViewRef = useRef();
   /**
    * Opens the issue view modal to display details of the selected issue.
    * @param {Object} issue - The issue object to be displayed.
    */
-  const showIssueViewModal = (issue, referenceId) => {
-    openModal(
-        <IssueView 
-            issue={issue} 
-            onClose={() => closeModalCallback(true)} 
-        />, 
-        false
-    );
-};
+  const showIssueViewModal = (issue) => {
+    openModal(<IssueView ref={issueViewRef} issue={issue} onClose={() => closeModalCallback(true)} />, true);
+  };
 
   /**
    * Triggers a re-fetch of issues when a modal is closed, if the object was updated.
    * @param {Object} changed - Flag to indicate if the object was updated.
    */
   const closeModalCallback = (changed) => {
-    closeModal(null);
+    closeModal();
     if (changed) {
       setUpdateTrigger((prev) => prev + 1);
     }
@@ -240,6 +207,7 @@ const Dashboard = () => {
   const handleStatusFilterChange = (selectedOptions) => {
     const selectedStatuses = selectedOptions.map(option => option.value);
     setStatusFilter(selectedStatuses);
+    localStorage.setItem('statusFilter', JSON.stringify(selectedStatuses));
   };
 
   useEffect(() => {
@@ -359,30 +327,30 @@ const Dashboard = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
 
         {/* Main Content */}
-        <main className="flex-grow p-6">
+        <main className="flex-grow p-4 overflow-y-auto">
           <div className="flex space-x-4 items-center mb-4">
             {/* Filter Dropdown */}
 
             <div className="bg-white rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
-            <Select
-              id="filter-select"
-              options={filterOptions}
-              value={filterOptions.find(option => filterType === option.value) || null}
-              onChange={handleFilterChange}
-              className="text-primary-600 font-semibold focus:outline-none"
-              placeholder="Filter by Owner"
-            />
+              <Select
+                id="filter-select"
+                options={filterOptions}
+                value={filterOptions.find(option => filterType === option.value) || null}
+                onChange={handleFilterChange}
+                className="text-primary-600 font-semibold focus:outline-none"
+                placeholder="Filter by Owner"/>
             </div>
 
-            <Select
-              id="status-filter-select"
-              isMulti
-              options={statusOptions}
-              value={statusOptions.filter(option => statusFilter.includes(option.value)) || []}
-              onChange={handleStatusFilterChange}
-              className="text-primary-600 font-semibold focus:outline-none"
-              placeholder="Filter by Status"
-            />
+            <div className="bg-white rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
+              <Select
+                id="status-filter-select"
+                isMulti
+                options={statusOptions}
+                value={statusOptions.filter(option => statusFilter.includes(option.value)) || []}
+                onChange={handleStatusFilterChange}
+                className="text-primary-600 font-semibold focus:outline-none"
+                placeholder="Filter by Status"/>
+            </div>
           </div>
           {/* Display message if no issues found */}
           {noIssuesMessage && (
@@ -394,52 +362,20 @@ const Dashboard = () => {
               No issues found. Try changing the search term or filters
             </div>
           )}
-          {layoutType === 'masonry' ? (
-            <Masonry
-              breakpointCols={breakpointColumnsObj}
-              className="masonry-grid"
-              columnClassName="masonry-grid_column"
-            >
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => showDeleteIssueModal(issue)}
-                  openIssueModal={() => showIssueViewModal(issue)}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
-            </Masonry>
-          ) : layoutType === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => showDeleteIssueModal(issue)}
-                  openIssueModal={() => showIssueViewModal(issue)}
-                  closeIssueModal={closeModalCallback}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col space-y-4 max-w-[600px] mx-auto">
-              {filteredIssues.map((issue, index) => (
-                <Issue
-                  key={issue._id}
-                  index={index}
-                  data={issue}
-                  deleteHandler={() => showDeleteIssueModal(issue)}
-                  openIssueModal={() => showIssueViewModal(issue)}
-                  closeIssueModal={closeModalCallback}
-                  className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
-                />
-              ))}
-            </div>
-          )}
+          <FluentLayout
+            layoutType={layoutType}
+            items={filteredIssues}
+            renderItem={(issue, index) => (
+              <Issue
+                key={issue._id}
+                index={index}
+                data={issue}
+                openIssueModal={() => showIssueViewModal(issue)}
+                closeIssueModal={closeModalCallback}
+                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+              />
+            )}
+          />
         </main>
       </div>
     </div>

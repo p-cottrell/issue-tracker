@@ -1,7 +1,11 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import { CheckIcon, PaperAirplaneIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import apiClient from "../api/apiClient";
+import { useModal } from '../context/ModalContext';
 import { useUser } from "../context/UserContext";
-import { generateNiceReferenceId } from '../helpers/IssueHelpers';
+import { charmOptions, generateNiceReferenceId, getStatusClass } from '../helpers/IssueHelpers';
+import { GetUserAvatar } from '../helpers/UserHelpers';
+import DescriptionEditor from './DescriptionEditor';
 import "./IssueView.css";
 
 // Helper function to format date in DD/MM/YYYY format
@@ -38,23 +42,18 @@ function formatSmartDate(dateString) {
   }
 }
 
-// Array of emoji options for the charm selector
-const emojiOptions = [
-  '⚠️', '🚀', '🐞', '💻', '📅', '🌐', '🏆', '🏠', '🐈', '🐕', '⏱️', '🎵',
-  '⭐', '🔎', '📸', '💾', '❤️', '🎬', '📖', '🎂', '🖥️', '🔥', '🎫', '🔧',
-  '🚫', '💥', '🎓', '📚'
-];
-
-export default function IssueView({ issue, onClose }) {
+function IssueView({ issue, onClose }, ref) {
   const { user } = useUser();
+  const { openModal, closeModal } = useModal();
 
   // State variables
-  const [detailedIssue, setDetailedIssue] = useState(issue); // Detailed issue data
-  const [editMode, setEditMode] = useState(false); // Toggle for edit mode
+  const [originalIssue, setOriginalIssue] = useState(issue); // Detailed issue data
   const [editedIssue, setEditedIssue] = useState({ ...issue }); // Copy of issue for editing
-  const [editedCharm, setEditedCharm] = useState(issue.charm); // Edited charm (emoji)
+  useEffect(() => { // when the originalIssue changes, update the editedIssue
+    setEditedIssue({ ...originalIssue });
+  }, [originalIssue]);
+
   const [currentStatus, setCurrentStatus] = useState(() => {
-  
     // Initialize currentStatus based on the latest status in status_history
     if (issue.status_history && issue.status_history.length > 0) {
       return issue.status_history[issue.status_history.length - 1].status_id;
@@ -64,15 +63,20 @@ export default function IssueView({ issue, onClose }) {
   const [canEdit, setCanEdit] = useState(false); // Permission to edit
   const [isAdmin, setIsAdmin] = useState(false); // Check if user is admin
 
+  // State for header fields
+  const [isTitleBeingEdited, setIsTitleBeingEdited] = useState(false);
+  const [isStatusBeingEdited, setIsStatusBeingEdited] = useState(false);
+  const [isCharmBeingEdited, setIsCharmBeingEdited] = useState(false);
+  const [isDescriptionBeingEdited, setIsDescriptionBeingEdited] = useState(false);
+
   // State for occurrences
-  const [newOccurrence, setNewOccurrence] = useState(""); // New occurrence input
+  const [newOccurrence, setNewOccurrence] = useState(null); // New occurrence input
   const [selectedOccurrence, setSelectedOccurrence] = useState(null); // Selected occurrence for editing
-  const [editedOccurrence, setEditedOccurrence] = useState(""); // Edited occurrence text
+  const [editedOccurrence, setEditedOccurrence] = useState(null); // Edited occurrence object
 
   // State for comments
   const [newComment, setNewComment] = useState(""); // New comment input
-  const [selectedComment, setSelectedComment] = useState(null); // Selected comment for editing
-  const [editedComment, setEditedComment] = useState(""); // Edited comment text
+  const [editedComment, setEditedComment] = useState(null); // Edited comment object
 
   // Other states
   const [toast, setToast] = useState(null); // Toast notification state
@@ -83,8 +87,6 @@ export default function IssueView({ issue, onClose }) {
   const [imagePreviews, setImagePreviews] = useState([]); // Image preview URLs
   const fileInputRef = useRef(null); // Create a ref for the file input
   const [isDragging, setIsDragging] = useState(false); // Drag-and-drop state
-  const [previewImage, setPreviewImage] = useState(null); // Preview image state
-  const [referenceId, setReferenceId] = useState(''); // Stores the static reference ID
 
   // Function to display toast notifications
   const showToast = (message, type, duration = 5000, onConfirm = null) => {
@@ -94,26 +96,14 @@ export default function IssueView({ issue, onClose }) {
     }
   };
 
-  /**
-  * Generates the reference ID and stores it in the state.
-  */
-  useEffect(() => {
-      const generatedReferenceId = generateNiceReferenceId(issue._id);
-      setReferenceId(generatedReferenceId);
-  }, [issue._id]);
-
-
   // Fetch issue details from the server
   const fetchIssueDetails = useCallback(async () => {
     try {
       const response = await apiClient.get(`/api/issues/${issue._id}`);
       const fetchedIssue = response.data;
-      setDetailedIssue(fetchedIssue);
+      setOriginalIssue(fetchedIssue);
       setEditedIssue({ ...fetchedIssue }); // Update editedIssue with fetched data
-      setEditedCharm(fetchedIssue.charm); // Update editedCharm
-
-      // Set reporter's username
-      fetchUsername(response.data.reporter_id);
+      fetchUsername(response.data.reporter_id); // Fetch reporter's username
       fetchAttachments(); // Fetch attachments if necessary
     } catch (error) {
       console.error('Error fetching issue details:', error);
@@ -158,40 +148,21 @@ export default function IssueView({ issue, onClose }) {
 
   // useEffect to update currentStatus when detailedIssue changes
   useEffect(() => {
-    if (detailedIssue.status_history && detailedIssue.status_history.length > 0) {
+    if (originalIssue.status_history && originalIssue.status_history.length > 0) {
       setCurrentStatus(
-        detailedIssue.status_history[detailedIssue.status_history.length - 1].status_id
+        originalIssue.status_history[originalIssue.status_history.length - 1].status_id
       );
     } else {
       setCurrentStatus(null); // Or set to a default status ID if desired
     }
-  }, [detailedIssue]);
-
-  // Function to handle entering edit mode
-  const handleEdit = () => {
-    if (canEdit) {
-      setEditMode(true);
-      setEditedIssue({ ...detailedIssue }); // Set editedIssue to current detailedIssue
-      setEditedCharm(detailedIssue.charm); // Set editedCharm to current charm
-      // Set currentStatus to the latest status_id from detailedIssue
-      if (detailedIssue.status_history && detailedIssue.status_history.length > 0) {
-        setCurrentStatus(
-          detailedIssue.status_history[detailedIssue.status_history.length - 1].status_id
-        );
-      } else {
-        setCurrentStatus(null); // Or a default status if needed
-      }
-    }
-  };
+  }, [originalIssue]);
 
   // Function to handle saving edits
   const handleSave = async () => {
     if (canEdit) {
       try {
-        // Prepare updated issue data
         const updatedIssue = {
           ...editedIssue,
-          charm: editedCharm,
           status_id: currentStatus,
           status_history: [
             ...editedIssue.status_history,
@@ -209,14 +180,11 @@ export default function IssueView({ issue, onClose }) {
           })),
         };
 
-        // Send PUT request to update the issue
         const response = await apiClient.put(`/api/issues/${issue._id}`, dataToSend);
 
-        setDetailedIssue(response.data.updatedIssue); // Update detailedIssue with response
-        setEditMode(false); // Exit edit mode
-        showToast('Issue updated successfully', 'success', 5000);
+        setOriginalIssue(response.data.updatedIssue);
 
-        onClose(response.data.updatedIssue); // Close the issue view with updated data
+        onClose(response.data.updatedIssue);
       } catch (error) {
         console.error('Error updating issue:', error);
         showToast('Error updating issue', 'error');
@@ -227,19 +195,101 @@ export default function IssueView({ issue, onClose }) {
   // Function to handle canceling edits
   const handleCancel = () => {
     if (canEdit) {
-      setEditMode(false);
-      setEditedIssue(detailedIssue); // Revert changes
-      setEditedCharm(detailedIssue.charm); // Revert charm
-      // Reset currentStatus to match detailedIssue
-      if (detailedIssue.status_history && detailedIssue.status_history.length > 0) {
+      setEditedIssue(originalIssue);
+      if (originalIssue.status_history && originalIssue.status_history.length > 0) {
         setCurrentStatus(
-          detailedIssue.status_history[detailedIssue.status_history.length - 1].status_id
+          originalIssue.status_history[originalIssue.status_history.length - 1].status_id
         );
       } else {
         setCurrentStatus(null);
       }
     }
   };
+
+  // Helper function to check if there are unsaved changes
+  function hasUnsavedChanges(editedIssue, originalIssue) {
+    return (
+      editedIssue.title !== originalIssue.title ||
+      editedIssue.description !== originalIssue.description ||
+      JSON.stringify(editedIssue.status_history) !== JSON.stringify(originalIssue.status_history)
+    );
+  }
+
+  // Helper function to prompt the user to save changes
+  async function promptToSaveChangesIfNecessary(messageType, openModal, closeModal, handleSave, handleCancel, unsavedChangesCheck) {
+    if (unsavedChangesCheck) {
+      return new Promise((resolve) => {
+        openModal(
+          <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+            <h2 className="text-lg text-dark font-semibold mb-4">
+              {messageType === 'CloseRequest' && 'You have unsaved changes. Do you want to save them before proceeding?'}
+              {messageType === 'OccurrenceEdit' && 'Before editing occurrences, you must finalise your changes to the issue.'}
+              {messageType === 'CommentEdit' && 'Before editing comments, you must finalise your changes to the issue.'}
+              {messageType === 'AttachmentEdit' && 'Before managing attachments, you must finalise your changes to the issue.'}
+            </h2>
+            <div className="flex justify-center">
+              <button
+                className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+                onClick={async () => {
+                  closeModal();
+                  await handleSave();
+                  resolve(true);
+                }}
+              >
+                Save
+              </button>
+              <button
+                className="mr-4 px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+                onClick={() => {
+                  closeModal();
+                  handleCancel();
+                  resolve(true);
+                }}
+              >
+                Discard
+              </button>
+              <button
+                className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+                onClick={() => {
+                  closeModal();
+                  resolve(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>,
+          false
+        );
+      });
+    }
+    return true;
+  }
+
+  // Function to handle closing the issue view
+  // This method is used implicitly by ModalContext when the user clicks outside the modal
+  const onUserCloseRequest = useCallback(async () => {
+    // If any field is being edited, deny the close request
+    if (isTitleBeingEdited || isStatusBeingEdited || isCharmBeingEdited || isDescriptionBeingEdited) {
+      return false;
+    }
+
+    // If there are unsaved changes, prompt the user to save them; if the user selects "Cancel", deny the close request
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const canClose = await promptToSaveChangesIfNecessary(
+      'CloseRequest',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    return canClose;
+  }, [editedIssue, originalIssue, openModal]);
+
+  useImperativeHandle(ref, () => ({
+    onUserCloseRequest,
+  }));
 
   // Function to handle input changes in edit mode
   const handleInputChange = (e) => {
@@ -280,20 +330,33 @@ export default function IssueView({ issue, onClose }) {
 
   // Add a new occurrence
   const handleAddOccurrence = async () => {
-    if (!newOccurrence.trim()) return;
+    if (!newOccurrence || !newOccurrence.description?.trim() || !newOccurrence.time) {
+      return;
+    }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'OccurrenceEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
 
     try {
       const response = await apiClient.post(`/api/occurrences/${issue._id}`, {
-        description: newOccurrence,
+        description: newOccurrence.description,
+        created_at: newOccurrence.time,
         user_id: user.id,
       });
 
-      setDetailedIssue({
-        ...detailedIssue,
-        occurrences: [...detailedIssue.occurrences, response.data.occurrence],
+      setOriginalIssue({
+        ...originalIssue,
+        occurrences: [...originalIssue.occurrences, response.data.occurrence],
       });
       setNewOccurrence("");
-      showToast("Occurrence added successfully", "success");
     } catch (error) {
       console.error("Error adding occurrence:", error);
       showToast("Failed to add occurrence", "error");
@@ -301,19 +364,30 @@ export default function IssueView({ issue, onClose }) {
   };
 
   // Select an occurrence for editing
-  const handleSelectOccurrence = (occurrence) => {
-    console.log('Occurrence user_id:', occurrence.user_id);
-    console.log('Current user id:', user.id);
-  
-    const occurrenceUserId = occurrence.user_id?._id || occurrence.user_id; 
-    if (isAdmin || user.id === occurrenceUserId)
-      {
-      setSelectedOccurrence(
-        selectedOccurrence && selectedOccurrence._id === occurrence._id
-          ? null
-          : occurrence
+  const handleSelectOccurrence = async (occurrence) => {
+    if (selectedOccurrence && selectedOccurrence._id === occurrence._id) {
+      return;
+    }
+
+    if (isAdmin || user.id === occurrence.user_id) {
+      const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+      const proceed = await promptToSaveChangesIfNecessary(
+        'OccurrenceEdit',
+        openModal,
+        closeModal,
+        handleSave,
+        handleCancel,
+        unsavedChangesCheck
       );
-      setEditedOccurrence(occurrence.description);
+      if (!proceed) return;
+
+      setSelectedOccurrence(
+        selectedOccurrence && selectedOccurrence._id === occurrence._id ? null : occurrence
+      );
+      setEditedOccurrence({
+        description: occurrence.description,
+        time: occurrence.created_at ? new Date(occurrence.created_at).toISOString().slice(0, 16) : '',
+      });
     }
   };
 
@@ -323,50 +397,101 @@ export default function IssueView({ issue, onClose }) {
       showToast("You do not have permission to edit this occurrence", "error");
       return;
     }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'OccurrenceEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.put(
         `/api/occurrences/${issue._id}/${occurrence._id}`,
         {
-          description: editedOccurrence,
+          description: editedOccurrence.description,
+          created_at: editedOccurrence.time,
         }
       );
 
-      const updatedOccurrences = detailedIssue.occurrences.map((occ) =>
+      const updatedOccurrences = originalIssue.occurrences.map((occ) =>
         occ._id === occurrence._id ? response.data.occurrence : occ
       );
 
-      setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
+      setOriginalIssue({ ...originalIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
-      setEditedOccurrence("");
-      showToast("Occurrence updated successfully", "success");
+      setEditedOccurrence(null);
     } catch (error) {
       console.error("Error updating occurrence:", error);
       showToast("Error updating occurrence", "error");
     }
   };
 
-  // Delete an occurrence
+  // Open modal asking if the user wants to delete an occurrence
+  const promptDeleteOccurrence = async (occurrence) => {
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'OccurrenceEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this occurrence?
+        </h2>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={async () => {
+              await handleDeleteOccurrence(occurrence);
+              closeModal();
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+      , false);
+  };
+
+  // Function to handle deleting an occurrence
   const handleDeleteOccurrence = async (occurrence) => {
-    if (!isAdmin && user.id !== occurrence.user_id._id) {
+    console.log(`Deleting occurrence: ${occurrence._id}`);
+    if (!isAdmin && user.id !== occurrence.user_id) {
       showToast("You do not have permission to delete this occurrence", "error");
       return;
     }
+
     try {
       await apiClient.delete(`/api/occurrences/${issue._id}/${occurrence._id}`);
 
-      const updatedOccurrences = detailedIssue.occurrences.filter(
+      const updatedOccurrences = originalIssue.occurrences.filter(
         (occ) => occ._id !== occurrence._id
       );
 
-      setDetailedIssue({ ...detailedIssue, occurrences: updatedOccurrences });
+      setOriginalIssue({ ...originalIssue, occurrences: updatedOccurrences });
       setSelectedOccurrence(null);
-      showToast("Occurrence deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting occurrence:", error);
       showToast("Error deleting occurrence", "error");
     }
   };
-
 
   // Functions for handling comments
 
@@ -374,17 +499,27 @@ export default function IssueView({ issue, onClose }) {
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'CommentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.post(`/api/comments/${issue._id}`, {
         comment_text: newComment,
       });
 
-      setDetailedIssue({
-        ...detailedIssue,
-        comments: [...detailedIssue.comments, response.data.comment],
+      setOriginalIssue({
+        ...originalIssue,
+        comments: [...originalIssue.comments, response.data.comment],
       });
       setNewComment("");
-      showToast("Comment added successfully", "success");
     } catch (error) {
       console.error("Error adding comment:", error);
       showToast("Error adding comment", "error");
@@ -392,12 +527,19 @@ export default function IssueView({ issue, onClose }) {
   };
 
   // Select a comment for editing
-  const handleSelectComment = (comment) => {
-    if (isAdmin || user.id === comment.user_id.id) {
-      setSelectedComment(
-        selectedComment && selectedComment._id === comment._id ? null : comment
+  const handleSelectComment = async (comment) => {
+    if (isAdmin || user.id === comment.user_id._id) {
+      const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+      const proceed = await promptToSaveChangesIfNecessary(
+        'CommentEdit',
+        openModal,
+        closeModal,
+        handleSave,
+        handleCancel,
+        unsavedChangesCheck
       );
-      setEditedComment(comment.comment_text);
+      if (!proceed) return;
+      setEditedComment({ ...comment });
     }
   };
 
@@ -407,6 +549,18 @@ export default function IssueView({ issue, onClose }) {
       showToast("You do not have permission to edit this comment", "error");
       return;
     }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'CommentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
     try {
       const response = await apiClient.put(
         `/api/comments/${issue._id}/${comment._id}`,
@@ -415,36 +569,72 @@ export default function IssueView({ issue, onClose }) {
         }
       );
 
-      setDetailedIssue((prevState) => ({
+      setOriginalIssue((prevState) => ({
         ...prevState,
         comments: prevState.comments.map((c) =>
           c._id === comment._id ? response.data.comment : c
         ),
       }));
-      setSelectedComment(null);
-      setEditedComment("");
-      showToast("Comment updated successfully", "success");
+      setEditedComment(null);
     } catch (error) {
       console.error("Error updating comment:", error);
       showToast("Error updating comment", "error");
     }
   };
 
+  // Open modal asking if the user wants to delete a comment
+  const promptDeleteComment = async (comment) => {
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'CommentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this comment?
+        </h2>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={async () => {
+              await handleDeleteComment(comment);
+              closeModal();
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+      , false);
+  };
+
   // Delete a comment
   const handleDeleteComment = async (comment) => {
-    if (!isAdmin && user.id !== comment.user_id.id) {
+    if (!isAdmin && user.id !== comment.user_id._id) {
       showToast("You do not have permission to delete this comment", "error");
       return;
     }
+
     try {
       await apiClient.delete(`/api/comments/${issue._id}/${comment._id}`);
 
-      setDetailedIssue((prevState) => ({
+      setOriginalIssue((prevState) => ({
         ...prevState,
         comments: prevState.comments.filter((c) => c._id !== comment._id),
       }));
-      setSelectedComment(null);
-      showToast("Comment deleted successfully", "success");
     } catch (error) {
       console.error("Error deleting comment:", error);
       showToast("Error deleting comment", "error");
@@ -489,17 +679,23 @@ export default function IssueView({ issue, onClose }) {
     setImagePreviews(newPreviews);
   };
 
-  // Preview an image
-  const handlePreviewImage = (imageUrl) => {
-    setPreviewImage(imageUrl);
-  };
-
   // Upload selected files
   const handleFileUpload = async () => {
     if (images.length === 0) {
       showToast('Please select files to upload', 'error');
       return;
     }
+
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'AttachmentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
 
     const formData = new FormData();
     images.forEach((file) => {
@@ -519,175 +715,300 @@ export default function IssueView({ issue, onClose }) {
       fetchIssueDetails(); // Refresh the issue view
     } catch (error) {
       console.error('Error uploading files:', error);
-      showToast(`Error uploading files: ${error.response?.data?.details || error.message}`, 'error');
+      showToast('Error uploading files', 'error');
     }
   };
 
-  // Delete an attachment
+  // Handle image click to open full preview
+  const handleImageClick = (imageSrc) => {
+    openModal(
+      <div className="relative">
+        <img src={imageSrc} alt="Full Preview" className="rounded-lg max-w-full max-h-full mx-auto" />
+      </div>
+    );
+  };
+
+  // Open modal asking if the user wants to delete an attachment
+  const promptDeleteAttachment = async (attachmentId) => {
+    const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    const proceed = await promptToSaveChangesIfNecessary(
+      'AttachmentEdit',
+      openModal,
+      closeModal,
+      handleSave,
+      handleCancel,
+      unsavedChangesCheck
+    );
+    if (!proceed) return;
+
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this attachment?
+        </h2>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={async () => {
+              await handleDeleteAttachment(attachmentId);
+              closeModal();
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+    , false);
+  };
+
+  // Function to handle deleting an attachment
   const handleDeleteAttachment = async (attachmentId) => {
-    if (window.confirm('Are you sure you want to delete this attachment?')) {
-      try {
-        const response = await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
-        if (response.status === 200) {
-          showToast('Attachment deleted successfully', 'success');
-          setAttachments(attachments.filter((attachment) => attachment._id !== attachmentId));
-        } else {
-          throw new Error(response.data.message || 'Error deleting attachment');
-        }
-      } catch (error) {
-        console.error('Error deleting attachment:', error);
-        showToast(`Error deleting attachment: ${error.message}`, 'error');
-      }
+    try {
+      await apiClient.delete(`/api/attachments/${issue._id}/${attachmentId}`);
+      fetchAttachments(); // Refresh the attachments list
+    } catch (error) {
+      console.error('Error deleting attachment:', error);
+      showToast('Error deleting attachment', 'error');
     }
   };
 
-  // Function to handle deleting the issue (if needed)
+  // Open modal asking if the user wants to delete the issue
+  const promptDeleteIssue = async () => {
+    // const unsavedChangesCheck = hasUnsavedChanges(editedIssue, originalIssue);
+    // const proceed = await promptToSaveChangesIfNecessary(
+    //   'CloseRequest',
+    //   openModal,
+    //   closeModal,
+    //   handleSave,
+    //   handleCancel,
+    //   unsavedChangesCheck
+    // );
+    // if (!proceed) return; // If we're deleting the issue, we don't need to save changes
+
+    openModal(
+      <div className="bg-white p-6 rounded shadow-lg text-center w-3/4 mx-auto">
+        <h2 className="text-lg text-dark font-semibold mb-4">
+          Are you sure you want to delete this issue?
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          This action cannot be undone.
+          <br />
+          All occurrences, comments, and attachments will be permanently deleted.
+        </p>
+        <div className="flex justify-center">
+          <button
+            className="mr-4 px-6 py-2 bg-primary text-white rounded hover:bg-primaryHover"
+            onClick={async () => {
+              await handleDeleteIssue();
+              closeModal();
+            }}
+          >
+            Yes
+          </button>
+          <button
+            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            onClick={closeModal}
+          >
+            No
+          </button>
+        </div>
+      </div>
+      , false);
+  };
+
+  // Function to handle deleting the issue
   const handleDeleteIssue = async () => {
-    if (window.confirm('Are you sure you want to delete this issue?')) {
-      try {
-        await apiClient.delete(`/api/issues/${issue._id}`);
-        showToast('Issue deleted successfully', 'success');
-        onClose(); // Close the issue view
-      } catch (error) {
-        console.error('Error deleting issue:', error);
-        showToast('Error deleting issue', 'error');
-      }
+    try {
+      await apiClient.delete(`/api/issues/${issue._id}`);
+      onClose(); // Close the issue view
+    } catch (error) {
+      console.error('Error deleting issue:', error);
+      showToast('Error deleting issue', 'error');
+    } finally {
+      closeModal();
     }
   };
+
+  const charmButtonRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (charmButtonRef.current && !charmButtonRef.current.contains(event.target)) {
+        setIsCharmBeingEdited(false);
+      }
+    };
+
+    if (isCharmBeingEdited) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCharmBeingEdited]);
 
   // Render the component
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div className="mt-3">
-          {/* Header with edit, save, cancel buttons */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-              {canEdit && !editMode && (
-                <button
-                  onClick={handleEdit}
-                  className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+    <div className="relative mx-auto md:p-5 shadow-lg rounded-md bg-white max-h-[calc(100vh-40px)] overflow-y-auto">
+      <div className="mt-3">
+        <div className="mt-2 pl-7 pr-3 lg:pr-7 py-3">
+          {/* Issue header section */}
+          <div className="issue-header flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4 mb-6">
+            {/* Charm Selector */}
+            <div className="relative" ref={charmButtonRef}>
+              <button
+                type="button"
+                onClick={() => setIsCharmBeingEdited(!isCharmBeingEdited)}
+                className={`bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-14 h-14 text-4xl ${canEdit ? 'hover:bg-gray-400 cursor-pointer' : ''}`}
+                disabled={!canEdit}
+              >
+                {editedIssue.charm}
+              </button>
+
+              {isCharmBeingEdited && canEdit ? (
+                <div className="absolute left-0 mt-2 p-2 bg-white border border-gray-200 shadow-lg rounded grid grid-cols-4 gap-2 overflow-visible z-10 w-80">
+                  {charmOptions.map((charmOption, index) => (
+                    <div
+                      key={index}
+                      className={`cursor-pointer p-1 rounded-lg text-xl flex justify-center items-center ${editedIssue.charm === charmOption ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                      onClick={() => {
+                        setEditedIssue({ ...editedIssue, charm: charmOption });
+                        setIsCharmBeingEdited(false);
+                      }}
+                    >
+                      {charmOption}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Title Input/Display */}
+            <div className="flex-grow">
+              {isTitleBeingEdited && canEdit ? (
+                <input
+                  type="text"
+                  value={editedIssue.title}
+                  onChange={(e) => setEditedIssue({ ...editedIssue, title: e.target.value })}
+                  onBlur={() => setIsTitleBeingEdited(false)}
+                  autoFocus
+                  className="text-xl font-bold mb-2 w-full p-2 border border-gray-300 rounded"
+                  placeholder="Issue Title"
+                />
+              ) : (
+                <h1
+                  className={`text-xl font-bold mb-2 ${canEdit ? 'hover:underline cursor-pointer' : ''}`}
+                  onClick={() => canEdit && setIsTitleBeingEdited(true)}
                 >
-                  Edit
-                </button>
-              )}
-              {canEdit && editMode && (
-                <>
-                  <button
-                    onClick={handleSave}
-                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                  >
-                    Cancel
-                  </button>
-                </>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={handleDeleteIssue}
-                  className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                >
-                  Delete
-                </button>
+                  {editedIssue.title}
+                </h1>
               )}
             </div>
-          </div>
 
-          <div className="mt-2 px-7 py-3">
-            {/* Issue header section */}
-            <div className="issue-header">
-              {editMode ? (
-                <div className="flex items-center space-x-2">
-                  {/* Editable title */}
-                  <input
-                    type="text"
-                    value={editedIssue.title}
-                    onChange={(e) =>
-                      setEditedIssue({ ...editedIssue, title: e.target.value })
-                    }
-                    className="text-xl font-bold mb-2 w-full p-2 border rounded h-[42px]"
-                  />
-                  {/* Status select */}
+            {/* Status and Reference ID Section */}
+            <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
+              <div className="flex flex-col space-y-2">
+                {isStatusBeingEdited && canEdit ? (
                   <select
                     name="status_id"
                     value={currentStatus || ''}
                     onChange={handleInputChange}
-                    className="p-2 border rounded h-[42px]"
+                    onBlur={() => setIsStatusBeingEdited(false)}
+                    className="p-2 border border-gray-300 rounded h-[42px]"
+                    autoFocus
                   >
                     <option value={1}>Complete</option>
                     <option value={2}>In Progress</option>
                     <option value={3}>Cancelled</option>
                     <option value={4}>Pending</option>
                   </select>
-                  {/* Charm (emoji) select */}
-                  <select
-                    value={editedCharm || ''}
-                    onChange={(e) => setEditedCharm(e.target.value)}
-                    className="p-2 border rounded h-[42px]"
+                ) : (
+                  <span
+                    className={`text-sm ${getStatusClass(currentStatus)} ${canEdit ? 'cursor-pointer hover:underline' : ''}`}
+                    onClick={() => canEdit && setIsStatusBeingEdited(true)}
                   >
-                    {emojiOptions.map((emoji, index) => (
-                      <option key={index} value={emoji}>
-                        {emoji}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <>
-                  {/* Display issue title, status, charm */}
-                  <h1 className="text-xl font-bold mb-2">{detailedIssue.title}</h1>
-                  <p className="text-sm text-gray-600">
-                    Status: {getStatusText(currentStatus)}
-                  </p>
-                  <p className="text-2xl ml-2">{detailedIssue.charm}</p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Reference ID:</strong> {referenceId}
-                  </p>
-                </>
+                    {getStatusText(currentStatus)}
+                  </span>
+                )}
+                <p
+                  className="text-sm text-gray-600 cursor-pointer hover:underline text-center"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generateNiceReferenceId(originalIssue));
+                    showToast('Reference ID copied to clipboard', 'info', 1000);
+                  }}
+                >
+                  {generateNiceReferenceId(originalIssue)}
+                </p>
+              </div>
+
+
+              {/* Delete Issue Button */}
+              {(isAdmin || user.id === originalIssue.reporter_id) && (
+                <button
+                  onClick={promptDeleteIssue}
+                  className="p-4 bg-gray-300 text-gray-600 hover:text-red-500 rounded-full hover:bg-red-100 focus:outline-none"
+                  title="Delete Issue"
+                >
+                  <TrashIcon className="w-5 h-5" /> {/* Icon for Delete Button */}
+                </button>
               )}
             </div>
+          </div>
 
-            {/* Issue body section */}
-            <div className="issue-body">
-              <div className="issue-main">
-                {/* Description section */}
-                <h2>Description</h2>
-                {editMode ? (
-                  <textarea
-                    name="description"
-                    value={editedIssue.description}
-                    onChange={handleInputChange}
-                    className="issue-description-textarea"
-                  />
-                ) : (
-                  <p>{detailedIssue.description}</p>
-                )}
+          {/* Issue body section */}
+          <div className="issue-body flex flex-col md:flex-row">
+            <div className="issue-main">
+              {/* Description section */}
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Description</h2>
+                <DescriptionEditor
+                  description={editedIssue.description}
+                  onChange={(newDescription) => setEditedIssue({ ...editedIssue, description: newDescription })}
+                  canEdit={canEdit}
+                  isEditMode={isDescriptionBeingEdited}
+                  setIsEditMode={setIsDescriptionBeingEdited}
+                />
+              </div>
 
-                {/* Occurrences section */}
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h2 className="text-xl font-bold">Occurrences</h2>
-                  </div>
-                  <ul className="occurrences-list">
-                    {(detailedIssue.occurrences || []).map((occurrence) => (
-                      <li
-                        key={occurrence._id}
-                        className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ${
-                          isAdmin || user.id === occurrence.user_id._id
-                            ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-500"
-                            : "bg-gray-50 hover:bg-gray-100 border-l-4 border-gray-300"
+              {/* Occurrences section */}
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-xl font-bold">Occurrences</h2>
+                </div>
+                <ul className="occurrences-list">
+                  {(originalIssue.occurrences || []).map((occurrence) => (
+                    <li
+                      key={occurrence._id}
+                      className={`occurrence-item mb-2 p-3 rounded-lg shadow-sm transition-all duration-200
+                        ${isAdmin || user.id === occurrence.user_id
+                          ? selectedOccurrence?._id === occurrence._id
+                            ? "bg-green-50 hover:bg-green-100 border-l-4 cursor-pointer border-green-500"
+                            : "bg-blue-50 hover:bg-blue-100 border-l-4 cursor-pointer border-blue-500"
+                          : "bg-gray-50 border-l-4 border-gray-300"
                         }`}
-                        onClick={() => handleSelectOccurrence(occurrence)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-sm text-gray-600">
-                              <strong>Created at: </strong>
+                      onClick={() => handleSelectOccurrence(occurrence)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm text-gray-600">
+                            <strong>Created at: </strong>
+                            {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id?._id === user.id) ? (
+                              <input
+                                type="datetime-local"
+                                value={editedOccurrence.time}
+                                onChange={(e) => setEditedOccurrence({ ...editedOccurrence, time: e.target.value })}
+                                className="w-full p-2 border rounded mb-2"
+                                max={new Date().toISOString().slice(0, 16)}
+                              />
+                            ) : (
                               <span
                                 title={
                                   occurrence.created_at
@@ -699,449 +1020,432 @@ export default function IssueView({ issue, onClose }) {
                                   ? formatSmartDate(occurrence.created_at)
                                   : 'N/A'}
                               </span>
-                              <br />
-                              <strong>Reported by: </strong>
-                              {occurrence.user_id?.username || 'Unknown'}
-                            </p>
+                            )}
+                            {(!selectedOccurrence || selectedOccurrence._id !== occurrence._id || selectedOccurrence.user_id?._id !== user.id) && (
+                              <>
+                                <br />
+                                <p className="mt-1">
+                                  <strong>Reported by: </strong>
+                                  {occurrence.user_id?.username || 'Unknown'}
+                                </p>
+                              </>
+                            )}
+                          </p>
+                          {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id?._id === user.id) ? (
+                            <>
+                              <p className="mt-1">
+                                <strong>Description:</strong>
+                              </p>
+                              <textarea
+                                value={editedOccurrence.description}
+                                onChange={(e) => setEditedOccurrence({ ...editedOccurrence, description: e.target.value })}
+                                className="w-full p-2 border rounded mb-2"
+                              />
+                            </>
+                          ) : (
                             <p className="mt-1">
                               <strong>Description:</strong> {occurrence.description}
                             </p>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Occurrence edit section */}
-                {selectedOccurrence && (
-                  <div className="occurrence-edit mt-4">
-                    {user.id === selectedOccurrence.user_id._id && (
-                      <>
-                        <textarea
-                          value={editedOccurrence}
-      
-                          onChange={(e) => setEditedOccurrence(e.target.value)}
-                          className="w-full p-2 border rounded mb-2"
-                        />
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => handleEditOccurrence(selectedOccurrence)}
-                            className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                          >
-                            Save Occurrence
-                          </button>
-                          <button
-                            onClick={() => setSelectedOccurrence(null)}
-                            className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                          >
-                            Cancel
-                          </button>
-                          {(isAdmin || user.id === selectedOccurrence.user_id) && (
-                            <button
-                              onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                              className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                            >
-                              Delete Occurrence
-                            </button>
                           )}
                         </div>
-                      </>
-                    )}
-
-                    {user.id !== selectedOccurrence.user_id && (isAdmin || user.id === selectedOccurrence.user_id) && (
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleDeleteOccurrence(selectedOccurrence)}
-                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                        >
-                          Delete Occurrence
-                        </button>
+                        {(selectedOccurrence && selectedOccurrence._id === occurrence._id) ? (
+                          <div className="flex flex-col items-center space-y-2">
+                            {selectedOccurrence?.user_id === user.id ? (
+                              <button
+                                onClick={() => handleEditOccurrence(occurrence)}
+                                className="p-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                                title="Save"
+                              >
+                                <CheckIcon className="w-5 h-5" />
+                              </button>
+                            ) : null}
+                            <button
+                              onClick={() => setSelectedOccurrence(null)}
+                              className="p-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                              title="Cancel"
+                            >
+                              <XMarkIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => promptDeleteOccurrence(occurrence)}
+                              className="p-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                              title="Delete"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
-                    )}
-                  </div>
-                )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                {/* New occurrence input */}
-                <>
-                  <textarea
-                    placeholder="Add new occurrence"
-                    value={newOccurrence}
-                    onChange={(e) => setNewOccurrence(e.target.value)}
-                    className="new-occurrence-input"
+              {/* Add new occurrence section */}
+              <div className="mt-6 p-4 bg-gray-50 border rounded-lg shadow-md">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Add a New Occurrence</h3>
+
+                {/* Date/Time Picker */}
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Occurrence Date and Time:</label>
+                  <input
+                    type="datetime-local"
+                    value={newOccurrence?.time || ''}
+                    onChange={(e) => setNewOccurrence({ ...newOccurrence, time: e.target.value })}
+                    max={new Date().toISOString().slice(0, 16)}
+                    className="w-full p-2 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-100 transition"
                   />
-                  <button
-                    onClick={handleAddOccurrence}
-                    className="add-occurrence-button"
-                  >
-                    Add Occurrence
-                  </button>
-                </>
+                </div>
 
-                {/* Attachments section */}
-                <div className="mt-4">
+                {/* Occurrence Text Area */}
+                <textarea
+                  value={newOccurrence?.description || ''}
+                  onChange={(e) => setNewOccurrence({ ...newOccurrence, description: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-100 transition"
+                  placeholder="Describe the occurrence..."
+                />
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-2">
+                  {newOccurrence && newOccurrence.description?.trim() && newOccurrence.time && (
+                    <button
+                      onClick={handleAddOccurrence}
+                      className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition flex items-center"
+                    >
+                      <CheckIcon className="w-4 h-4 mr-1" />
+                      Add Occurrence
+                    </button>
+                  )}
+                  {newOccurrence ? (
+                    <button
+                      onClick={() => {
+                        setNewOccurrence(null);
+                      }}
+                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition flex items-center"
+                    >
+                      <XMarkIcon className="w-4 h-4 mr-1" />
+                      Discard
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Attachments section */}
+              <div className="mt-4">
+                {attachmentError || attachments.length > 0 ? (
                   <h2 className="text-xl font-bold mb-2">Attachments</h2>
-                  {attachmentError && <p className="text-red-500">{attachmentError}</p>}
-                  {!attachmentError && attachments.length === 0 && <p>No attachments found.</p>}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {attachments.map((attachment) => (
-                      <div key={attachment._id} className="relative group">
+                ) : null}
+                {attachmentError && <p className="text-red-500">{attachmentError}</p>}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {attachments.map((attachment) => (
+                    <div className="hover:bg-gray-200 rounded-md h-40 flex items-center justify-center relative overflow-hidden group">
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        {/* <div
+                          className="absolute inset-0 bg-cover bg-center filter blur-lg opacity-0 group-hover:opacity-100"
+                          style={{ backgroundImage: `url(${attachment.signedUrl})` }}
+                        ></div> */}
                         <img
                           src={attachment.signedUrl}
-                          alt={attachment.title}
-                          className="w-full h-40 object-cover rounded-lg"
+                          alt="Attachment"
+                          className="relative rounded-md object-contain max-h-full max-w-full cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleImageClick(attachment.signedUrl);
+                          }}
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
-                          <div>
-                            <button
-                              onClick={() => handlePreviewImage(attachment.signedUrl)}
-                              className="absolute top-1 right-10 bg-blue-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                              title="View attachment"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                transform="rotate(-45)"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                                />
-                              </svg>
-                            </button>
-                            {(isAdmin || user.id === attachment.user_id) && (
-                              <button
-                                onClick={() => handleDeleteAttachment(attachment._id)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                                title="Delete attachment"
-                              >
-                                &times;
-                              </button>
-                            )}
-                          </div>
+                      </div>
+                      {(isAdmin || user.id === attachment.user_id) && (
+                        <div className="absolute top-1 right-1 flex space-x-2 bg-gray-300 bg-opacity-0 rounded-full p-1 group-hover:bg-opacity-50 hover:bg-opacity-100">
+                          <button
+                            onClick={() => promptDeleteAttachment(attachment._id)}
+                            title="Delete attachment"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {previewImage && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
-                        <img
-                          src={previewImage}
-                          alt="Preview"
-                          className="max-w-full max-h-full"
-                        />
-                        <button
-                          onClick={() => setPreviewImage(null)}
-                          className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
-                        >
-                          &times;
-                        </button>
-                      </div>
+                      )}
                     </div>
-                  )}
+                  ))}
+                </div>
 
-                  {/* File upload input */}
-                  <div className="mt-4">
-                    <h2 className="text-xl font-bold mb-2">Upload Attachments</h2>
-                    <div
-                      className={`mb-4 p-4 h-32 border-2 ${
-                        isDragging ? 'border-primary' : 'border-secondary'
-                      } border-dashed rounded cursor-pointer flex justify-center items-center`}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current.click()} // Use the ref to trigger click
-                    >
-                      <p className="text-sm text-gray-500">
-                      {images.length > 0 
+                {/* File upload input */}
+                <div className="mt-4">
+                  <h2 className="text-lg font-bold mb-2">Upload Attachments</h2>
+                  <div
+                    className={`mb-4 p-4 h-32 border-2 ${
+                      isDragging ? 'border-primary' : 'border-secondary'
+                    } border-dashed rounded cursor-pointer flex justify-center items-center`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('fileInput').click()}
+                  >
+                    <p className="text-sm text-gray-500">
+                      {images.length > 0
                         ? `${images.length} file(s) selected`
                         : (
                           <>
-                            {/* Show this text on small screens */}
-                            <span className="block sm:hidden">Click to select image</span>
-                            {/* Show this text on larger screens */}
+                            <span className="block sm:hidden">Tap to select files</span>
                             <span className="hidden sm:block">Drag & drop images here, or click to select</span>
                           </>
                         )}
-                      </p>
-                    </div>
-                    <input
-                      id="fileInput"
-                      ref={fileInputRef} // Attach the ref to the file input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => handleImageSelection(Array.from(e.target.files))}
-                      className="hidden"
-                    />
-                    {imagePreviews.length > 0 && (
-                      <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {imagePreviews.map((preview, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index}`}
-                              className="w-full h-40 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
-                              onClick={() => handleRemoveImage(index)}
-                            >
-                              &times;
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {images.length > 0 && (
-                      <div className="flex justify-start space-x-2">
-                        <button
-                          onClick={handleFileUpload}
-                          className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        >
-                          Upload Selected Files
-                        </button>
-                        <button
-                          onClick={() => {
-                            setImages([]);
-                            setImagePreviews([]);
-                          }}
-                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
+                    </p>
                   </div>
-                </div>
-
-                {/* Comments section */}
-                <div className="mt-4">
-                  <h2 className="text-xl font-bold mb-2">Comments</h2>
-                  <ul className="comments-list">
-                    {(detailedIssue.comments || []).map((comment) => (
-                      <li
-                        key={comment._id}
-                        className={`comment-item mb-4 ${
-                          isAdmin || user.id === comment.user_id._id
-                            ? 'bg-blue-50 border-l-4 border-blue-500 hover:bg-blue-100'
-                            : 'bg-gray-50 border-l-4 border-gray-300'
-                        }`}
-                      >
-                        <div
-                          className="p-3 rounded-lg shadow-sm cursor-pointer transition-all duration-200 hover:bg-opacity-80"
-                          onClick={() => handleSelectComment(comment)}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm text-gray-600">
-                                <strong>Created at: </strong>
-                                <span
-                                  title={
-                                    comment.created_at
-                                      ? new Date(comment.created_at).toLocaleString()
-                                      : ''
-                                  }
-                                >
-                                  {comment.created_at
-                                    ? formatSmartDate(comment.created_at)
-                                    : 'N/A'}
-                                </span>
-                                <br />
-                                <strong>Commented by: </strong>
-                                {comment.user_id?.username || 'Unknown User'}
-
-                              </p>
-                              <p className="mt-1">
-                                <strong>Comment:</strong> {comment.comment_text}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Comment edit section */}
-                {selectedComment && (
-                  <div className="comment-edit mt-4">
-                    {user.id === selectedComment.user_id._id && (
-                      <>
-                        <textarea
-                          value={editedComment}
-                          onChange={(e) => setEditedComment(e.target.value)}
-                          className="w-full p-2 border rounded mb-2"
-                        />
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => handleEditComment(selectedComment)}
-                            className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                          >
-                            Save Comment
-                          </button>
-                          <button
-                            onClick={() => setSelectedComment(null)}
-                            className="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                          >
-                            Cancel
-                          </button>
-                          {(isAdmin || user.id === selectedComment.user_id._id) && (
-                            <button
-                              onClick={() => handleDeleteComment(selectedComment)}
-                              className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                            >
-                              Delete Comment
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {user.id !== selectedComment.user_id && (isAdmin || user.id === selectedComment.user_id._id) && (
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleDeleteComment(selectedComment)}
-                          className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                        >
-                          Delete Comment
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Add new comment section */}
-                <div className="mt-4">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full p-2 border rounded mb-2"
-                    placeholder="Add a new comment..."
+                  <input
+                    id="fileInput"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleImageSelection(Array.from(e.target.files))}
+                    className="hidden"
                   />
-                  <button
-                    onClick={handleAddComment}
-                    className="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    Add Comment
-                  </button>
+                  {imagePreviews.length > 0 && (
+                    <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index}`}
+                            className="w-full h-40 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex justify-center items-center opacity-0 group-hover:opacity-100"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {images.length > 0 && (
+                    <div className="flex justify-start space-x-2">
+                      <button
+                        onClick={handleFileUpload}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      >
+                        Upload Selected Files
+                      </button>
+                      <button
+                        onClick={() => {
+                          setImages([]);
+                          setImagePreviews([]);
+                        }}
+                        className="px-3 py-1 bg-red-500 text-white text-sm font-medium rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-              {/* Issue sidebar with metadata */}
-              <div className="issue-sidebar">
-                <div className="issue-meta">
-                  <p>
-                  <strong>Reported by:</strong>{" "}
-                  {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
-                  </p>
-                   
-                  
-                  {editMode ? (
-                    <>
-                      <div>
-                        <strong>Created at:</strong>{" "}
-                        <input
-                          type="datetime-local"
-                          value={detailedIssue.created_at ? detailedIssue.created_at.slice(0, 16) : ''}
-                          onChange={(e) => setDetailedIssue({...detailedIssue, created_at: e.target.value})}
+
+              {/* Comments section */}
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Comments</h2>
+                <ul className="comments-list">
+                  {(originalIssue.comments || []).map((comment) => (
+                    <li
+                      key={comment._id}
+                      className="comment-item mb-4 p-4 bg-white border rounded-lg shadow-md flex items-start space-x-4 transition-all duration-200"
+                    >
+                      {/* User Icon */}
+                      <div className="w-10 h-10 flex-shrink-0">
+                        <img
+                          src={GetUserAvatar(comment.user_id?._id)}
+                          alt="User Avatar"
+                          className="w-10 h-10 rounded-full object-cover"
                         />
                       </div>
-                      <div>
-                        <strong>Updated at:</strong>{" "}
-                        <input
-                          type="datetime-local"
-                          value={detailedIssue.updated_at ? detailedIssue.updated_at.slice(0, 16) : ''}
-                          onChange={(e) => setDetailedIssue({...detailedIssue, updated_at: e.target.value})}
-                        />
+
+                      {/* Comment Content */}
+                      <div className="flex-grow">
+                        {/* User name and comment date */}
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                          <span className="font-semibold text-gray-800 truncate">
+                            {comment.user_id?.username || 'Unknown User'}
+                          </span>
+                          {comment.created_at ? (
+                            <span
+                              className="text-sm text-gray-500 truncate sm:ml-2"
+                              title={comment.created_at ? new Date(comment.created_at).toLocaleString() : ''}
+                            >
+                              {formatSmartDate(comment.created_at)}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Comment text */}
+                        {editedComment?._id === comment._id ? (
+                          <textarea
+                            value={editedComment.comment_text}
+                            onChange={(e) => setEditedComment({ ...editedComment, comment_text: e.target.value })}
+                            className="w-full p-2 border rounded mb-2"
+                          />
+                        ) : (
+                          <p className="mt-2 text-gray-700">
+                            {comment.comment_text}
+                          </p>
+                        )}
+
+                        {/* Edit/Delete actions for admins or comment owners */}
+                        {(isAdmin || user.id === comment.user_id?._id) && (
+                          <>
+                            {editedComment?._id === comment._id ? (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditComment(comment)}
+                                  className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditedComment(null)}
+                                  className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="mt-2 flex space-x-2">
+                                {user.id === comment.user_id?._id && (
+                                  <button
+                                    onClick={() => handleSelectComment(comment)}
+                                    className="text-blue-500 text-sm hover:underline"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => promptDeleteComment(comment)}
+                                  className="text-red-500 text-sm hover:underline"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <p>
-                        <strong>Created at:</strong>{" "}
-                        <span
-                          title={detailedIssue.created_at ? new Date(detailedIssue.created_at).toLocaleString() : ''}
-                        >
-                          {detailedIssue.created_at ? formatSmartDate(detailedIssue.created_at) : 'N/A'}
-                        </span>
-                      </p>
-                      <p>
-                        <strong>Updated at:</strong>{" "}
-                        <span
-                          title={detailedIssue.updated_at ? new Date(detailedIssue.updated_at).toLocaleString() : ''}
-                        >
-                          {detailedIssue.updated_at ? formatSmartDate(detailedIssue.updated_at) : 'N/A'}
-                        </span>
-                      </p>
-                    </>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Add new comment section */}
+              <div className="mt-6 p-4 bg-gray-50 border rounded-lg shadow-md">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Add a New Comment</h3>
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg mb-2 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-100 transition"
+                  placeholder="Write your comment here..."
+                />
+                <div className="flex justify-end space-x-2">
+                  {newComment.trim() && (
+                    <button
+                      onClick={handleAddComment}
+                      className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition flex items-center"
+                    >
+                      <PaperAirplaneIcon className="w-5 h-5 mr-2" />
+                      Send
+                    </button>
+                  )}
+                  {newComment.trim() && (
+                    <button
+                      onClick={() => setNewComment('')}
+                      className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition flex items-center"
+                    >
+                      <XMarkIcon className="w-5 h-5 mr-2" />
+                      Discard
+                    </button>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-          <div className="items-center px-4 py-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-        {toast && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 max-w-sm w-full">
-              <p
-                className={`text-center mb-4 ${
-                  toast.type === "success"
-                    ? "text-green-600"
-                    : toast.type === "error"
-                    ? "text-red-600"
-                    : toast.type === "warning"
-                    ? "text-yellow-600"
-                    : "text-blue-600"
-                }`}
-              >
-                {toast.message}
-              </p>
-              {toast.onConfirm ? (
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => {
-                      toast.onConfirm();
-                      setToast(null);
-                    }}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    onClick={() => setToast(null)}
-                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
+            {/* Issue sidebar with metadata */}
+            <div className="issue-sidebar mt-4 md:mt-0 md:ml-4">
+              <div className="issue-meta">
+                <p className="md:mb-4">
+                  <strong>Reported by: </strong>{" "}
+                  <span className="inline md:block">
+                    {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
+                  </span>
+                </p>
+
+                <div>
+                  <p className="md:mb-4">
+                    <strong>Created at:</strong>{" "}
+                    <span
+                      title={originalIssue.created_at ? new Date(originalIssue.created_at).toLocaleString() : ''}
+                      className="inline md:block"
+                    >
+                      {originalIssue.created_at ? formatSmartDate(originalIssue.created_at) : 'N/A'}
+                    </span>
+                  </p>
+                  <p className="md:mb-4">
+                    <strong>Updated at:</strong>{" "}
+                    <span
+                      title={originalIssue.updated_at ? new Date(originalIssue.updated_at).toLocaleString() : ''}
+                      className="inline md:block"
+                    >
+                      {originalIssue.updated_at ? formatSmartDate(originalIssue.updated_at) : 'N/A'}
+                    </span>
+                  </p>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setToast(null)}
-                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  OK
-                </button>
-              )}
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
+      {toast && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <p
+              className={`text-center mb-4 ${
+                toast.type === "success"
+                  ? "text-green-600"
+                  : toast.type === "error"
+                  ? "text-red-600"
+                  : toast.type === "warning"
+                  ? "text-yellow-600"
+                  : "text-blue-600"
+              }`}
+            >
+              {toast.message}
+            </p>
+            {toast.onConfirm ? (
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    toast.onConfirm();
+                    setToast(null);
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setToast(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setToast(null)}
+                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                OK
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default forwardRef(IssueView);

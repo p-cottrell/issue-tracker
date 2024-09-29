@@ -9,11 +9,11 @@ const mongoose = require('mongoose');
  * Occurrence Management Routes
  *
  * This module defines routes for creating, retrieving, and deleting occurrences
- * associated with specific issues. Each route uses JWT-based authentication to 
+ * associated with specific issues. Each route uses JWT-based authentication to
  * ensure that only authorized users can interact with the occurrences.
  *
- * IMPORTANT: `authenticateToken` middleware authenticates using cookies, so when 
- * calling the API from the front-end, you must use `{ withCredentials: true }` to 
+ * IMPORTANT: `authenticateToken` middleware authenticates using cookies, so when
+ * calling the API from the front-end, you must use `{ withCredentials: true }` to
  * ensure authentication cookies are passed.
  */
 
@@ -22,7 +22,7 @@ const mongoose = require('mongoose');
  *
  * This route allows an authenticated user to add a new occurrence to an existing issue.
  * The issue is identified by `issueId`, and the occurrence details are provided in the request body.
- * The occurrence is associated with the authenticated user's ID and appended to the issue's 
+ * The occurrence is associated with the authenticated user's ID and appended to the issue's
  * `occurrences` array.
  *
  * @name POST /:issueId
@@ -90,8 +90,8 @@ router.post('/:issueId', authenticateToken, async (req, res) => {
 /**
  * Route to retrieve all occurrences for a specific issue
  *
- * This route allows an authenticated user to retrieve all occurrences associated 
- * with a specific issue. The issue is identified by `issueId`, and the occurrences 
+ * This route allows an authenticated user to retrieve all occurrences associated
+ * with a specific issue. The issue is identified by `issueId`, and the occurrences
  * are returned in the response.
  *
  * @name GET /issues/:id/occurrences
@@ -121,7 +121,7 @@ router.get('/issues/:id/occurrences', authenticateToken, async (req, res) => {
 /**
  * Route to delete a specific occurrence from an issue
  *
- * This route allows an authenticated user to delete a specific occurrence from an 
+ * This route allows an authenticated user to delete a specific occurrence from an
  * issue. The issue is identified by `issueId` and the occurrence by `occurrenceId`.
  * Only the user who created the occurrence or an admin can delete it.
  *
@@ -149,8 +149,6 @@ router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => 
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    
-
     res.status(200).json(updatedIssue);
   } catch (error) {
     console.error('Error deleting occurrence:', error);
@@ -163,12 +161,12 @@ router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => 
  *
  * This route allows an authenticated user to update the description of a specific occurrence
  * within an issue. The issue is identified by `issueId` and the occurrence by `occurrenceId`.
- * The updated description is provided in the request body.
+ * The updated description and created_at are provided in the request body.
  *
  * @name PUT /:issueId/:occurrenceId
  * @function
  * @memberof module:routes/occurrences
- * @param {Object} req.body - The updated occurrence data (description).
+ * @param {Object} req.body - The updated occurrence data (description, created_at).
  * @param {Object} res - The response object.
  * @throws {404} - If the issue or occurrence is not found.
  * @throws {500} - If an error occurs while updating the occurrence.
@@ -177,16 +175,27 @@ router.delete('/:issueId/:occurrenceId', authenticateToken, async (req, res) => 
 router.put('/:issueId/:occurrenceId', authenticateToken, async (req, res) => {
   try {
     const { issueId, occurrenceId } = req.params;
-    const { description } = req.body;
+    const { description, created_at } = req.body;
+
+    // Check if the provided created_at date is in the future
+    if (created_at && new Date(created_at) > new Date()) {
+      return res.status(400).json({ message: 'created_at date cannot be in the future' });
+    }
 
     // Update the specific occurrence using $set operator
+    const updateFields = {
+      'occurrences.$.description': description,
+      'occurrences.$.updated_at': Date.now()
+    };
+
+    if (created_at) {
+      updateFields['occurrences.$.created_at'] = created_at;
+    }
+
     const updatedIssue = await Issue.findOneAndUpdate(
       { _id: issueId, 'occurrences._id': occurrenceId },
-      { 
-        $set: { 
-          'occurrences.$.description': description,
-          'occurrences.$.updated_at': Date.now()
-        } 
+      {
+        $set: updateFields
       },
       { new: true, runValidators: false }
     );
@@ -199,9 +208,9 @@ router.put('/:issueId/:occurrenceId', authenticateToken, async (req, res) => {
       occ => occ._id.toString() === occurrenceId
     );
 
-    res.json({ 
-      message: 'Occurrence updated successfully', 
-      occurrence: updatedOccurrence 
+    res.json({
+      message: 'Occurrence updated successfully',
+      occurrence: updatedOccurrence
     });
   } catch (error) {
     console.error('Error updating occurrence:', error);

@@ -7,7 +7,7 @@ import LogoutConfirmation from './LogoutConfirmation';
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { openModal } = useModal();
+    const { openModal, closeModal } = useModal();
 
     const handleLogoutClick = () => {
         openModal(
@@ -20,10 +20,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         console.error('Error logging out:', error);
                         // TODO: Handle the error (e.g., show an error message)
                     } finally {
-                        openModal(null);
+                        closeModal();
                     }
                 }}
-                onCancel={() => openModal(null)}
+                onCancel={() => closeModal()}
             />
         , false);
     };

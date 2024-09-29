@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { Bars3Icon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';
-import Logo from '../../components/Logo';
 import apiClient from '../../api/apiClient';
+import Logo from '../../components/Logo';
 import PasswordRules from '../../components/PasswordRules';
+import Sidebar from '../../components/Sidebar';
 import { useUser } from '../../context/UserContext';
+import { GetUserAvatar } from '../../helpers/UserHelpers';
 
 /**
  * Profile component: Displays and manages user profile information,
@@ -32,6 +34,9 @@ const Profile = () => {
   const [isUsernameEditVisible, setUsernameEditVisible] = useState(false);
   const [isPasswordEditVisible, setPasswordEditVisible] = useState(false);
 
+  // State to store the edited username (used to separate from userData, so we aren't updating the username in the side panel in real-time)
+  const [editedUsername, setEditedUsername] = useState('');
+
   // State to handle the sidebar's open/close status
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -43,7 +48,7 @@ const Profile = () => {
   // Password-related states for rules and validation
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  // New state for dark mode setting
+  // State for dark mode setting
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch user data from the global UserContext
@@ -55,6 +60,7 @@ const Profile = () => {
       try {
         const response = await apiClient.get('api/users/me');
         setUserData(response.data);
+        setEditedUsername(response.data.username);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -92,18 +98,19 @@ const Profile = () => {
    * Validates the username and sends the new username to the API.
    */
   const handleUsernameChange = async () => {
-    if (!userData.username.trim()) {
+    if (!editedUsername.trim()) {
       setErrors({ username: 'Username cannot be empty.' });
       return;
     }
 
     try {
-      const response = await apiClient.put('api/users/update-username', { username: userData.username });
+      const response = await apiClient.put('api/users/update-username', { username: editedUsername });
 
       if (response.data.success) {
         setSuccessMessage('Username updated successfully.');
         setErrors({});
-        setUsernameEditVisible(false); // Hide the username edit form
+        setUserData({ ...userData, username: editedUsername });
+        setUsernameEditVisible(false);
       } else {
         setErrors({ username: 'Failed to update username.' });
       }
@@ -171,6 +178,7 @@ const Profile = () => {
 
   const toggleUsernameEdit = () => {
     setUsernameEditVisible((prev) => !prev); // Switch between showing and hiding the form
+    setEditedUsername(userData.username);
   };
 
   const togglePasswordEdit = () => {
@@ -178,6 +186,7 @@ const Profile = () => {
   };
 
   const cancelUsernameEdit = () => {
+    setEditedUsername(userData.username);
     setUsernameEditVisible(false); // Simply hides the form
   };
 
@@ -225,16 +234,35 @@ const Profile = () => {
     }
   }, [user.id]);
 
+  const handleInProgressIssuesClick = () => {
+    localStorage.setItem('statusFilter', JSON.stringify([2])); // Set to show 'In Progress' in 'My Issues'
+    localStorage.setItem('filterType', 'myIssues');
+    navigate('/dashboard');
+  }
+
+  const handleClosedIssuesClick = () => {
+    localStorage.setItem('statusFilter', JSON.stringify([1])); // Set to show 'Closed' in 'My Issues'
+    localStorage.setItem('filterType', 'myIssues');
+    navigate('/dashboard');
+  }
+
+  const handleTotalIssuesClick = () => {
+    localStorage.setItem('statusFilter', JSON.stringify([])); // Set to show all issues in 'My Issues'
+    localStorage.setItem('filterType', 'myIssues');
+    navigate('/dashboard');
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-dark">
+    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
       <header className="relative bg-primary shadow p-4 flex items-center justify-between">
+        {/* Left: Logo and Hamburger */}
         <div>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden"
           >
-            <span className="text-lg font-bold">☰</span>
+            <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
             <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
@@ -250,7 +278,7 @@ const Profile = () => {
             {/* Profile Section */}
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <img
-                src="https://i.pravatar.cc/150"
+                src={GetUserAvatar(user.id)}
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto mb-4"
               />
@@ -260,9 +288,24 @@ const Profile = () => {
               )}
               <p className="text-lg mb-2">{userData.email}</p>
               <ul className="mt-4 space-y-2 text-center">
-                <li className="text-gray-700">Issues in progress: <span className="text-green-500">{issuesInProgress}</span></li>
-                <li className="text-gray-700">Issues closed: <span className="text-red-500">{issuesClosed}</span></li>
-                <li className="text-gray-700">Total issues: <span className="text-gray-500">{totalIssues}</span></li>
+                <li
+                  className="text-gray-700 cursor-pointer hover:underline"
+                  onClick={handleInProgressIssuesClick}
+                >
+                  Issues in progress: <span className="text-green-500">{issuesInProgress}</span>
+                </li>
+                <li
+                  className="text-gray-700 cursor-pointer hover:underline"
+                  onClick={handleClosedIssuesClick}
+                >
+                  Issues closed: <span className="text-red-500">{issuesClosed}</span>
+                </li>
+                <li
+                  className="text-gray-700 cursor-pointer hover:underline"
+                  onClick={handleTotalIssuesClick}
+                >
+                  Total issues: <span className="text-gray-500">{totalIssues}</span>
+                </li>
               </ul>
             </div>
 
@@ -276,18 +319,18 @@ const Profile = () => {
                   <label className="block text-gray-700 px-2">Username</label>
                   <input
                     type="text"
-                    value={userData.username}
+                    value={editedUsername}
                     className="w-full mt-1 p-2 border rounded-lg"
-                    onChange={(e) => setUserData({ ...userData, username: e.target.value })}
+                    onChange={(e) => setEditedUsername(e.target.value)}
                   />
                   <div className="grid grid-cols-2 gap-4 mt-4">
-                    <button onClick={handleUsernameChange} className="bg-primary text-white py-2 rounded-lg w-full">Save</button>
-                    <button onClick={cancelUsernameEdit} className="bg-red-500 text-white py-2 rounded-lg w-full">Cancel</button>
+                    <button onClick={handleUsernameChange} className="bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Save</button>
+                    <button onClick={cancelUsernameEdit} className="bg-red-500 text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <div className="w-full sm:w-2/3">
-                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full">Update Username</button>
+                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Username</button>
                 </div>
               )}
 
@@ -326,13 +369,13 @@ const Profile = () => {
                     </div>
 
                     <div className="col-span-1 sm:col-span-2 flex justify-center mt-2 space-x-4">
-                      <button onClick={handlePasswordChange} className="bg-primary text-white py-2 px-6 rounded-lg w-1/2">Save</button>
-                      <button onClick={cancelPasswordEdit} className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2">Cancel</button>
+                      <button onClick={handlePasswordChange} className="bg-primary text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Save</button>
+                      <button onClick={cancelPasswordEdit} className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full">
-                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary text-white py-2 rounded-lg w-full">Update Password</button>
+                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Password</button>
                   </div>
                 )}
               </div>
@@ -340,7 +383,7 @@ const Profile = () => {
               {/* Theme Settings */}
               <div className="w-full sm:w-2/3 mt-8">
               <h3 className="text-2xl font-bold mb-6 text-center">Theme Settings</h3>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between transition-transform transform hover:scale-105">
                   <span className="text-dark dark:text-neutral">Dark Mode</span>
                   <button
                     onClick={handleThemeToggle}
