@@ -395,17 +395,31 @@ const DataVisualisation = () => {
 
     try {
       const dataUrl = await toPng(chartElement);
-      const pdf = new jsPDF();
-      const imgProps = pdf.getImageProperties(dataUrl);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const img = new Image();
+      img.src = dataUrl;
 
-      pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
-      const blob = pdf.output('blob');
-      const writable = await fileHandle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      alert('Chart exported successfully!');
+      img.onload = async () => {
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+
+        // Determine orientation: if the image is wider than tall, use landscape
+        const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation });
+
+        // Get PDF dimensions
+        const pdfWidth = orientation === 'landscape' ? pdf.internal.pageSize.getHeight() : pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
+
+        // Add image to the PDF
+        pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+
+        // Export PDF
+        const blob = pdf.output('blob');
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        alert('Chart exported successfully!');
+      };
     } catch (err) {
       console.error('Error exporting to PDF:', err);
     } finally {
