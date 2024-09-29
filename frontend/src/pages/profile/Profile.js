@@ -233,6 +233,24 @@ const Profile = () => {
     }
   }, [user.id]);
 
+  const handleInProgressIssuesClick = () => {
+    localStorage.setItem('statusFilter', JSON.stringify([2])); // Set to show 'In Progress' in 'My Issues'
+    localStorage.setItem('filterType', 'myIssues');
+    navigate('/dashboard');
+  }
+
+  const handleClosedIssuesClick = () => {
+    localStorage.setItem('statusFilter', JSON.stringify([1])); // Set to show 'Closed' in 'My Issues'
+    localStorage.setItem('filterType', 'myIssues');
+    navigate('/dashboard');
+  }
+
+  const handleTotalIssuesClick = () => {
+    localStorage.setItem('statusFilter', JSON.stringify([])); // Set to show all issues in 'My Issues'
+    localStorage.setItem('filterType', 'myIssues');
+    navigate('/dashboard');
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
@@ -268,9 +286,24 @@ const Profile = () => {
               )}
               <p className="text-lg mb-2">{userData.email}</p>
               <ul className="mt-4 space-y-2 text-center">
-                <li className="text-gray-700">Issues in progress: <span className="text-green-500">{issuesInProgress}</span></li>
-                <li className="text-gray-700">Issues closed: <span className="text-red-500">{issuesClosed}</span></li>
-                <li className="text-gray-700">Total issues: <span className="text-gray-500">{totalIssues}</span></li>
+                <li
+                  className="text-gray-700 cursor-pointer hover:underline"
+                  onClick={handleInProgressIssuesClick}
+                >
+                  Issues in progress: <span className="text-green-500">{issuesInProgress}</span>
+                </li>
+                <li
+                  className="text-gray-700 cursor-pointer hover:underline"
+                  onClick={handleClosedIssuesClick}
+                >
+                  Issues closed: <span className="text-red-500">{issuesClosed}</span>
+                </li>
+                <li
+                  className="text-gray-700 cursor-pointer hover:underline"
+                  onClick={handleTotalIssuesClick}
+                >
+                  Total issues: <span className="text-gray-500">{totalIssues}</span>
+                </li>
               </ul>
             </div>
 

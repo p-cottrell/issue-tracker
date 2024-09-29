@@ -53,7 +53,7 @@ const Dashboard = () => {
   const [filteredIssues, setFilteredIssues] = useState([]); // Issues filtered based on search term or filter type
   const [updateTrigger, setUpdateTrigger] = useState(0); // Trigger to force re-fetch of issues
   const [filterType, setFilterType] = useState(localStorage.getItem('filterType') || 'all'); // Filter type for issues, initialized from localStorage
-  const [statusFilter, setStatusFilter] = useState([]); // State for the status filter
+  const [statusFilter, setStatusFilter] = useState(JSON.parse(localStorage.getItem('statusFilter')) || []); // State for the status filter
   const { user } = useUser(); // Fetch authenticated user data from the context
   const [layoutType, setLayoutType] = useState(localStorage.getItem('layoutType') || 'masonry'); // Layout type for displaying issues - masonry, grid, or list
   const [isLayoutDropdownOpen, setIsLayoutDropdownOpen] = useState(false); // State to control visibility of the layout dropdown
@@ -235,6 +235,7 @@ const Dashboard = () => {
   const handleStatusFilterChange = (selectedOptions) => {
     const selectedStatuses = selectedOptions.map(option => option.value);
     setStatusFilter(selectedStatuses);
+    localStorage.setItem('statusFilter', JSON.stringify(selectedStatuses));
   };
 
   useEffect(() => {
