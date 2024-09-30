@@ -29,6 +29,7 @@ const TiptapToolbar = ({ editor }) => {
         <>
             <div className="btn-group">
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     className={`btn btn-left ${editor.isActive('bold') ? 'btn-active' : ''}`}
                     title="Bold"
@@ -36,6 +37,7 @@ const TiptapToolbar = ({ editor }) => {
                     <BoldIcon className="w-6 h-6" />
                 </button>
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                     className={`btn btn-middle ${editor.isActive('italic') ? 'btn-active' : ''}`}
                     title="Italic"
@@ -43,6 +45,7 @@ const TiptapToolbar = ({ editor }) => {
                     <ItalicIcon className="w-6 h-6" />
                 </button>
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleUnderline().run()}
                     className={`btn btn-right ${editor.isActive('underline') ? 'btn-active' : ''}`}
                     title="Underline"
@@ -52,6 +55,7 @@ const TiptapToolbar = ({ editor }) => {
             </div>
             <div className="btn-group">
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
                     className={`btn btn-left ${editor.isActive('blockquote') ? 'btn-active' : ''}`}
                     title="Blockquote"
@@ -59,6 +63,7 @@ const TiptapToolbar = ({ editor }) => {
                     <ChatBubbleBottomCenterTextIcon className="w-6 h-6" />
                 </button>
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
                     className={`btn btn-middle ${editor.isActive('bulletList') ? 'btn-active' : ''}`}
                     title="Bullet List"
@@ -66,6 +71,7 @@ const TiptapToolbar = ({ editor }) => {
                     <ListBulletIcon className="w-6 h-6" />
                 </button>
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleOrderedList().run()}
                     className={`btn btn-right ${editor.isActive('orderedList') ? 'btn-active' : ''}`}
                     title="Ordered List"
@@ -75,6 +81,7 @@ const TiptapToolbar = ({ editor }) => {
             </div>
             <div className="btn-group">
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                     className={`btn btn-left ${editor.isActive('heading', { level: 1 }) ? 'btn-active' : ''}`}
                     title="Heading 1"
@@ -82,6 +89,7 @@ const TiptapToolbar = ({ editor }) => {
                     <H1Icon className="w-6 h-6" />
                 </button>
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     className={`btn btn-right ${editor.isActive('heading', { level: 2 }) ? 'btn-active' : ''}`}
                     title="Heading 2"
@@ -91,6 +99,7 @@ const TiptapToolbar = ({ editor }) => {
             </div>
             <div className="btn-group">
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().toggleLink({ href: prompt('Enter the URL') }).run()}
                     className={`btn ${editor.isActive('link') ? 'btn-active' : ''}`}
                     title="Link"
@@ -106,6 +115,7 @@ const TiptapToolbar = ({ editor }) => {
             <div ref={toolbarRef} className="tiptap-toolbar flex space-x-2 bg-gray-100 p-2 rounded-tl rounded-tr overflow-hidden">
                 {isOverflow ? (
                     <button
+                        type="button"
                         onClick={() => setShowMenu(!showMenu)}
                         className="btn"
                         title="More"
