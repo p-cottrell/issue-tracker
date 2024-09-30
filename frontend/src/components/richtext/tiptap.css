@@ -150,3 +150,11 @@
 .tiptap-content a:visited {
     color: #7a3ff1;
 }
+
+.button-group {
+    padding: 0.5rem; /* Equivalent to m-2 */
+}
+
+.overflow-button:not(:first-child) {
+    margin-left: 0.5rem; /* Equivalent to space-x-2 */
+}
