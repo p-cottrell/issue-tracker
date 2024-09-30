@@ -86,7 +86,7 @@ The dashboard provides an overview of all your tracked issues, while detailed vi
 
 ## Database Documentation
 
-For more details on the database design and how to extend it, refer to the [Full API Documentation](https://github.com/p-cottrell/issue-tracker/blob/main/db/README.md).
+For more details on the database design and how to extend it, refer to the [Full Database Documentation](https://github.com/p-cottrell/issue-tracker/blob/main/db/README.md).
 
 
 ## API Documentation
