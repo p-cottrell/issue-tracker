@@ -518,7 +518,7 @@ const DataVisualisation = () => {
           <div className="flex flex-col space-y-4">
 
             {/* Filters and Export Button */}
-            <div className="flex flex-wrap justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4">
               {/* Filters Parent */}
               <div className="flex-grow flex space-x-4 justify-center mx-auto">
                 {/* Filter Dropdown */}
@@ -544,7 +544,7 @@ const DataVisualisation = () => {
               </div>
 
               {/* Export Button */}
-              <div className="relative mt-4 sm:mt-0" ref={exportDropdownRef}>
+              <div className="relative" ref={exportDropdownRef}>
                 <button
                   onClick={toggleExportDropdown}
                   className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
