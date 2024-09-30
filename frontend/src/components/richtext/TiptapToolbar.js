@@ -5,21 +5,36 @@ const TiptapToolbar = ({ editor }) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isOverflow, setIsOverflow] = useState(false);
     const toolbarRef = useRef(null);
+    const buttonsRef = useRef([]);
+    const [totalButtonWidth, setTotalButtonWidth] = useState(0);
+
+    // Calculate total width of all buttons
+    const calculateButtonWidth = () => {
+        if (toolbarRef.current) {
+            const buttons = toolbarRef.current.querySelectorAll('.btn-group button');
+            const totalWidth = Array.from(buttons).reduce((acc, button) => acc + button.offsetWidth, 0);
+            setTotalButtonWidth(totalWidth);
+        }
+    };
+
+    // Check if overflow is needed based on toolbar width
+    const handleResize = () => {
+        if (toolbarRef.current) {
+            const availableWidth = toolbarRef.current.clientWidth;
+            setIsOverflow(totalButtonWidth > availableWidth);
+        }
+    };
 
     useEffect(() => {
-        const handleResize = () => {
-            if (toolbarRef.current) {
-                setIsOverflow(toolbarRef.current.scrollWidth > toolbarRef.current.clientWidth);
-            }
-        };
+        calculateButtonWidth();
+        handleResize();
 
         window.addEventListener('resize', handleResize);
-        handleResize();
 
         return () => {
             window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    }, [totalButtonWidth]);
 
     if (!editor) {
         return null;
@@ -27,7 +42,7 @@ const TiptapToolbar = ({ editor }) => {
 
     const buttons = (
         <>
-            <div className="btn-group">
+            <div className="btn-group" ref={(el) => (buttonsRef.current[0] = el)}>
                 <button
                     type="button"
                     onClick={() => editor.chain().focus().toggleBold().run()}
