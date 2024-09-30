@@ -287,10 +287,10 @@ const DataVisualisation = () => {
         label: "Issue Status",
         data: pieData,
         backgroundColor: [
-          "#FFCDB2",
-          "#FFB4A2",
-          "#E5989B",
-          "#B5838D",
+          "#A0DAB1",
+          "#FFF3B0",
+          "#FFB3B3",
+          "#D3D3D3",
         ],
         hoverOffset: 4,
       }
