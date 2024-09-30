@@ -525,7 +525,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={handleFilterChange}
                   value={filterType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg w-full sm:w-auto truncate"
                 >
                   <option value="all">All Issues</option>
                   <option value="myIssues">My Issues</option>
@@ -535,7 +535,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={(e) => setGraphType(e.target.value)}
                   value={graphType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg w-full sm:w-auto truncate"
                 >
                   <option value="added">Added issues / month</option>
                   <option value="solved">Completed issues / month</option>
@@ -544,7 +544,7 @@ const DataVisualisation = () => {
               </div>
 
               {/* Export Button */}
-              <div className="relative" ref={exportDropdownRef}>
+              <div className="relative ml-4" ref={exportDropdownRef}>
                 <button
                   onClick={toggleExportDropdown}
                   className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
