@@ -19,10 +19,10 @@ The Intermittent Issue Tracker allows users to:
 
 ## Technologies Used
 
-- **Frontend:** Built using <img alt="React" src="https://custom-icon-badges.demolab.com/badge/React-025E9F.svg?logo=react&logoColor=white">, <img alt="HTML" src="https://img.shields.io/badge/HTML-E34F26.svg?logo=html5&logoColor=white">, <img alt="CSS" src="https://img.shields.io/badge/CSS-1572B6.svg?logo=css3&logoColor=white"> and <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?logo=javascript&logoColor=black">.
-- **Backend:** Powered by <img alt="Node.js" src="https://img.shields.io/badge/Node.js-8CC84C.svg?logo=node.js&logoColor=white"> and <img alt="Express.js" src="https://img.shields.io/badge/Express.js-000000.svg?logo=express&logoColor=white">.
+- **Frontend:** Built using <img alt="React" src="https://custom-icon-badges.demolab.com/badge/React-025E9F.svg?logo=react&logoColor=white">, <img alt="HTML" src="https://img.shields.io/badge/HTML-E34F26.svg?logo=html5&logoColor=white">, <img alt="CSS" src="https://img.shields.io/badge/CSS-1572B6.svg?logo=css3&logoColor=white">, <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?logo=javascript&logoColor=black"> and <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-38B2AC.svg?logo=tailwindcss&logoColor=white">.
+- **Backend:** Powered by <img alt="Node.js" src="https://img.shields.io/badge/Node.js-8CC84C.svg?logo=node.js&logoColor=white">, <img alt="Express.js" src="https://img.shields.io/badge/Express.js-000000.svg?logo=express&logoColor=white">.
 - **Database:** <img alt="MongoDB" src="https://img.shields.io/badge/MongoDB-47A248.svg?logo=mongodb&logoColor=white"> with Mongoose for data management.
-- **Visualisation:** <img alt="Chart.js" src="https://img.shields.io/badge/Chart.js-F7D03C.svg?logo=chart.js&logoColor=black"> for creating dynamic data visualisations.
+- **Data Visualisation:** <img alt="Chart.js" src="https://img.shields.io/badge/Chart.js-F7D03C.svg?logo=chart.js&logoColor=black"> for creating dynamic data visualisations.
 - **Authentication**: <img alt="JWT" src="https://img.shields.io/badge/JSON_Web_Tokens-000000.svg?logo=json-web-tokens&logoColor=white"> for secure user authentication.
 
 ## Installation
@@ -46,40 +46,33 @@ To get started with the Intermittent Issue Tracker on your local machine:
    npm install
    ```
 
-4. **Set up the environment variables:**
-
-   Create a `.env` file in the backend directory with your MongoDB URI and other information
-   ```bash
-   PORT=5000
-   MONGO_URI= ***
-   ACCESS_TOKEN_SECRET= ****
-   ```
-
-5. **Run the server:**
+4. **Run the server:**
 
    ```bash
-   node server.js
+   npm start
    ```
 
-6. **Create a new terminalinstance and navigate to the frontend project directory:**
+5. **Create a new terminal instance and navigate to the frontend project directory:**
 
    ```bash
    cd issue-tracker/frontend
    ```
 
-7. **Install the dependencies:**
+6. **Install the dependencies:**
 
    ```bash
    npm install
    ```
 
-8. **Start the application:**
+7. **Start the application:**
 
    ```bash
    npm start
    ```
 
 The application should now be running at `http://localhost:3000`.
+
+
 
 ## Usage
 
@@ -90,6 +83,11 @@ The application should now be running at `http://localhost:3000`.
 5. **View the history** of logged instances and see visualizations of your data over time.
 
 The dashboard provides an overview of all your tracked issues, while detailed views allow you to dive into specific problems and their occurrence patterns.
+
+## Database Documentation
+
+For more details on the database design and how to extend it, refer to the [Full API Documentation](https://github.com/p-cottrell/issue-tracker/blob/main/db/README.md).
+
 
 ## API Documentation
 
@@ -102,7 +100,8 @@ The backend provides RESTful endpoints for interacting with the application. Her
     PUT /api/issues/:id: Update an existing issue.
     DELETE /api/issues/:id: Delete an issue.
 
-For detailed API documentation, refer to the API Docs.
+For detailed API documentation, refer to the [Full API Documentation](https://github.com/p-cottrell/issue-tracker/blob/main/api-documentation/API_DOCUMENTATION.md).
+
 
 ## License
 
