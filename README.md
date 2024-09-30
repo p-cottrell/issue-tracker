@@ -100,7 +100,7 @@ The backend provides RESTful endpoints for interacting with the application. Her
     PUT /api/issues/:id: Update an existing issue.
     DELETE /api/issues/:id: Delete an issue.
 
-For detailed API documentation, refer to the [Full API Documentation](https://github.com/p-cottrell/issue-tracker/blob/main/api-documentation/API_DOCUMENTATION.md).
+For detailed API documentation, refer to the [Full API Documentation](https://github.com/p-cottrell/issue-tracker/blob/main/api_documentation/API_DOCUMENTATION.md).
 
 
 ## License
