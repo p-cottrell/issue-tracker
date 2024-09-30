@@ -340,36 +340,15 @@ const DataVisualisation = () => {
     setIsExporting(true);
     setIsExportDropdownOpen(false);
 
-    let fileHandle;
-    try {
-      const defaultFilename = generateDefaultFilename(filterType, graphType);
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${defaultFilename}.png`,
-        types: [{
-          description: 'PNG Image',
-          accept: { 'image/png': ['.png'] }
-        }]
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('File save operation was canceled by the user.');
-        setIsExporting(false);
-        return;
-      }
-      console.error('Error getting file handle:', err);
-      setIsExporting(false);
-      return;
-    }
-
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
 
     try {
       const dataUrl = await toPng(chartElement);
-      const blob = await (await fetch(dataUrl)).blob();
-      const writable = await fileHandle.createWritable();
-      await writable.write(blob);
-      await writable.close();
+      const link = document.createElement('a');
+      link.download = `${generateDefaultFilename(filterType, graphType)}.png`;
+      link.href = dataUrl;
+      link.click();
       alert('Chart exported successfully!');
     } catch (err) {
       console.error('Error exporting to PNG:', err);
@@ -387,27 +366,6 @@ const DataVisualisation = () => {
 
     setIsExporting(true);
     setIsExportDropdownOpen(false);
-
-    let fileHandle;
-    try {
-      const defaultFilename = generateDefaultFilename(filterType, graphType);
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${defaultFilename}.pdf`,
-        types: [{
-          description: 'PDF Document',
-          accept: { 'application/pdf': ['.pdf'] }
-        }]
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('File save operation was canceled by the user.');
-        setIsExporting(false);
-        return;
-      }
-      console.error('Error getting file handle:', err);
-      setIsExporting(false);
-      return;
-    }
 
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
@@ -431,12 +389,7 @@ const DataVisualisation = () => {
 
         // Add image to the PDF
         pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
-
-        // Export PDF
-        const blob = pdf.output('blob');
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+        pdf.save(`${generateDefaultFilename(filterType, graphType)}.pdf`);
         alert('Chart exported successfully!');
       };
     } catch (err) {
@@ -447,7 +400,7 @@ const DataVisualisation = () => {
   };
 
   // Function to export data as Excel
-  const exportToXLSX = async () => {
+  const exportToXLSX = () => {
     if (isExporting) {
       console.warn('Export already in progress. Please wait for the current export to complete.');
       return;
@@ -456,35 +409,11 @@ const DataVisualisation = () => {
     setIsExporting(true);
     setIsExportDropdownOpen(false);
 
-    let fileHandle;
-    try {
-      const defaultFilename = generateDefaultFilename(filterType, graphType);
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${defaultFilename}.xlsx`,
-        types: [{
-          description: 'Excel Spreadsheet',
-          accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
-        }]
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('File save operation was canceled by the user.');
-        setIsExporting(false);
-        return;
-      }
-      console.error('Error getting file handle:', err);
-      setIsExporting(false);
-      return;
-    }
-
     try {
       const worksheet = XLSX.utils.json_to_sheet(filteredIssues);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues');
-      const blob = new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/octet-stream' });
-      const writable = await fileHandle.createWritable();
-      await writable.write(blob);
-      await writable.close();
+      XLSX.writeFile(workbook, `${generateDefaultFilename(filterType, graphType)}.xlsx`);
       alert('Issues exported successfully!');
     } catch (err) {
       console.error('Error exporting to XLSX:', err);
