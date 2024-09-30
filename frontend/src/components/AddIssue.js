@@ -164,36 +164,37 @@ const AddIssue = ({ closeHandler }) => {
   };
 
   return (
-    <div className="bg-white p-8 rounded shadow-lg max-w-3xl mx-auto max-h-screen overflow-auto">
+    <div className="bg-white dark:bg-gray-800 p-8 rounded shadow-lg max-w-3xl mx-auto max-h-screen overflow-auto">
       {/* Form Title */}
-      <h2 className="text-2xl text-dark font-semibold mb-6 text-center">Add New Issue</h2>
+      <h2 className="text-2xl text-dark dark:text-white font-semibold mb-6 text-center">Add New Issue</h2>
 
       {/* Form for adding a new issue */}
       <form onSubmit={addHandler}>
         {/* Title Input */}
-        <label className="block text-dark mb-2">Title:</label>
+        <label className="block text-dark dark:text-white mb-2">Title:</label>
         <div className="mb-6 flex items-center space-x-4">
           {/* Charm Selection Button */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="bg-gray-300 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-12 h-12"
+              className="bg-gray-300 dark:bg-gray-700 border border-secondary p-2 rounded-full text-center flex justify-center items-center w-12 h-12 text-white"
             >
               {charm}
             </button>
 
             {/* Charm Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 p-2 bg-white border border-gray-200 shadow-lg rounded grid grid-cols-4 gap-2 overflow-visible z-10 w-80">
+              <div className="absolute left-0 mt-2 p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg rounded grid grid-cols-4 gap-2 overflow-visible z-10 w-80">
                 {charmOptions.map((charmOption, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer p-1 rounded-lg text-xl flex justify-center items-center
-                    ${charm === charmOption ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                    className={`cursor-pointer p-1 rounded-lg text-xl flex justify-center items-center ${
+                      charm === charmOption ? 'bg-primary text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white'
+                    }`}
                     onClick={() => {
-                      setCharm(charmOption); // Set selected charm
-                      setIsDropdownOpen(false); // Close the dropdown after selection
+                      setCharm(charmOption);
+                      setIsDropdownOpen(false);
                     }}
                   >
                     {charmOption}
@@ -206,7 +207,7 @@ const AddIssue = ({ closeHandler }) => {
           {/* Title Input Field */}
           <div className="flex-grow">
             <input
-              className="bg-white border border-secondary p-2 rounded outline-none w-full"
+              className="bg-white dark:bg-gray-700 border border-secondary p-2 rounded outline-none w-full dark:text-white"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -218,34 +219,26 @@ const AddIssue = ({ closeHandler }) => {
 
         {/* Description Text Area */}
         <div className="mb-6">
-          <label className="block text-dark mb-2">Description:</label>
-          {/* <textarea
-            className="bg-white border border-secondary p-2 rounded outline-none w-full resize-y h-52"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe everything about the issue here..."
-          /> */}
-          <TiptapEditor content={description} setContent={setDescription}/>
+          <label className="block text-dark dark:text-white mb-2">Description:</label>
+          <TiptapEditor content={description} setContent={setDescription} />
         </div>
 
         {/* Attachments Section */}
-        <label className="block text-dark mb-2">Attachments:</label>
+        <label className="block text-dark dark:text-white mb-2">Attachments:</label>
         <div
-          className={`mb-6 p-4 h-32 border-2 ${isDragging ? 'border-primary' : 'border-secondary'} border-dashed rounded cursor-pointer flex justify-center items-center`}
+          className={`mb-6 p-4 h-32 border-2 ${isDragging ? 'border-primary' : 'border-secondary'} border-dashed rounded cursor-pointer flex justify-center items-center dark:bg-gray-700`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={() => document.getElementById('fileInput').click()} // Open file input when clicked
+          onClick={() => document.getElementById('fileInput').click()}
         >
           {/* Attachment Prompt */}
-          <p className="text-sm text-gray-500">
-            {images.length > 0 
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {images.length > 0
               ? `${images.length} file(s) selected`
               : (
                 <>
-                  {/* Show this text on small screens */}
                   <span className="block sm:hidden">Click to select image</span>
-                  {/* Show this text on larger screens */}
                   <span className="hidden sm:block">Drag & drop images here, or click to select</span>
                 </>
               )}
@@ -254,12 +247,12 @@ const AddIssue = ({ closeHandler }) => {
 
         {/* Hidden File Input */}
         <input
-          id="fileInput" // Assign an id to the input for manual trigger
+          id="fileInput"
           type="file"
           accept="image/*"
-          multiple // Allow multiple image uploads
-          onChange={handleFileChange} // Handle file input change
-          className="hidden" // Hidden input
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
         />
 
         {/* Image Previews */}
@@ -267,7 +260,6 @@ const AddIssue = ({ closeHandler }) => {
           <div className="mb-6 grid grid-cols-2 md:grid-cols-3 gap-4">
             {imagePreviews.map((preview, index) => (
               <div key={index} className="relative group">
-                {/* Image Preview */}
                 <img
                   src={preview}
                   alt={`Preview ${index}`}
@@ -308,7 +300,7 @@ const AddIssue = ({ closeHandler }) => {
           </button>
           <button
             type="button"
-            className="px-6 py-2 bg-gray-300 text-dark rounded hover:bg-gray-400"
+            className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-dark dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-500"
             onClick={() => {
               closeHandler(false);
               closeModal();
@@ -323,10 +315,7 @@ const AddIssue = ({ closeHandler }) => {
       {previewImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative max-w-3xl max-h-[90vh] overflow-auto">
-            {/* Display preview image */}
             <img src={previewImage} alt="Preview" className="max-w-full max-h-full" />
-
-            {/* Close Button for Modal */}
             <button
               onClick={() => setPreviewImage(null)}
               className="absolute top-2 right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center"
@@ -338,6 +327,7 @@ const AddIssue = ({ closeHandler }) => {
       )}
     </div>
   );
-}
+};
 
 export default AddIssue;
+

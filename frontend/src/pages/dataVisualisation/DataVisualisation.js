@@ -496,14 +496,14 @@ const DataVisualisation = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
-      <header className="relative bg-primary shadow p-4 flex items-center justify-between">
+      <header className="relative bg-primary shadow p-4 flex items-center justify-between dark:bg-primaryAlt">
         {/* Left: Logo and Hamburger */}
         <div>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden dark:bg-neutral dark:text-white">
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
-            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+            <Logo className="truncate text-neutral dark:text-white xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
           </span>
         </div>
       </header>
@@ -525,7 +525,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={handleFilterChange}
                   value={filterType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white"
                 >
                   <option value="all">All Issues</option>
                   <option value="myIssues">My Issues</option>
@@ -535,7 +535,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={(e) => setGraphType(e.target.value)}
                   value={graphType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white"
                 >
                   <option value="added">Added issues / month</option>
                   <option value="solved">Completed issues / month</option>
@@ -547,7 +547,7 @@ const DataVisualisation = () => {
               <div className="relative" ref={exportDropdownRef}>
                 <button
                   onClick={toggleExportDropdown}
-                  className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryAlt dark:bg-primaryAlt flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={isExporting}
                 >
                   {isExporting ? (
@@ -560,24 +560,24 @@ const DataVisualisation = () => {
                   <span className="hidden lg:inline">{isExporting ? 'Exporting...' : 'Export to...'}</span>
                 </button>
                 {isExportDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10">
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10 dark:bg-gray-800">
                     <button
                       onClick={exportToPNG}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
                     >
                       <PhotoIcon className="w-5 h-5 mr-2" />
                       Export to PNG
                     </button>
                     <button
                       onClick={exportToPDF}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
                     >
                       <DocumentChartBarIcon className="w-5 h-5 mr-2" />
                       Export to PDF
                     </button>
                     <button
                       onClick={exportToXLSX}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
                     >
                       <TableCellsIcon className="w-5 h-5 mr-2" />
                       Export to XLSX

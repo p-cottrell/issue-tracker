@@ -252,17 +252,17 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
-      <header className="relative bg-primary shadow p-4 flex items-center justify-between">
+      <header className="relative bg-primary shadow p-4 flex items-center justify-between dark:bg-primaryAlt">
         {/* Left: Logo and Hamburger */}
         <div>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden"
+            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden dark:bg-gray-800 dark:text-white dark:placeholder-white"
           >
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
-            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+            <Logo className="truncate text-neutral dark:text-white xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
           </span>
         </div>
 
@@ -273,7 +273,7 @@ const Dashboard = () => {
             placeholder="Search issues..."
             value={searchTerm}
             onChange={handleSearch}
-            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-center"
+            className="px-4 py-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-center dark:bg-gray-800 dark:text-white dark:placeholder-white"
             style={{ textAlign: 'center' }}
           />
         </div>
@@ -283,29 +283,29 @@ const Dashboard = () => {
           <div className="relative layout-dropdown hidden md:block">
             <button
               onClick={toggleLayoutDropdown}
-              className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+              className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white dark:placeholder-white"
             >
               {layoutType === 'masonry' ? <RectangleGroupIcon className="w-6 h-6" /> : layoutType === 'grid' ? <Squares2X2Icon className="w-6 h-6" /> : <QueueListIcon className="w-6 h-6" />}
             </button>
             {isLayoutDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 layout-dropdown-menu">
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 layout-dropdown-menu dark:bg-neutral dark:border-gray-700">
                 <button
                   onClick={() => handleLayoutChange('masonry')}
-                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'masonry' ? 'bg-gray-100' : ''}`}
+                  className={`block w-full text-left px-4 py-2 text-gray-700  dark:hover:text-gray-100 dark:hover:bg-gray-700 ${layoutType === 'masonry' ? 'bg-gray-100 dark:text-gray-100 dark:bg-gray-700' : ''}`}
                 >
                   <RectangleGroupIcon className="w-5 h-5 inline mr-2" />
                   Adaptive
                 </button>
                 <button
                   onClick={() => handleLayoutChange('grid')}
-                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'grid' ? 'bg-gray-100' : ''}`}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 dark:hover:text-gray-100 dark:hover:bg-gray-700 ${layoutType === 'grid' ? 'bg-gray-100 dark:bg-gray-700 dark:text-gray-100' : ''}`}
                 >
                   <Squares2X2Icon className="w-5 h-5 inline mr-2" />
                   Grid
                 </button>
                 <button
                   onClick={() => handleLayoutChange('list')}
-                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 ${layoutType === 'list' ? 'bg-gray-100' : ''}`}
+                  className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 dark:hover:text-gray-100 dark:hover:bg-gray-700 ${layoutType === 'list' ? 'bg-gray-100 dark:text-gray-100 dark:bg-gray-700' : ''}`}
                 >
                   <QueueListIcon className="w-5 h-5 inline mr-2" />
                   List
@@ -315,7 +315,7 @@ const Dashboard = () => {
           </div>
           <button
             onClick={showAddIssueModal}
-            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2"
+            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 dark:bg-gray-800 dark:placeholder-whitedark:bg-neutral dark:text-white"
           >
             <PlusIcon className="w-6 h-6" />
             <span className="hidden lg:inline">New Issue</span>
@@ -338,7 +338,8 @@ const Dashboard = () => {
                 value={filterOptions.find(option => filterType === option.value) || null}
                 onChange={handleFilterChange}
                 className="text-primary-600 font-semibold focus:outline-none"
-                placeholder="Filter by Owner"/>
+                placeholder="Filter by Owner"
+              />
             </div>
 
             <div className="bg-white rounded-lg transition-transform transform hover:scale-105 hover:shadow-lg z-10">
@@ -348,16 +349,17 @@ const Dashboard = () => {
                 options={statusOptions}
                 value={statusOptions.filter(option => statusFilter.includes(option.value)) || []}
                 onChange={handleStatusFilterChange}
-                className="text-primary-600 font-semibold focus:outline-none"
-                placeholder="Filter by Status"/>
+                className="text-primary-600 font-semibold focus:outline-none "
+                placeholder="Filter by Status"
+              />
             </div>
           </div>
           {/* Display message if no issues found */}
           {noIssuesMessage && (
-            <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full">{noIssuesMessage}</div>
+            <div className="flex justify-center items-center text-center text-red-500 mb-4 h-full dark:text-red-400">{noIssuesMessage}</div>
           )}
           {filteredIssues.length === 0 && !noIssuesMessage && (
-            <div className="flex justify-center items-center text-center text-gray-500 mb-4 h-full">
+            <div className="flex justify-center items-center text-center text-gray-500 mb-4 h-full dark:text-gray-400">
               <InformationCircleIcon className="w-6 h-6 inline mr-2" />
               No issues found. Try changing the search term or filters
             </div>
@@ -372,7 +374,7 @@ const Dashboard = () => {
                 data={issue}
                 openIssueModal={() => showIssueViewModal(issue)}
                 closeIssueModal={closeModalCallback}
-                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between"
+                className="bg-background shadow-md rounded-lg p-4 min-h-[200px] flex flex-col justify-between dark:bg-neutral"
               />
             )}
           />

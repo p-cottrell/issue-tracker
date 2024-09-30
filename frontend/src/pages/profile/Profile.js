@@ -255,96 +255,96 @@ const Profile = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-dark">
       {/* Header */}
-      <header className="relative bg-primary shadow p-4 flex items-center justify-between">
+      <header className="relative bg-primary shadow p-4 flex items-center justify-between dark:bg-primaryAlt">
         {/* Left: Logo and Hamburger */}
         <div>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden"
+            className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden dark:bg-gray-700 dark:text-white"
           >
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
-            <Logo className="truncate text-neutral xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
+            <Logo className="truncate text-neutral dark:text-white xs:text-base md:text-lg lg:text-4xl" navigate={navigate} useClick={true} />
           </span>
         </div>
       </header>
-
+  
       {/* Main content */}
       <div className="flex flex-grow">
         <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} />
         <main className="flex-grow p-4 sm:p-6 lg:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Profile Section */}
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center dark:bg-gray-800">
               <img
                 src={GetUserAvatar(user.id)}
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto mb-4"
               />
-              <h2 className="text-2xl font-bold">{userData.username}</h2>
+              <h2 className="text-2xl font-bold text-dark dark:text-white">{userData.username}</h2>
               {userData.role === 'admin' && (
-                <p className="text-lg mb-2">({userData.role})</p>
+                <p className="text-lg mb-2 text-dark dark:text-white">({userData.role})</p>
               )}
-              <p className="text-lg mb-2">{userData.email}</p>
+              <p className="text-lg mb-2 text-dark dark:text-white">{userData.email}</p>
               <ul className="mt-4 space-y-2 text-center">
                 <li
-                  className="text-gray-700 cursor-pointer hover:underline"
+                  className="text-gray-700 dark:text-white cursor-pointer hover:underline"
                   onClick={handleInProgressIssuesClick}
                 >
-                  Issues in progress: <span className="text-green-500">{issuesInProgress}</span>
+                  Issues in progress: <span className="text-green-500 dark:text-green-400">{issuesInProgress}</span>
                 </li>
                 <li
-                  className="text-gray-700 cursor-pointer hover:underline"
+                  className="text-gray-700 dark:text-white cursor-pointer hover:underline"
                   onClick={handleClosedIssuesClick}
                 >
-                  Issues closed: <span className="text-red-500">{issuesClosed}</span>
+                  Issues closed: <span className="text-red-500 dark:text-red-400">{issuesClosed}</span>
                 </li>
                 <li
-                  className="text-gray-700 cursor-pointer hover:underline"
+                  className="text-gray-700 dark:text-white cursor-pointer hover:underline"
                   onClick={handleTotalIssuesClick}
                 >
-                  Total issues: <span className="text-gray-500">{totalIssues}</span>
+                  Total issues: <span className="text-gray-500 dark:text-white">{totalIssues}</span>
                 </li>
               </ul>
             </div>
-
+  
             {/* Account Details and Theme Settings */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md sm:flex sm:flex-col sm:items-center">
-              <h3 className="text-2xl font-bold mb-6 text-center">Update Account Details</h3>
-
+            <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md sm:flex sm:flex-col sm:items-center dark:bg-gray-800">
+              <h3 className="text-2xl font-bold mb-6 text-center text-dark dark:text-white">Update Account Details</h3>
+  
               {/* Username Editing */}
               {isUsernameEditVisible ? (
                 <div className="mb-6 w-full sm:w-2/3">
-                  <label className="block text-gray-700 px-2">Username</label>
+                  <label className="block text-gray-700 dark:text-white px-2">Username</label>
                   <input
                     type="text"
                     value={editedUsername}
-                    className="w-full mt-1 p-2 border rounded-lg"
+                    className="w-full mt-1 p-2 border rounded-lg dark:bg-gray-700 dark:text-white"
                     onChange={(e) => setEditedUsername(e.target.value)}
                   />
                   <div className="grid grid-cols-2 gap-4 mt-4">
-                    <button onClick={handleUsernameChange} className="bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Save</button>
+                    <button onClick={handleUsernameChange} className="bg-primary dark:bg-primaryAlt text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Save</button>
                     <button onClick={cancelUsernameEdit} className="bg-red-500 text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <div className="w-full sm:w-2/3">
-                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Username</button>
+                  <button onClick={toggleUsernameEdit} className="mt-4 mb-4 bg-primary dark:bg-primaryAlt text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Username</button>
                 </div>
               )}
-
+  
               {/* Password Editing */}
               <div className="w-full sm:w-2/3">
                 {isPasswordEditVisible ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-700 px-2">New Password</label>
+                      <label className="block text-gray-700 dark:text-white px-2">New Password</label>
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full mt-1 p-2 border rounded-lg"
+                        className="w-full mt-1 p-2 border rounded-lg dark:bg-gray-700 dark:text-white"
                         placeholder="Enter new password"
                         onFocus={handlePasswordFocus}
                         onBlur={handlePasswordBlur}
@@ -352,53 +352,51 @@ const Profile = () => {
                       {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
                     </div>
                     <div>
-                      <label className="block text-gray-700 px-2">Confirm Password</label>
+                      <label className="block text-gray-700 dark:text-white px-2">Confirm Password</label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full mt-1 p-2 border rounded-lg"
+                        className="w-full mt-1 p-2 border rounded-lg dark:bg-gray-700 dark:text-white"
                         placeholder="Confirm new password"
                       />
                       {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
                     </div>
-
+  
                     {/* Password rules visible when focused */}
                     <div className="col-span-1 sm:col-span-2">
                       {passwordFocused && <PasswordRules password={password} />}
                     </div>
-
+  
                     <div className="col-span-1 sm:col-span-2 flex justify-center mt-2 space-x-4">
-                      <button onClick={handlePasswordChange} className="bg-primary text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Save</button>
+                      <button onClick={handlePasswordChange} className="bg-primary dark:bg-primaryAlt text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Save</button>
                       <button onClick={cancelPasswordEdit} className="bg-red-500 text-white py-2 px-6 rounded-lg w-1/2 transition-transform transform hover:scale-105">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full">
-                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Password</button>
+                    <button onClick={togglePasswordEdit} className="mb-4 bg-primary dark:bg-primaryAlt text-white py-2 rounded-lg w-full transition-transform transform hover:scale-105">Update Password</button>
                   </div>
                 )}
               </div>
-
+  
               {/* Theme Settings */}
               <div className="w-full sm:w-2/3 mt-8">
-              <h3 className="text-2xl font-bold mb-6 text-center">Theme Settings</h3>
+                <h3 className="text-2xl font-bold mb-6 text-center text-dark dark:text-white">Theme Settings</h3>
                 <div className="flex items-center justify-between transition-transform transform hover:scale-105">
-                  <span className="text-dark dark:text-neutral">Dark Mode</span>
+                  <span className="text-dark dark:text-white">Dark Mode</span>
                   <button
                     onClick={handleThemeToggle}
-                    className='dark:bg-primary bg-gray-300 relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none'
+                    className="dark:bg-primary bg-gray-300 relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
                   >
-                    <span className={`${
-                      isDarkMode ? 'translate-x-6' : 'translate-x-1'
-                    } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                    <span className={`${isDarkMode ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
                   </button>
                 </div>
               </div>
-
+  
               {/* Success Message */}
               {successMessage && (
-                <div className="mt-4 p-2 bg-green-100 text-green-700 rounded-lg w-full sm:w-2/3">
+                <div className="mt-4 p-2 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg w-full sm:w-2/3">
                   {successMessage}
                 </div>
               )}

@@ -103,7 +103,7 @@ export default function Issue({ data, openIssueModal }) {
 
     return (
         <div
-            className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative cursor-pointer"
+            className="bg-white dark:bg-gray-400 shadow-md rounded-lg p-4 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-lg relative cursor-pointer"
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
         >
@@ -135,14 +135,14 @@ export default function Issue({ data, openIssueModal }) {
             ></div>
 
             {/* Reference */}
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-800 mb-4">
                 <strong>Reference:</strong> {generateNiceReferenceId(data)}
             </p>
 
             {/* Attachments */}
             {attachments && attachments.length > 0 && (
                 <div className="mb-4 relative">
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-800 mb-4">
                         <strong>Attachment(s):</strong>
                     </p>
                     <div

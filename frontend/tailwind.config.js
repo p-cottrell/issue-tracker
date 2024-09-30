@@ -14,7 +14,7 @@ module.exports = {
     extend: {
       colors: {
         primary: '#124559',       // Main color for primary actions
-        primaryHover: '#124565',  // Hover
+        primaryAlt: '#124565',  // Hover
         secondary: '#598392',     // Secondary actions
         accent: '#aec3b0',        // Highlighting elements
         neutral: '#eff6e0',       // Backgrounds, cards, sections
