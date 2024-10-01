@@ -287,10 +287,10 @@ const DataVisualisation = () => {
         label: "Issue Status",
         data: pieData,
         backgroundColor: [
-          "#FFCDB2",
-          "#FFB4A2",
-          "#E5989B",
-          "#B5838D",
+          "#A0DAB1",
+          "#FFF3B0",
+          "#FFB3B3",
+          "#D3D3D3",
         ],
         hoverOffset: 4,
       }
@@ -340,36 +340,15 @@ const DataVisualisation = () => {
     setIsExporting(true);
     setIsExportDropdownOpen(false);
 
-    let fileHandle;
-    try {
-      const defaultFilename = generateDefaultFilename(filterType, graphType);
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${defaultFilename}.png`,
-        types: [{
-          description: 'PNG Image',
-          accept: { 'image/png': ['.png'] }
-        }]
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('File save operation was canceled by the user.');
-        setIsExporting(false);
-        return;
-      }
-      console.error('Error getting file handle:', err);
-      setIsExporting(false);
-      return;
-    }
-
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
 
     try {
       const dataUrl = await toPng(chartElement);
-      const blob = await (await fetch(dataUrl)).blob();
-      const writable = await fileHandle.createWritable();
-      await writable.write(blob);
-      await writable.close();
+      const link = document.createElement('a');
+      link.download = `${generateDefaultFilename(filterType, graphType)}.png`;
+      link.href = dataUrl;
+      link.click();
       alert('Chart exported successfully!');
     } catch (err) {
       console.error('Error exporting to PNG:', err);
@@ -387,27 +366,6 @@ const DataVisualisation = () => {
 
     setIsExporting(true);
     setIsExportDropdownOpen(false);
-
-    let fileHandle;
-    try {
-      const defaultFilename = generateDefaultFilename(filterType, graphType);
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${defaultFilename}.pdf`,
-        types: [{
-          description: 'PDF Document',
-          accept: { 'application/pdf': ['.pdf'] }
-        }]
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('File save operation was canceled by the user.');
-        setIsExporting(false);
-        return;
-      }
-      console.error('Error getting file handle:', err);
-      setIsExporting(false);
-      return;
-    }
 
     const chartElement = document.querySelector('.chart-container');
     if (!chartElement) return;
@@ -431,12 +389,7 @@ const DataVisualisation = () => {
 
         // Add image to the PDF
         pdf.addImage(dataUrl, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
-
-        // Export PDF
-        const blob = pdf.output('blob');
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+        pdf.save(`${generateDefaultFilename(filterType, graphType)}.pdf`);
         alert('Chart exported successfully!');
       };
     } catch (err) {
@@ -447,7 +400,7 @@ const DataVisualisation = () => {
   };
 
   // Function to export data as Excel
-  const exportToXLSX = async () => {
+  const exportToXLSX = () => {
     if (isExporting) {
       console.warn('Export already in progress. Please wait for the current export to complete.');
       return;
@@ -456,35 +409,11 @@ const DataVisualisation = () => {
     setIsExporting(true);
     setIsExportDropdownOpen(false);
 
-    let fileHandle;
-    try {
-      const defaultFilename = generateDefaultFilename(filterType, graphType);
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${defaultFilename}.xlsx`,
-        types: [{
-          description: 'Excel Spreadsheet',
-          accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
-        }]
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('File save operation was canceled by the user.');
-        setIsExporting(false);
-        return;
-      }
-      console.error('Error getting file handle:', err);
-      setIsExporting(false);
-      return;
-    }
-
     try {
       const worksheet = XLSX.utils.json_to_sheet(filteredIssues);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues');
-      const blob = new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/octet-stream' });
-      const writable = await fileHandle.createWritable();
-      await writable.write(blob);
-      await writable.close();
+      XLSX.writeFile(workbook, `${generateDefaultFilename(filterType, graphType)}.xlsx`);
       alert('Issues exported successfully!');
     } catch (err) {
       console.error('Error exporting to XLSX:', err);
@@ -525,7 +454,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={handleFilterChange}
                   value={filterType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg w-full sm:w-auto truncate"
                 >
                   <option value="all">All Issues</option>
                   <option value="myIssues">My Issues</option>
@@ -535,7 +464,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={(e) => setGraphType(e.target.value)}
                   value={graphType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg"
+                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg w-full sm:w-auto truncate"
                 >
                   <option value="added">Added issues / month</option>
                   <option value="solved">Completed issues / month</option>
@@ -544,7 +473,7 @@ const DataVisualisation = () => {
               </div>
 
               {/* Export Button */}
-              <div className="relative" ref={exportDropdownRef}>
+              <div className="relative ml-4" ref={exportDropdownRef}>
                 <button
                   onClick={toggleExportDropdown}
                   className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryHover flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
