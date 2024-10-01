@@ -302,19 +302,19 @@ const DataVisualisation = () => {
     switch (graphType) {
       case 'added':
         return (
-          <div className="chart-container flex flex-auto relative min-w-3.5 max-w-4xl">
+          <div className="chart-container flex flex-auto relative min-w-0 max-w-4xl">
             <BarGraph graphData={graphData} />
           </div>
         );
       case 'solved':
         return (
-          <div className="chart-container flex flex-auto relative min-w-3.5 max-w-4xl">
+          <div className="chart-container flex flex-auto relative min-w-0 max-w-4xl">
             <LineGraph graphData={lineData} />
           </div>
         );
       case 'status':
         return (
-          <div className="chart-container flex flex-auto relative min-w-3.5 max-w-2xl">
+          <div className="chart-container flex flex-auto relative min-w-0 max-w-2xl">
             <PieChart graphData={pieChartData} />
           </div>
         );
@@ -428,7 +428,7 @@ const DataVisualisation = () => {
       <header className="relative bg-primary shadow p-4 flex items-center justify-between dark:bg-primaryAlt">
         {/* Left: Logo and Hamburger */}
         <div>
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden dark:bg-neutral dark:text-white">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white  text-primary-600 px-4 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg flex items-center space-x-2 lg:hidden dark:bg-gray-800 dark:text-white dark:placeholder-white">
             <Bars3Icon className="w-6 h-6" />
           </button>
           <span className="hidden lg:inline">
@@ -447,14 +447,14 @@ const DataVisualisation = () => {
           <div className="flex flex-col space-y-4">
 
             {/* Filters and Export Button */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center min-w-0 mb-4">
               {/* Filters Parent */}
-              <div className="flex-grow flex space-x-4 justify-center mx-auto">
+              <div className="flex-grow flex space-x-4 justify-center ">
                 {/* Filter Dropdown */}
                 <select
                   onChange={handleFilterChange}
                   value={filterType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white"
+                  className="bg-white text-primary-600 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white"
                 >
                   <option value="all">All Issues</option>
                   <option value="myIssues">My Issues</option>
@@ -464,7 +464,7 @@ const DataVisualisation = () => {
                 <select
                   onChange={(e) => setGraphType(e.target.value)}
                   value={graphType}
-                  className="bg-white text-primary-600 px-2 py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white"
+                  className="bg-white text-primary-600  py-2 rounded-lg font-semibold focus:outline-none transition-transform transform hover:scale-105 hover:shadow-lg dark:bg-gray-800 dark:text-white"
                 >
                   <option value="added">Added issues / month</option>
                   <option value="solved">Completed issues / month</option>
@@ -473,14 +473,15 @@ const DataVisualisation = () => {
               </div>
 
               {/* Export Button */}
-              <div className="relative ml-4" ref={exportDropdownRef}>
+              <div className="relative ml-4 hidden sm:block" ref={exportDropdownRef}>
+
                 <button
                   onClick={toggleExportDropdown}
                   className={`bg-primary text-white px-2 lg:px-4 py-2 rounded-lg shadow hover:bg-primaryAlt dark:bg-primaryAlt flex items-center ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={isExporting}
                 >
                   {isExporting ? (
-                    <div className="inline-block lg:mr-2 inset-0 flex items-center justify-center">
+                    <div className="lg:mr-2 inset-0 flex items-center justify-center">
                       <div className="loader"></div>
                     </div>
                   ) : (
@@ -492,21 +493,21 @@ const DataVisualisation = () => {
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-2 z-10 dark:bg-gray-800">
                     <button
                       onClick={exportToPNG}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
+                      className=" w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
                     >
                       <PhotoIcon className="w-5 h-5 mr-2" />
                       Export to PNG
                     </button>
                     <button
                       onClick={exportToPDF}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
+                      className=" w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
                     >
                       <DocumentChartBarIcon className="w-5 h-5 mr-2" />
                       Export to PDF
                     </button>
                     <button
                       onClick={exportToXLSX}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
+                      className=" w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 flex items-center"
                     >
                       <TableCellsIcon className="w-5 h-5 mr-2" />
                       Export to XLSX
