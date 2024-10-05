@@ -857,7 +857,7 @@ function IssueView({ issue, onClose }, ref) {
 
   // Render the component
   return (
-    <div className="relative mx-auto md:p-5 shadow-lg rounded-md bg-white dark dark:bg-gray-800 max-h-[calc(100vh-40px)] overflow-y-auto">
+    <div className="relative mx-auto md:p-5 shadow-lg rounded-md bg-white max-h-[calc(100vh-40px)] overflow-y-auto">
       <div className="mt-3">
         <div className="mt-2 pl-7 pr-3 lg:pr-7 py-3">
           {/* Issue header section */}
@@ -900,12 +900,12 @@ function IssueView({ issue, onClose }, ref) {
                   onChange={(e) => setEditedIssue({ ...editedIssue, title: e.target.value })}
                   onBlur={() => setIsTitleBeingEdited(false)}
                   autoFocus
-                  className="text-xl font-bold mb-2 w-full p-2 border 0 border-gray-300 rounded"
+                  className="text-xl font-bold mb-2 w-full p-2 border border-gray-300 rounded"
                   placeholder="Issue Title"
                 />
               ) : (
                 <h1
-                  className={`text-xl font-bold dark:text-gray-100 mb-2 ${canEdit ? 'hover:underline cursor-pointer' : ''}`}
+                  className={`text-xl font-bold mb-2 ${canEdit ? 'hover:underline cursor-pointer' : ''}`}
                   onClick={() => canEdit && setIsTitleBeingEdited(true)}
                 >
                   {editedIssue.title}
@@ -968,7 +968,7 @@ function IssueView({ issue, onClose }, ref) {
             <div className="issue-main">
               {/* Description section */}
               <div className="mt-4">
-                <h2 className="text-xl dark:text-gray-100 font-bold mb-2">Description</h2>
+                <h2 className="text-xl font-bold mb-2">Description</h2>
                 <DescriptionEditor
                   description={editedIssue.description}
                   onChange={(newDescription) => setEditedIssue({ ...editedIssue, description: newDescription })}
@@ -981,7 +981,7 @@ function IssueView({ issue, onClose }, ref) {
               {/* Occurrences section */}
               <div className="mt-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-xl dark:text-gray-100 font-bold">Occurrences</h2>
+                  <h2 className="text-xl font-bold">Occurrences</h2>
                 </div>
                 <ul className="occurrences-list">
                   {(originalIssue.occurrences || []).map((occurrence) => (
@@ -998,7 +998,7 @@ function IssueView({ issue, onClose }, ref) {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-100">
+                          <p className="text-sm text-gray-600">
                             <strong>Created at: </strong>
                             {(selectedOccurrence && selectedOccurrence._id === occurrence._id && selectedOccurrence.user_id?._id === user.id) ? (
                               <input
@@ -1133,7 +1133,7 @@ function IssueView({ issue, onClose }, ref) {
               {/* Attachments section */}
               <div className="mt-4">
                 {attachmentError || attachments.length > 0 ? (
-                  <h2 className="text-xl dark:text-gray-100 font-bold mb-2">Attachments</h2>
+                  <h2 className="text-xl font-bold mb-2">Attachments</h2>
                 ) : null}
                 {attachmentError && <p className="text-red-500">{attachmentError}</p>}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1160,7 +1160,7 @@ function IssueView({ issue, onClose }, ref) {
                             onClick={() => promptDeleteAttachment(attachment._id)}
                             title="Delete attachment"
                           >
-                            <TrashIcon className="w-4 h-4 rounded-md dark:bg-white" />
+                            <TrashIcon className="w-4 h-4" />
                           </button>
                         </div>
                       )}
@@ -1170,7 +1170,7 @@ function IssueView({ issue, onClose }, ref) {
 
                 {/* File upload input */}
                 <div className="mt-4">
-                  <h2 className="text-lg dark:text-gray-100 font-bold mb-2">Upload Attachments</h2>
+                  <h2 className="text-lg font-bold mb-2">Upload Attachments</h2>
                   <div
                     className={`mb-4 p-4 h-32 border-2 ${
                       isDragging ? 'border-primary' : 'border-secondary'
@@ -1243,7 +1243,7 @@ function IssueView({ issue, onClose }, ref) {
 
               {/* Comments section */}
               <div className="mt-4">
-                <h2 className="text-xl dark:text-gray-100 font-bold mb-2">Comments</h2>
+                <h2 className="text-xl font-bold mb-2">Comments</h2>
                 <ul className="comments-list">
                   {(originalIssue.comments || []).map((comment) => (
                     <li
@@ -1367,7 +1367,7 @@ function IssueView({ issue, onClose }, ref) {
             {/* Issue sidebar with metadata */}
             <div className="issue-sidebar mt-4 md:mt-0 md:ml-4">
               <div className="issue-meta">
-                <p className="md:mb-4 dark:text-gray-100">
+                <p className="md:mb-4">
                   <strong>Reported by: </strong>{" "}
                   <span className="inline md:block">
                     {username.split('.').map(part => part.replace(/\d+$/, '')).join(' ')}
@@ -1375,7 +1375,7 @@ function IssueView({ issue, onClose }, ref) {
                 </p>
 
                 <div>
-                  <p className="md:mb-4 dark:text-gray-100">
+                  <p className="md:mb-4">
                     <strong>Created at:</strong>{" "}
                     <span
                       title={originalIssue.created_at ? new Date(originalIssue.created_at).toLocaleString() : ''}
@@ -1384,7 +1384,7 @@ function IssueView({ issue, onClose }, ref) {
                       {originalIssue.created_at ? formatSmartDate(originalIssue.created_at) : 'N/A'}
                     </span>
                   </p>
-                  <p className="md:mb-4 dark:text-gray-100">
+                  <p className="md:mb-4">
                     <strong>Updated at:</strong>{" "}
                     <span
                       title={originalIssue.updated_at ? new Date(originalIssue.updated_at).toLocaleString() : ''}
