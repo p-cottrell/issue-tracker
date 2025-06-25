@@ -55,56 +55,73 @@ Below are short previews demonstrating key features of the Intermittent Issue Tr
 
 ---
 
+
 ## Installation
 
-To get started with the Intermittent Issue Tracker on your local machine:
+To get started with the **Intermittent Issue Tracker** on your local machine, follow the steps below.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/p-cottrell/issue-tracker
-   ```
+### 1. Clone the repository
 
-2. **Navigate to the backend project directory:**
-   ```bash
-   cd issue-tracker/backend
-   ```
-
-3. **Install backend dependencies:**
-   ```bash
-   npm install
-   ```
-
-4. **Create a `.env` file in the backend folder:**
-   ```env
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   ```
-
-5. **Start the backend server:**
-   ```bash
-   npm start
-   ```
-
-6. **In a new terminal, navigate to the frontend:**
-   ```bash
-   cd ../frontend
-   ```
-
-7. **Install frontend dependencies:**
-   ```bash
-   npm install
-   ```
-
-8. **Start the frontend app:**
-   ```bash
-   npm run dev
-   ```
-
-The application should now be running at:
+```bash
+git clone https://github.com/p-cottrell/issue-tracker
+cd issue-tracker
 ```
-Frontend: http://localhost:5173  
-Backend: http://localhost:5000
+
+---
+
+### 2. Set up the backend
+
+```bash
+cd backend
+npm install
 ```
+
+Create a `.env` file inside the `backend/` folder with the following variables:
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=your_mongodb_connection_string
+ACCESS_TOKEN_SECRET=your_jwt_secret_key
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_REGION=ap-southeast-2
+S3_BUCKET_NAME=your_bucket_name
+```
+
+> ⚠️ Make sure you **do not commit** this file or Jeff Bezos will take all of your money. Add `.env` to your `.gitignore`.
+
+Start the backend server:
+
+```bash
+npm start
+```
+
+---
+
+### 3. Set up the frontend
+
+In a new terminal window:
+
+```bash
+cd ../frontend
+npm install
+```
+
+Start the frontend development server:
+
+```bash
+npm start
+```
+
+---
+
+### Application URLs
+
+Once both servers are running:
+
+- **Frontend**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:5000](http://localhost:5000)
 
 ---
 
@@ -163,4 +180,3 @@ git checkout -b feature/your-feature-name
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/p-cottrell/issue-tracker/blob/main/LICENSE) file for more details.
 
 ---
-```
