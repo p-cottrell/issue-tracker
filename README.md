@@ -1,6 +1,22 @@
 
 # Intermittent Issue Tracker
 
+## 📚 Table of Contents
+
+- [Summary](#track-and-manage-intermittent-issues-with-ease)
+- [Feature Previews](#-feature-previews)
+- [Technologies Used](#technologies-used)
+- [Installation](#installation)
+  - [1. Clone the repository](#1-clone-the-repository)
+  - [2. Set up the backend](#2-set-up-the-backend)
+  - [3. Set up the frontend](#3-set-up-the-frontend)
+  - [Application URLs](#application-urls)
+- [Usage](#usage)
+- [Database Documentation](#database-documentation)
+- [API Documentation](#api-documentation)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Track and Manage Intermittent Issues with Ease
 
 The Intermittent Issue Tracker is a mobile-compatible web application designed to help users keep track of recurring issues. Whether it's a technical glitch, a health symptom, or any other type of intermittent problem, this tool enables you to log instances, track patterns, and gain insights over time.
