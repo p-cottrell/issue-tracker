@@ -8,6 +8,15 @@
     border-top-right-radius: 4px;
 }
 
+.tiptap-editor {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  min-height: 200px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
 .tiptap-toolbar .btn {
     padding: 5px 10px;
     background: #f4f4f4;
